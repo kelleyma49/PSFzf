@@ -1,4 +1,11 @@
-$script:AppName = 'fzf.exe' # TODO: support other OSes
+$script:IsWindows = Get-Variable IsWindows -Scope Global -ErrorAction SilentlyContinue
+if ($script:IsWindows -eq $null -or $script:IsWindows.Value -eq $true) {
+	$script:AppName = 'fzf.exe'
+	$script:IsWindows = $true
+} else {
+	$script:AppName = 'fzf'	
+	$script:IsWindows = $false
+}
 $script:FzfLocation = $null
 $script:PSReadlineHandlerChord = $null
 $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
@@ -11,17 +18,26 @@ $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
 function Invoke-Fzf {
 	param($BasePath=$null)
    
-	if ($BasePath -eq $null -or !(Test-Path $BasePath -PathType Container)) {
-		$BasePath = $PWD.Path
-	} else {
-		$BasePath = (Resolve-Path $BasePath).Path
+	Begin {
+		if ($BasePath -eq $null -or !(Test-Path $BasePath -PathType Container)) {
+			$BasePath = $PWD.Path
+		} else {
+			$BasePath = (Resolve-Path $BasePath).Path
+		}
 	}
 
-    $prevCmd = $env:FZF_DEFAULT_COMMAND 
-    $env:FZF_DEFAULT_COMMAND = "dir /s/b $basePath"
-	$results = & $script:FzfLocation 
-    $env:FZF_DEFAULT_COMMAND = $prevCmd
-	return $results
+	Process {
+		$prevCmd = $env:FZF_DEFAULT_COMMAND
+		if ($script:IsWindows) {
+			$env:FZF_DEFAULT_COMMAND = "dir /s/b $basePath"
+		} 
+		$results = & $script:FzfLocation 
+		$env:FZF_DEFAULT_COMMAND = $prevCmd
+	}
+
+	End {
+	   	return $results
+	}
 }
 
 function Find-CurrentPath {
