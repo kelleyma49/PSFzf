@@ -16,7 +16,11 @@ $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
 }
 
 function Invoke-Fzf {
-	param($BasePath=$null)
+	param($BasePath=$null,
+            [Parameter(Mandatory=$True,
+            ValueFromPipeline=$True)]
+            [string[]]$text
+    )
    
 	Begin {
 		if ($BasePath -eq $null -or !(Test-Path $BasePath -PathType Container)) {
@@ -24,19 +28,48 @@ function Invoke-Fzf {
 		} else {
 			$BasePath = (Resolve-Path $BasePath).Path
 		}
+
+        $process = New-Object System.Diagnostics.Process
+        $process.StartInfo.FileName = $script:FzfLocation
+        $process.StartInfo.RedirectStandardInput = 1
+        $process.StartInfo.RedirectStandardOutput = 1
+        $process.StartInfo.UseShellExecute = 0
+        
+        # Creating string builders to store stdout and stderr.
+        $oStdOutBuilder = New-Object -TypeName System.Text.StringBuilder
+
+        # Adding event handers for stdout and stderr.
+        $sScripBlock = {
+            if (! [String]::IsNullOrEmpty($EventArgs.Data)) {
+                $Event.MessageData.AppendLine($EventArgs.Data)
+            }
+        }
+        $oStdOutEvent = Register-ObjectEvent -InputObject $process `
+        -Action $sScripBlock -EventName 'OutputDataReceived' `
+        -MessageData $oStdOutBuilder
+
+        $process.Start()
+        $process.BeginOutputReadLine()
 	}
 
 	Process {
-		$prevCmd = $env:FZF_DEFAULT_COMMAND
-		if ($script:IsWindows) {
-			$env:FZF_DEFAULT_COMMAND = "dir /s/b $basePath"
-		} 
-		$results = & $script:FzfLocation 
-		$env:FZF_DEFAULT_COMMAND = $prevCmd
+        foreach ($t in $text) {
+            $process.StandardInput.WriteLine($t)
+        }
+        $process.StandardInput.Flush()
+    
+        if ($process.HasExited) {
+            Unregister-Event -SourceIdentifier $oStdOutEvent.Name
+            $oStdOutBuilder.ToString()
+            break
+        }
 	}
 
 	End {
-	   	return $results
+        $process.StandardInput.Close()
+        $process.WaitForExit()
+        Unregister-Event -SourceIdentifier $oStdOutEvent.Name
+        $oStdOutBuilder.ToString()
 	}
 }
 
