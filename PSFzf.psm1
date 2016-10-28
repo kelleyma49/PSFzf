@@ -16,20 +16,79 @@ $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
 }
 
 function Invoke-Fzf {
-	param($BasePath=$null,
-            [Parameter(ValueFromPipeline=$True)]
-            [string[]]$text
+	param( 
+			[Alias("x")]
+			[switch]$Extended,
+			[Alias('e')]
+		  	[switch]$ExtendedExact,
+			[Alias('i')]
+		  	[switch]$CaseInsensitive,
+		  	[switch]$CaseSensitive,
+		  	[Alias('d')]
+		  	[string]$Delimiter,
+		  	[switch]$NoSort,
+			[Alias('tac')]
+		  	[switch]$ReverseInput,
+		  	[ValidateSet('length','begin','end','index')]
+		  	[string]
+		  	$Tiebreak = 'length',
+			[Alias('m')]
+		  	[switch]$Multi,
+			#[switch]$Ansi,
+			[switch]$NoMouse,
+			#$Color,
+			[switch]$Black,
+			[switch]$Reverse,
+			[switch]$Cycle,
+			[switch]$NoHScroll,
+			[switch]$InlineInfo,
+			[string]$Prompt,
+			#[string]$Bind,
+			[string]$History,
+			[int]$HistorySize = -1,
+			
+			[Alias('q')]
+			[string]$Query,
+			[Alias('1')]
+			[switch]$Select1,
+			[Alias('0')]
+			[switch]$Exit0,
+			[Alias('f')]
+			[string]$Filter,
+			
+		  	[Parameter(ValueFromPipeline=$True)]
+            [string[]]$Input
     )
-   
-	Begin {
-		if ($BasePath -eq $null -or !(Test-Path $BasePath -PathType Container)) {
-			$BasePath = $PWD.Path
-		} else {
-			$BasePath = (Resolve-Path $BasePath).Path
-		}
 
+	Begin {
+		# process parameters: 
+		$arguments = ''
+		if ($Extended) 									{ $arguments += '--extended '}
+		if ($ExtendedExact) 							{ $arguments += '--extended-exact '}
+		if ($CaseInsensitive) 							{ $arguments += '-i '}
+		if ($CaseSensitive) 							{ $arguments += '+i '}
+		if (![string]::IsNullOrWhiteSpace($Delimiter)) 	{ $arguments += "--delimiter=$Delimiter "}
+		if ($NoSort) 									{ $arguments += '--no-sort '}
+		if ($ReverseInput) 								{ $arguments += '--tac '}
+		if (![string]::IsNullOrWhiteSpace($Tiebreak))	{ $arguments += "--tiebreak=$Tiebreak "}
+		if ($Multi) 									{ $arguments += '--multi '}
+		if ($NoMouse)					 				{ $arguments += '--no-mouse '}
+		if ($Black) 									{ $arguments += '--black '}
+		if ($Reverse)					 				{ $arguments += '--reverse '}
+		if ($Cycle)						 				{ $arguments += '--cycle '}
+		if ($NoHScroll) 								{ $arguments += '--no-hscroll '}
+		if ($InlineInfo) 								{ $arguments += '--inline-info '}
+		if (![string]::IsNullOrWhiteSpace($Prompt)) 	{ $arguments += "--prompt='$Prompt' "}
+		if ($History) 									{ $arguments += "--history='$History' "}
+		if ($HistorySize -ge 1)							{ $arguments += "--history-size=$HistorySize "}
+		if (![string]::IsNullOrWhiteSpace($Query))		{ $arguments += "--query=$Query "}
+		if ($Select1)									{ $arguments += '--select-1 '}
+		if ($Exit0)										{ $arguments += '--exit-0 '}
+		if (![string]::IsNullOrWhiteSpace($Filter0))	{ $arguments += "--filter=$Filter " }
+	
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo.FileName = $script:FzfLocation
+		$process.StartInfo.Arguments = $arguments
         $process.StartInfo.RedirectStandardInput = 1
         $process.StartInfo.RedirectStandardOutput = 1
         $process.StartInfo.UseShellExecute = 0
@@ -53,8 +112,8 @@ function Invoke-Fzf {
 
 	Process {
 		try {
-			foreach ($t in $text) {
-				$process.StandardInput.WriteLine($t.ToString())
+			foreach ($i in $Input) {
+				$process.StandardInput.WriteLine($i)
 			}
 			$process.StandardInput.Flush()
 		} catch {
