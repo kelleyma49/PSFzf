@@ -120,7 +120,7 @@ function Invoke-Fzf {
 				} 
 			} else {
 				foreach ($i in $Input) {
-					$process.StandardInput.WriteLine($i)
+					$process.StandardInput.WriteLine($i) 
 				}				
 			}
 			$process.StandardInput.Flush()
@@ -215,7 +215,11 @@ function Invoke-FzfPsReadlineHandler {
 	if ([String]::IsNullOrWhitespace($currentPath) -or !(Test-Path $currentPath)) {
 		$currentPath = $null
 	}
-	$result = Invoke-Fzf $currentPath
+	if ([string]::IsNullOrWhiteSpace($currentPath)) {
+		$result = Invoke-Fzf -Multi
+	} else {
+		$result = gci $currentPath -Recurse | ForEach-Object { $_.FullName } | Invoke-Fzf -Multi		
+	}
 	if ($result -ne $null) {
 
 		# quote strings if we need to:
