@@ -17,8 +17,7 @@ $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
 
 function Invoke-Fzf {
 	param($BasePath=$null,
-            [Parameter(Mandatory=$True,
-            ValueFromPipeline=$True)]
+            [Parameter(ValueFromPipeline=$True)]
             [string[]]$text
     )
    
@@ -54,7 +53,7 @@ function Invoke-Fzf {
 
 	Process {
         foreach ($t in $text) {
-            $process.StandardInput.WriteLine($t)
+            $process.StandardInput.WriteLine($t.ToString())
         }
         $process.StandardInput.Flush()
     
