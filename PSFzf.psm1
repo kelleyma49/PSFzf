@@ -35,40 +35,43 @@ function Invoke-Fzf {
         $process.StartInfo.UseShellExecute = 0
         
         # Creating string builders to store stdout and stderr.
-        $oStdOutBuilder = New-Object -TypeName System.Text.StringBuilder
+        $stdOutStr = New-Object -TypeName System.Text.StringBuilder
 
         # Adding event handers for stdout and stderr.
-        $sScripBlock = {
+        $scripBlock = {
             if (! [String]::IsNullOrEmpty($EventArgs.Data)) {
                 $Event.MessageData.AppendLine($EventArgs.Data)
             }
         }
-        $oStdOutEvent = Register-ObjectEvent -InputObject $process `
-        -Action $sScripBlock -EventName 'OutputDataReceived' `
-        -MessageData $oStdOutBuilder
+        $stdOutEvent = Register-ObjectEvent -InputObject $process `
+        -Action $scripBlock -EventName 'OutputDataReceived' `
+        -MessageData $stdOutStr
 
-        $process.Start()
-        $process.BeginOutputReadLine()
+        $process.Start() | Out-Null
+        $process.BeginOutputReadLine() | Out-Null
 	}
 
 	Process {
-        foreach ($t in $text) {
-            $process.StandardInput.WriteLine($t.ToString())
-        }
-        $process.StandardInput.Flush()
-    
+		try {
+			foreach ($t in $text) {
+				$process.StandardInput.WriteLine($t.ToString())
+			}
+			$process.StandardInput.Flush()
+		} catch {
+			# do nothing
+		}
         if ($process.HasExited) {
-            Unregister-Event -SourceIdentifier $oStdOutEvent.Name
-            $oStdOutBuilder.ToString()
+            Unregister-Event -SourceIdentifier $stdOutEvent.Name
+            $stdOutStr.ToString()
             break
         }
 	}
 
 	End {
-        $process.StandardInput.Close()
-        $process.WaitForExit()
-        Unregister-Event -SourceIdentifier $oStdOutEvent.Name
-        $oStdOutBuilder.ToString()
+	   $process.StandardInput.Close() | Out-Null
+        $process.WaitForExit() | Out-Null
+        Unregister-Event -SourceIdentifier $stdOutEvent.Name | Out-Null
+        $stdOutStr.ToString()
 	}
 }
 
