@@ -86,6 +86,7 @@ function Invoke-Fzf {
 		if ($Exit0)										{ $arguments += '--exit-0 '}
 		if (![string]::IsNullOrWhiteSpace($Filter0))	{ $arguments += "--filter=$Filter " }
 	
+		# prepare to start process:
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo.FileName = $script:FzfLocation
 		$process.StartInfo.Arguments = $arguments
@@ -93,10 +94,10 @@ function Invoke-Fzf {
         $process.StartInfo.RedirectStandardOutput = 1
         $process.StartInfo.UseShellExecute = 0
         
-        # Creating string builders to store stdout and stderr.
+        # Creating string builders to store stdout:
         $stdOutStr = New-Object -TypeName System.Text.StringBuilder
 
-        # Adding event handers for stdout and stderr.
+        # Adding event handers for stdout:
         $scripBlock = {
             if (! [String]::IsNullOrEmpty($EventArgs.Data)) {
                 $Event.MessageData.AppendLine($EventArgs.Data)
@@ -119,6 +120,8 @@ function Invoke-Fzf {
 		} catch {
 			# do nothing
 		}
+
+		# if process has exited, stop pipeline:
         if ($process.HasExited) {
             Unregister-Event -SourceIdentifier $stdOutEvent.Name
             $stdOutStr.ToString()
