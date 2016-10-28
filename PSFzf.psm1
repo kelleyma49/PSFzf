@@ -17,6 +17,7 @@ $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
 
 function Invoke-Fzf {
 	param( 
+            # Search
 			[Alias("x")]
 			[switch]$Extended,
 			[Alias('e')]
@@ -32,21 +33,30 @@ function Invoke-Fzf {
 		  	[ValidateSet('length','begin','end','index')]
 		  	[string]
 		  	$Tiebreak = 'length',
+
+            # Interface
 			[Alias('m')]
 		  	[switch]$Multi,
-			#[switch]$Ansi,
 			[switch]$NoMouse,
-			#$Color,
-			[switch]$Black,
-			[switch]$Reverse,
 			[switch]$Cycle,
 			[switch]$NoHScroll,
+
+            # Layout
+			[switch]$Reverse,
 			[switch]$InlineInfo,
 			[string]$Prompt,
-			#[string]$Bind,
+			[string]$Header,
+            [int]$HeaderLines=$null,
+
+            # History
 			[string]$History,
 			[int]$HistorySize = -1,
 			
+            #Preview
+            [string]$Preview,
+            [string]$PreviewWindow,
+
+            # Scripting
 			[Alias('q')]
 			[string]$Query,
 			[Alias('1')]
@@ -57,7 +67,8 @@ function Invoke-Fzf {
 			[string]$Filter,
 			
 		  	[Parameter(ValueFromPipeline=$True)]
-            [string[]]$Input
+            [string[]]$Input,
+            [switch]$ThrowException # work around for ReadlineHandler
     )
 
 	Begin {
@@ -73,19 +84,29 @@ function Invoke-Fzf {
 		if (![string]::IsNullOrWhiteSpace($Tiebreak))	{ $arguments += "--tiebreak=$Tiebreak "}
 		if ($Multi) 									{ $arguments += '--multi '}
 		if ($NoMouse)					 				{ $arguments += '--no-mouse '}
-		if ($Black) 									{ $arguments += '--black '}
 		if ($Reverse)					 				{ $arguments += '--reverse '}
 		if ($Cycle)						 				{ $arguments += '--cycle '}
 		if ($NoHScroll) 								{ $arguments += '--no-hscroll '}
 		if ($InlineInfo) 								{ $arguments += '--inline-info '}
 		if (![string]::IsNullOrWhiteSpace($Prompt)) 	{ $arguments += "--prompt='$Prompt' "}
+        if (![string]::IsNullOrWhiteSpace($Header)) 	{ $arguments += "--header=""$Header"" "}
+        if ($HeaderLines -ne $null) 	                { $arguments += "--header-lines=$HeaderLines "}
 		if ($History) 									{ $arguments += "--history='$History' "}
 		if ($HistorySize -ge 1)							{ $arguments += "--history-size=$HistorySize "}
+        if (![string]::IsNullOrWhiteSpace($Preview)) 	    { $arguments += "--preview=""$Preview"" "}
+        if (![string]::IsNullOrWhiteSpace($PreviewWindow)) 	{ $arguments += "--preview-window=""$PreviewWindow"" "}
 		if (![string]::IsNullOrWhiteSpace($Query))		{ $arguments += "--query=$Query "}
 		if ($Select1)									{ $arguments += '--select-1 '}
 		if ($Exit0)										{ $arguments += '--exit-0 '}
 		if (![string]::IsNullOrWhiteSpace($Filter0))	{ $arguments += "--filter=$Filter " }
 	
+        # Windows only - if running under ConEmu, use option:
+        if ($script:IsWindows) {
+            if ("$env:ConEmuHooks" -eq 'Enabled') {
+                #$arguments += '-new_console:s50H '
+            }
+        }
+        
 		# prepare to start process:
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo.FileName = $script:FzfLocation
@@ -130,14 +151,20 @@ function Invoke-Fzf {
 
 		# if process has exited, stop pipeline:
         if ($process.HasExited) {
+            $process.StandardInput.Close() | Out-Null
             Unregister-Event -SourceIdentifier $stdOutEvent.Name
             $stdOutStr.ToString()
-            break
+            if ($ThrowException) {
+                throw "Exit"
+            } else {
+                break
+            }
+            
         }
 	}
 
 	End {
-	   $process.StandardInput.Close() | Out-Null
+	    $process.StandardInput.Close() | Out-Null
         $process.WaitForExit() | Out-Null
         Unregister-Event -SourceIdentifier $stdOutEvent.Name | Out-Null
         $stdOutStr.ToString()
@@ -213,26 +240,39 @@ function Invoke-FzfPsReadlineHandler {
 	$currentPath = Find-CurrentPath $line $cursor ([ref]$leftCursor) ([ref]$rightCursor)
 	$addSpace = $currentPath -ne $null -and $currentPath.StartsWith(" ")
 	if ([String]::IsNullOrWhitespace($currentPath) -or !(Test-Path $currentPath)) {
-		$currentPath = $null
+		$currentPath = $PWD
 	}
-	if ([string]::IsNullOrWhiteSpace($currentPath)) {
-		$result = Invoke-Fzf -Multi
-	} else {
-		$result = gci $currentPath -Recurse | ForEach-Object { $_.FullName } | Invoke-Fzf -Multi		
-	}
+    
+    $result = @()
+    try 
+    {
+        if ([string]::IsNullOrWhiteSpace($currentPath)) {
+            Invoke-Fzf -Multi -ThrowException | % { $result += $_ }
+        } else {
+            gci $currentPath -Recurse | ForEach-Object { $_.FullName } | Invoke-Fzf -Multi -ThrowException | % { $result += $_ }
+        }
+    }
+    catch 
+    {
+        # catch custom exception
+    }
+	
 	if ($result -ne $null) {
-
 		# quote strings if we need to:
 		if ($result -is [system.array]) {
 			for ($i = 0;$i -lt $result.Length;$i++) {
 				if ($result[$i].Contains(" ") -or $result[$i].Contains("`t")) {
-					$result[$i] = "'{0}'" -f $result[$i]
-				}
+					$result[$i] = "'{0}'" -f $result[$i].Replace("`r`n","")
+				} else {
+                    $result[$i] = $result[$i].Replace("`r`n","")
+                }
 			}
 		} else {
 			if ($result.Contains(" ") -or $result.Contains("`t")) {
-					$result = "'{0}'" -f $result
-			}
+					$result = "'{0}'" -f $result.Replace("`r`n","")
+			} else {
+                $result = $result.Replace("`r`n","")
+            }
 		}
 		
 		$str = $result -join ','
