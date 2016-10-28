@@ -113,8 +113,15 @@ function Invoke-Fzf {
 
 	Process {
 		try {
-			foreach ($i in $Input) {
-				$process.StandardInput.WriteLine($i)
+			# handle no piped input:
+			if ($Input -eq $null -or $Input.Length -eq 0) {
+				gci . -Recurse | ForEach-Object { 
+					$process.StandardInput.WriteLine($_.FullName) 
+				} 
+			} else {
+				foreach ($i in $Input) {
+					$process.StandardInput.WriteLine($i)
+				}				
 			}
 			$process.StandardInput.Flush()
 		} catch {
