@@ -74,31 +74,31 @@ function Invoke-Fzf {
 	Begin {
 		# process parameters: 
 		$arguments = ''
-		if ($Extended) 									{ $arguments += '--extended '}
-		if ($ExtendedExact) 							{ $arguments += '--extended-exact '}
-		if ($CaseInsensitive) 							{ $arguments += '-i '}
-		if ($CaseSensitive) 							{ $arguments += '+i '}
-		if (![string]::IsNullOrWhiteSpace($Delimiter)) 	{ $arguments += "--delimiter=$Delimiter "}
-		if ($NoSort) 									{ $arguments += '--no-sort '}
-		if ($ReverseInput) 								{ $arguments += '--tac '}
-		if (![string]::IsNullOrWhiteSpace($Tiebreak))	{ $arguments += "--tiebreak=$Tiebreak "}
-		if ($Multi) 									{ $arguments += '--multi '}
-		if ($NoMouse)					 				{ $arguments += '--no-mouse '}
-		if ($Reverse)					 				{ $arguments += '--reverse '}
-		if ($Cycle)						 				{ $arguments += '--cycle '}
-		if ($NoHScroll) 								{ $arguments += '--no-hscroll '}
-		if ($InlineInfo) 								{ $arguments += '--inline-info '}
-		if (![string]::IsNullOrWhiteSpace($Prompt)) 	{ $arguments += "--prompt='$Prompt' "}
-        if (![string]::IsNullOrWhiteSpace($Header)) 	{ $arguments += "--header=""$Header"" "}
-        if ($HeaderLines -ne $null) 	                { $arguments += "--header-lines=$HeaderLines "}
-		if ($History) 									{ $arguments += "--history='$History' "}
-		if ($HistorySize -ge 1)							{ $arguments += "--history-size=$HistorySize "}
+		if ($Extended) 										{ $arguments += '--extended '}
+		if ($ExtendedExact) 								{ $arguments += '--extended-exact '}
+		if ($CaseInsensitive) 								{ $arguments += '-i '}
+		if ($CaseSensitive) 								{ $arguments += '+i '}
+		if (![string]::IsNullOrWhiteSpace($Delimiter)) 		{ $arguments += "--delimiter=$Delimiter "}
+		if ($NoSort) 										{ $arguments += '--no-sort '}
+		if ($ReverseInput) 									{ $arguments += '--tac '}
+		if (![string]::IsNullOrWhiteSpace($Tiebreak))		{ $arguments += "--tiebreak=$Tiebreak "}
+		if ($Multi) 										{ $arguments += '--multi '}
+		if ($NoMouse)					 					{ $arguments += '--no-mouse '}
+		if ($Reverse)					 					{ $arguments += '--reverse '}
+		if ($Cycle)						 					{ $arguments += '--cycle '}
+		if ($NoHScroll) 									{ $arguments += '--no-hscroll '}
+		if ($InlineInfo) 									{ $arguments += '--inline-info '}
+		if (![string]::IsNullOrWhiteSpace($Prompt)) 		{ $arguments += "--prompt='$Prompt' "}
+        if (![string]::IsNullOrWhiteSpace($Header)) 		{ $arguments += "--header=""$Header"" "}
+        if ($HeaderLines -ne $null) 	               		{ $arguments += "--header-lines=$HeaderLines "}
+		if ($History) 										{ $arguments += "--history='$History' "}
+		if ($HistorySize -ge 1)								{ $arguments += "--history-size=$HistorySize "}
         if (![string]::IsNullOrWhiteSpace($Preview)) 	    { $arguments += "--preview=""$Preview"" "}
         if (![string]::IsNullOrWhiteSpace($PreviewWindow)) 	{ $arguments += "--preview-window=""$PreviewWindow"" "}
-		if (![string]::IsNullOrWhiteSpace($Query))		{ $arguments += "--query=$Query "}
-		if ($Select1)									{ $arguments += '--select-1 '}
-		if ($Exit0)										{ $arguments += '--exit-0 '}
-		if (![string]::IsNullOrWhiteSpace($Filter0))	{ $arguments += "--filter=$Filter " }
+		if (![string]::IsNullOrWhiteSpace($Query))			{ $arguments += "--query=$Query "}
+		if ($Select1)										{ $arguments += '--select-1 '}
+		if ($Exit0)											{ $arguments += '--exit-0 '}
+		if (![string]::IsNullOrWhiteSpace($Filter))			{ $arguments += "--filter=$Filter " }
 	
         # Windows only - if running under ConEmu, use option:
         if ($script:IsWindows) {
@@ -137,10 +137,12 @@ function Invoke-Fzf {
 			# handle no piped input:
 			if ($Input -eq $null -or $Input.Length -eq 0) {
 				gci . -Recurse | ForEach-Object { 
+					"crap:" + $_.FullName >> F:\Projects\shit.txt 
 					$process.StandardInput.WriteLine($_.FullName) 
 				} 
 			} else {
 				foreach ($i in $Input) {
+					"crap:" + "$i" + '_blah' >> F:\Projects\shit.txt 
 					$process.StandardInput.WriteLine($i) 
 				}				
 			}
@@ -153,7 +155,7 @@ function Invoke-Fzf {
         if ($process.HasExited) {
             $process.StandardInput.Close() | Out-Null
             Unregister-Event -SourceIdentifier $stdOutEvent.Name
-            $stdOutStr.ToString()
+            $stdOutStr.ToString().Split([System.Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries)
             if ($ThrowException) {
                 throw "Exit"
             } else {
@@ -167,7 +169,7 @@ function Invoke-Fzf {
 	    $process.StandardInput.Close() | Out-Null
         $process.WaitForExit() | Out-Null
         Unregister-Event -SourceIdentifier $stdOutEvent.Name | Out-Null
-        $stdOutStr.ToString()
+        $stdOutStr.ToString().Split([System.Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries)
 	}
 }
 
@@ -317,7 +319,17 @@ if ($script:FzfLocation -ne $null) {
     }
     $script:FzfLocation = Join-Path $env:GOPATH (Join-Path 'bin' $script:AppName) 
 }
+
+# is it in the module path?
 if ($script:FzfLocation -eq $null) {
+	$moduleAppPath = Join-Path $PSScriptRoot $script:AppName
+	if (Test-Path $moduleAppPath -PathType Leaf) {
+		$script:FzfLocation = $moduleAppPath
+	}
+}
+
+if ($script:FzfLocation -eq $null) {
+	
     throw "Failed to find '{0}' in path" -f $script:AppName 
 }
  
