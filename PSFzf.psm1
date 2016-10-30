@@ -310,7 +310,7 @@ if (Get-Module -ListAvailable -Name PSReadline) {
 
 
 # find location of fzf executable: 
-$script:FzfLocation = Get-Command $script:AppName
+$script:FzfLocation = Get-Command $script:AppName -ErrorAction SilentlyContinue
 if ($script:FzfLocation -ne $null) {
     $script:FzfLocation = $script:FzfLocation.Source
 } else {
@@ -321,7 +321,7 @@ if ($script:FzfLocation -ne $null) {
 }
 
 # is it in the module path?
-if ($script:FzfLocation -eq $null) {
+if ($script:FzfLocation -eq $null -or !(Test-Path $script:FzfLocation -PathType Leaf)) {
 	$moduleAppPath = Join-Path $PSScriptRoot $script:AppName
 	if (Test-Path $moduleAppPath -PathType Leaf) {
 		$script:FzfLocation = $moduleAppPath
