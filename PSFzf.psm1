@@ -251,7 +251,19 @@ function Invoke-FzfPsReadlineHandler {
         if ([string]::IsNullOrWhiteSpace($currentPath)) {
             Invoke-Fzf -Multi -ThrowException | % { $result += $_ }
         } else {
-            gci $currentPath -Recurse | ForEach-Object { $_.FullName } | Invoke-Fzf -Multi -ThrowException | % { $result += $_ }
+            $resolvedPath = Resolve-Path $currentPath -ErrorAction SilentlyContinue
+            $providerName = $null
+            if ($resolvedPath -ne $null) {
+                $providerName = $resolvedPath.Provider.Name 
+            }
+            switch ($providerName) {
+                # Get-ChildItem is way too slow - we optimize for the FileSystem provider by 
+                # using batch commands:
+                'FileSystem'    { cmd.exe /c ("dir /s/b {0}" -f $resolvedPath.ProviderPath) | Invoke-Fzf -Multi -ThrowException | % { $result += $_ } }
+                'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select Name -ExpandProperty Name | Invoke-Fzf -Multi -ThrowException | % { $result += $_ } }
+                $null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select FullName -ExpandProperty FullName | Invoke-Fzf -Multi -ThrowException | % { $result += $_ } }
+                Default {}
+            }
         }
     }
     catch 
