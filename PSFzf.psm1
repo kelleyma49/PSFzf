@@ -2,9 +2,15 @@ $script:IsWindows = Get-Variable IsWindows -Scope Global -ErrorAction SilentlyCo
 if ($script:IsWindows -eq $null -or $script:IsWindows.Value -eq $true) {
 	$script:AppName = 'fzf.exe'
 	$script:IsWindows = $true
+	$script:DefaultFileSystemCmd = @"
+find {0} -path '*/\.*' -prune -o -type f -print -o -type l -print 2> /dev/null | sed s/^..//
+"@
 } else {
 	$script:AppName = 'fzf'	
 	$script:IsWindows = $false
+	$script:DefaultFileSystemCmd = @"
+dir /s/b {0}
+"@ 
 }
 $script:FzfLocation = $null
 $script:PSReadlineHandlerChord = $null
@@ -46,7 +52,7 @@ function Invoke-Fzf {
 			[switch]$InlineInfo,
 			[string]$Prompt,
 			[string]$Header,
-            [int]$HeaderLines=$null,
+            [int]$HeaderLines = -1,
 
             # History
 			[string]$History,
@@ -90,7 +96,7 @@ function Invoke-Fzf {
 		if ($InlineInfo) 									{ $arguments += '--inline-info '}
 		if (![string]::IsNullOrWhiteSpace($Prompt)) 		{ $arguments += "--prompt='$Prompt' "}
         if (![string]::IsNullOrWhiteSpace($Header)) 		{ $arguments += "--header=""$Header"" "}
-        if ($HeaderLines -ne $null) 	               		{ $arguments += "--header-lines=$HeaderLines "}
+        if ($HeaderLines -ge 0) 		               		{ $arguments += "--header-lines=$HeaderLines "}
 		if ($History) 										{ $arguments += "--history='$History' "}
 		if ($HistorySize -ge 1)								{ $arguments += "--history-size=$HistorySize "}
         if (![string]::IsNullOrWhiteSpace($Preview)) 	    { $arguments += "--preview=""$Preview"" "}
@@ -137,12 +143,10 @@ function Invoke-Fzf {
 			# handle no piped input:
 			if ($Input -eq $null -or $Input.Length -eq 0) {
 				gci . -Recurse | ForEach-Object { 
-					"crap:" + $_.FullName >> F:\Projects\shit.txt 
 					$process.StandardInput.WriteLine($_.FullName) 
 				} 
 			} else {
 				foreach ($i in $Input) {
-					"crap:" + "$i" + '_blah' >> F:\Projects\shit.txt 
 					$process.StandardInput.WriteLine($i) 
 				}				
 			}
@@ -259,7 +263,7 @@ function Invoke-FzfPsReadlineHandler {
             switch ($providerName) {
                 # Get-ChildItem is way too slow - we optimize for the FileSystem provider by 
                 # using batch commands:
-                'FileSystem'    { cmd.exe /c ("dir /s/b {0}" -f $resolvedPath.ProviderPath) | Invoke-Fzf -Multi -ThrowException | % { $result += $_ } }
+                'FileSystem'    { cmd.exe /c ($script:DefaultFileSystemCmd -f $resolvedPath.ProviderPath) | Invoke-Fzf -Multi -ThrowException | % { $result += $_ } }
                 'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select Name -ExpandProperty Name | Invoke-Fzf -Multi -ThrowException | % { $result += $_ } }
                 $null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select FullName -ExpandProperty FullName | Invoke-Fzf -Multi -ThrowException | % { $result += $_ } }
                 Default {}
