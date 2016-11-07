@@ -1,16 +1,16 @@
 $script:IsWindows = Get-Variable IsWindows -Scope Global -ErrorAction SilentlyContinue
 if ($script:IsWindows -eq $null -or $script:IsWindows.Value -eq $true) {
 	$script:AppName = 'fzf.exe'
-	$script:IsWindows = $true
+	$script:IsWindows = $true	
 	$script:DefaultFileSystemCmd = @"
-find {0} -path '*/\.*' -prune -o -type f -print -o -type l -print 2> /dev/null | sed s/^..//
-"@
+dir /s/b {0}
+"@ 
 } else {
 	$script:AppName = 'fzf'	
 	$script:IsWindows = $false
 	$script:DefaultFileSystemCmd = @"
-dir /s/b {0}
-"@ 
+find {0} -path '*/\.*' -prune -o -type f -print -o -type l -print 2> /dev/null | sed s/^..//
+"@
 }
 $script:FzfLocation = $null
 $script:PSReadlineHandlerChord = $null
