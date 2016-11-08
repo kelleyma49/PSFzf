@@ -334,17 +334,16 @@ if (Test-Path $moduleAppPath -PathType Leaf) {
 if ($script:FzfLocation -eq $null -or !(Test-Path $script:FzfLocation -PathType Leaf)) { 
 	$script:FzfLocation = Get-Command $script:AppName -ErrorAction SilentlyContinue
 	if ($script:FzfLocation -ne $null) {
-		$script:FzfLocation = $script:FzfLocation.Source
+		$script:FzfLocation = Resolve-Path $script:FzfLocation.Source
 	} else {
 		if ([string]::IsNullOrWhiteSpace($env:GOPATH)) {
 			throw 'environment variable GOPATH not set'
 		}
-		$script:FzfLocation = Join-Path $env:GOPATH (Join-Path 'bin' $script:AppName) 
+		$script:FzfLocation = Resolve-Path (Join-Path $env:GOPATH (Join-Path 'bin' $script:AppName))
 	}
 }
 
 if ($script:FzfLocation -eq $null) {
-	
     throw "Failed to find '{0}' in path" -f $script:AppName 
 }
  
