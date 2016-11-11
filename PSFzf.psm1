@@ -81,7 +81,7 @@ function Invoke-Fzf {
 			[string]$Filter,
 			
 		  	[Parameter(ValueFromPipeline=$True)]
-            [string[]]$Input=$null,
+            [string[]]$Input,
             [switch]$ThrowException # work around for ReadlineHandler
     )
 
@@ -145,10 +145,12 @@ function Invoke-Fzf {
         $process.Start() | Out-Null
         $process.BeginOutputReadLine() | Out-Null
 
-        $hasInput = $PSBoundParameters.ContainsKey('Input')
+        
 	}
 
 	Process {
+        $hasInput = $PSBoundParameters.ContainsKey('Input')
+
 		try {
 			# handle no piped input:
 			if (!$hasInput) {
@@ -156,6 +158,7 @@ function Invoke-Fzf {
 					$process.StandardInput.WriteLine($_.FullName) 
 				} 
 			} else {
+                'blah' | Out-File 'e:\tree\crap.txt'
                 foreach ($i in $Input) {
 					$process.StandardInput.WriteLine($i) 
 				}				
