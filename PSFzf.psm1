@@ -81,7 +81,7 @@ function Invoke-Fzf {
 			[string]$Filter,
 			
 		  	[Parameter(ValueFromPipeline=$True)]
-            [string[]]$Input,
+            [string[]]$Input=$null,
             [switch]$ThrowException # work around for ReadlineHandler
     )
 
@@ -144,17 +144,19 @@ function Invoke-Fzf {
 
         $process.Start() | Out-Null
         $process.BeginOutputReadLine() | Out-Null
+
+        $hasInput = $PSBoundParameters.ContainsKey('Input')
 	}
 
 	Process {
 		try {
 			# handle no piped input:
-			if ($Input -eq $null -or $Input.Length -eq 0) {
-				gci . -Recurse | ForEach-Object { 
+			if (!$hasInput) {
+                gci . -Recurse | ForEach-Object { 
 					$process.StandardInput.WriteLine($_.FullName) 
 				} 
 			} else {
-				foreach ($i in $Input) {
+                foreach ($i in $Input) {
 					$process.StandardInput.WriteLine($i) 
 				}				
 			}

@@ -1,6 +1,6 @@
 function Invoke-FuzzyEdit()
 {
-    $files = Invoke-Fzf -Multi
+    $files = $null | Invoke-Fzf -Multi
 
     $editor = $env:EDITOR
     # default to Visual Studio Code:
@@ -8,7 +8,6 @@ function Invoke-FuzzyEdit()
         $editor = 'code'
     }
     if ($files -ne $null) {
-        echo ($files -join ' ')
-        & "$editor" ($files -join ' ') 
+        Invoke-Expression -Command ("$editor {0}" -f ($files -join ' ')) 
     }
 }
