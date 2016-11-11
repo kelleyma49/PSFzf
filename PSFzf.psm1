@@ -1,16 +1,24 @@
 $script:IsWindows = Get-Variable IsWindows -Scope Global -ErrorAction SilentlyContinue
-if ($script:IsWindows -eq $null -or $script:IsWindows.Value -eq $true) {
-	$script:AppName = 'fzf.exe'
+if ($script:IsWindows -eq $null -or $script:IsWindows.Value -eq $true) {	
 	$script:IsWindows = $true	
 	$script:DefaultFileSystemCmd = @"
 dir /s/b {0}
 "@ 
 } else {
-	$script:AppName = 'fzf'	
 	$script:IsWindows = $false
 	$script:DefaultFileSystemCmd = @"
 find {0} -path '*/\.*' -prune -o -type f -print -o -type l -print 2> /dev/null | sed s/^..//
 "@
+}
+
+if ($script:IsWindows) {
+    $script:AppNames = @('fzf-*-windows_*.exe','fzf.exe')
+} else {
+    if ($IsOSX) {
+        $script:AppNames = @('fzf-*-darwin_*','fzf')
+    } elseif ($IsLinux) {
+        $script:AppNames = @('fzf-*-linux_*','fzf')
+    }
 }
 $script:FzfLocation = $null
 $script:PSReadlineHandlerChord = $null
@@ -306,46 +314,48 @@ function Invoke-FzfPsReadlineHandler {
 	}
 }
  
-# install PSReadline shortcut:
-if (Get-Module -ListAvailable -Name PSReadline) {
-	if ($args.Length -ge 1) {
-		$script:PSReadlineHandlerChord = $args[0] 
-	} else {
-		$script:PSReadlineHandlerChord = 'Ctrl+T'
-	}
-	if (Get-PSReadlineKeyHandler -Bound | Where Key -eq $script:PSReadlineHandlerChord) {
-		Write-Warning ("PSReadline chord {0} already in use - keyboard handler not installed" -f $script:PSReadlineHandlerChord)
-	} else {
-		Set-PSReadlineKeyHandler -Key Ctrl+T -BriefDescription "Invoke Fzf" -ScriptBlock  {
-			Invoke-FzfPsReadlineHandler
-		}
-	} 
-} else {
-	Write-Warning "PSReadline module not found - keyboard handler not installed" 
+function SetPsReadlineShortcut()
+{
+    # install PSReadline shortcut:
+    if (Get-Module -ListAvailable -Name PSReadline) {
+        if ($args.Length -ge 1) {
+            $script:PSReadlineHandlerChord = $args[0] 
+        } else {
+            $script:PSReadlineHandlerChord = 'Ctrl+T'
+        }
+        if (Get-PSReadlineKeyHandler -Bound | Where Key -eq $script:PSReadlineHandlerChord) {
+            Write-Warning ("PSReadline chord {0} already in use - keyboard handler not installed" -f $script:PSReadlineHandlerChord)
+        } else {
+            Set-PSReadlineKeyHandler -Key Ctrl+T -BriefDescription "Invoke Fzf" -ScriptBlock  {
+                Invoke-FzfPsReadlineHandler
+            }
+        } 
+    } else {
+        Write-Warning "PSReadline module not found - keyboard handler not installed" 
+    }
 }
 
 
-# is it in the module path?
-$moduleAppPath = Join-Path $PSScriptRoot $script:AppName
-if (Test-Path $moduleAppPath -PathType Leaf) {
-	$script:FzfLocation = Resolve-Path $moduleAppPath
+function FindFzf()
+{
+    # find it in our path:
+    $script:FzfLocation = $null
+    $script:AppNames | ForEach-Object {
+        if ($script:FzfLocation -eq $null) {
+            $result = Get-Command $_ -ErrorAction SilentlyContinue
+            $result | ForEach-Object {
+                $script:FzfLocation = Resolve-Path $_.Source   
+            }
+        }
+    }
+    
+    if ($script:FzfLocation -eq $null) {
+        throw 'Failed to find fzf binary in PATH' 
+    }
 }
 
-if ($script:FzfLocation -eq $null -or !(Test-Path $script:FzfLocation -PathType Leaf)) { 
-	$script:FzfLocation = Get-Command $script:AppName -ErrorAction SilentlyContinue
-	if ($script:FzfLocation -ne $null) {
-		$script:FzfLocation = Resolve-Path $script:FzfLocation.Source
-	} else {
-		if ([string]::IsNullOrWhiteSpace($env:GOPATH)) {
-			throw 'environment variable GOPATH not set'
-		}
-		$script:FzfLocation = Resolve-Path (Join-Path $env:GOPATH (Join-Path 'bin' $script:AppName))
-	}
-}
-
-if ($script:FzfLocation -eq $null) {
-    throw "Failed to find '{0}' in path" -f $script:AppName 
-}
  
+SetPsReadlineShortcut
+FindFzf
 
 	
