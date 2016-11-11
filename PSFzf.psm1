@@ -358,4 +358,8 @@ function FindFzf()
 SetPsReadlineShortcut
 FindFzf
 
+@('PSFzf.Functions.ps1') | % {  Join-Path $PSScriptRoot $_ } | ForEach-Object {
+	. $_
+}
+
 	
