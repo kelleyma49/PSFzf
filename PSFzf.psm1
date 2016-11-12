@@ -11,15 +11,6 @@ find {0} -path '*/\.*' -prune -o -type f -print -o -type l -print 2> /dev/null |
 "@
 }
 
-if ($script:IsWindows) {
-    $script:AppNames = @('fzf-*-windows_*.exe','fzf.exe')
-} else {
-    if ($IsOSX) {
-        $script:AppNames = @('fzf-*-darwin_*','fzf')
-    } elseif ($IsLinux) {
-        $script:AppNames = @('fzf-*-linux_*','fzf')
-    }
-}
 $script:FzfLocation = $null
 $script:PSReadlineHandlerChord = $null
 $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
@@ -342,9 +333,19 @@ function SetPsReadlineShortcut()
 
 function FindFzf()
 {
+	if ($script:IsWindows) {
+		$AppNames = @('fzf-*-windows_*.exe','fzf.exe')
+	} else {
+		if ($IsOSX) {
+			$AppNames = @('fzf-*-darwin_*','fzf')
+		} elseif ($IsLinux) {
+			$AppNames = @('fzf-*-linux_*','fzf')
+		}
+	}
+
     # find it in our path:
     $script:FzfLocation = $null
-    $script:AppNames | ForEach-Object {
+    $AppNames | ForEach-Object {
         if ($script:FzfLocation -eq $null) {
             $result = Get-Command $_ -ErrorAction SilentlyContinue
             $result | ForEach-Object {
