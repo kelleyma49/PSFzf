@@ -2,7 +2,7 @@ $script:IsWindows = Get-Variable IsWindows -Scope Global -ErrorAction SilentlyCo
 if ($script:IsWindows -eq $null -or $script:IsWindows.Value -eq $true) {	
 	$script:IsWindows = $true	
 	$script:DefaultFileSystemCmd = @"
-dir /s/b {0}
+dir /s/b "{0}"
 "@ 
 } else {
 	$script:IsWindows = $false
@@ -158,7 +158,6 @@ function Invoke-Fzf {
 					$process.StandardInput.WriteLine($_.FullName) 
 				} 
 			} else {
-                'blah' | Out-File 'e:\tree\crap.txt'
                 foreach ($i in $Input) {
 					$process.StandardInput.WriteLine($i) 
 				}				

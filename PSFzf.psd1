@@ -66,7 +66,7 @@ Description = 'A thin wrapper around Fzf (https://github.com/junegunn/fzf).  If 
 # NestedModules = @()
 
 # Functions to export from this module
-FunctionsToExport = @('Invoke-Fzf','Invoke-FuzzyEdit','Invoke-FuzzyHistory','Invoke-FuzzyKillProcess','Invoke-FuzzySetLocation')
+FunctionsToExport = @('Invoke-Fzf','Invoke-FuzzyEdit','Invoke-FuzzyFasdr','Invoke-FuzzyHistory','Invoke-FuzzyKillProcess','Invoke-FuzzySetLocation','Set-LocationFuzzyEverything')
 
 # Cmdlets to export from this module
 CmdletsToExport = '*'
