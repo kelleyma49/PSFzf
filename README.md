@@ -5,9 +5,17 @@
 PSFzf is a PowerShell module that wraps [fzf](https://github.com/junegunn/fzf), a fuzzy file finder for the command line.
 
 # Prerequisites
-Follow the [installation instructions for fzf] (https://github.com/junegunn/fzf#installation) before installing PSFzf.
+Follow the [installation instructions for fzf] (https://github.com/junegunn/fzf#installation) before installing PSFzf.  PSFzf will run `Get-Command` to find `fzf` in your path.  
+
+## Windows
+Download the `fzf` binary and place it in your path.  Run `Get-Command fzf*-Windows-*.exe` to verify that PowerShell can find the executable.
 
 PSFzf has only been tested on PowerShell 5.0.
+
+## MacOS
+Use Homebrew or download the binary and place it in your path.  Run `Get-Command fzf*` to verify that PowerShell can find the executable.
+
+PSFzf has been tested with the latest PowerShell 6.0 alpha.
 
 # Installation
 PSFzf is available on the [PowerShell Gallery](https://www.powershellgallery.com/packages/PSFzf).  PSReadline should be imported before PSFzf as PSFzf registers <kbd>CTRL+T</kbd> as a PSReadline key handler.
