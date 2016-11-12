@@ -13,7 +13,7 @@ Invoke-FuzzyEdit
 ```
 
 ## DESCRIPTION
-Allows the user to pick multiple files from fzf that will be launched in the editor defined in the environment variable EDITOR.  Visual Studio Code is launched if EDITOR is not defined.
+Allows the user to pick multiple files from fzf that will be launched in the editor defined in the environment variable EDITOR.  Under Windows, Visual Studio Code is launched if EDITOR is not defined.  If not running under Windows, vim is launched.
 ## EXAMPLES
 
 ### Launch Invoke-FuzzyEdit
