@@ -14,7 +14,7 @@ function Invoke-FuzzyEdit()
 Set-Alias -Name fe -Value Invoke-FuzzyEdit
 
 if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
-    function Invoke-FuzzyFasdr() {
+    function Invoke-FuzzyFasd() {
         $result = $null
         try {
             Get-Frecents | % { $_.FullPath } | Invoke-Fzf -ReverseInput -NoSort -ThrowException | % { $result = $_ }
@@ -26,7 +26,7 @@ if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
             cd $result
         }
     }
-    Set-Alias -Name ff -Value Invoke-FuzzyFasdr
+    Set-Alias -Name ff -Value Invoke-FuzzyFasd
 } elseif (Get-Command fasd -ErrorAction SilentlyContinue) {
     function Invoke-FuzzyFasd() {
         $result = $null
