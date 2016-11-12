@@ -17,7 +17,7 @@ if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
     function Invoke-FuzzyFasdr() {
         $result = $null
         try {
-            Get-Frecents | % { $_.FullPath } | Invoke-Fzf -Reverse -NoSort -ThrowException | % { $result = $_ }
+            Get-Frecents | % { $_.FullPath } | Invoke-Fzf -ReverseInput -NoSort -ThrowException | % { $result = $_ }
         } catch {
             
         }
@@ -27,6 +27,20 @@ if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
         }
     }
     Set-Alias -Name ff -Value Invoke-FuzzyFasdr
+} elseif (Get-Command fasd -ErrorAction SilentlyContinue) {
+    function Invoke-FuzzyFasd() {
+        $result = $null
+        try {
+            fasd -l | Invoke-Fzf -ReverseInput -NoSort -ThrowException | % { $result = $_ }
+        } catch {
+            
+        }
+        if ($result -ne $null) {
+            # use cd in case it's aliased to something else:
+            cd $result
+        }
+    }
+    Set-Alias -Name ff -Value Invoke-FuzzyFasd    
 }
 
 function Invoke-FuzzyHistory() {
