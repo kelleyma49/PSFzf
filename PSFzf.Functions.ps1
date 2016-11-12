@@ -56,10 +56,10 @@ function Invoke-FuzzyHistory() {
 Set-Alias -Name fh -Value Invoke-FuzzyHistory
 
 function Invoke-FuzzyKillProcess() {
-    $result = Get-Process | % { "{0}: {1}" -f $_.Id,$_.Name } | Invoke-Fzf -Multi
+    $result = Get-Process | where { ![string]::IsNullOrEmpty($_.ProcessName) } | % { "{0}: {1}" -f $_.Id,$_.ProcessName } | Invoke-Fzf -Multi
     $result | % {
         $id = $_ -replace "([0-9]+)(:)(.*)",'$1' 
-        Stop-Process $id 
+        Stop-Process $id -Verbose
     }
 }
 Set-Alias -Name fkill -Value Invoke-FuzzyKillProcess
