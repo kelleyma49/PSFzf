@@ -141,29 +141,47 @@ function Invoke-Fzf {
 
 	Process {
         $hasInput = $PSBoundParameters.ContainsKey('Input')
+        
+        $loopProcess = [scriptblock] {
+            param($item)
+
+            # check some common parameter names:
+            $str = $item.FullName
+            if ($str -eq $null) {
+                $str = $item.Name
+                if ($str -eq $null) {
+                    $str = $item.ToString()
+                }
+            }
+            if ($str -ne $null) {
+                $process.StandardInput.WriteLine($str) 
+            }
+        }
 
 		try {
 			# handle no piped input:
 			if (!$hasInput) {
-                cmd.exe /c ($script:DefaultFileSystemCmd -f $resolvedPath.ProviderPath) | ForEach-Object { 
-					$process.StandardInput.WriteLine($_) 
-                    if ($process.HasExited) {
-                        break processExited
-                    }
-				} 
+                # optimization for filesystem provider:
+                if ($PWD.Provider.Name -eq 'FileSystem') {
+                    cmd.exe /c ($script:DefaultFileSystemCmd -f $PWD.Path) | ForEach-Object { 
+                        $process.StandardInput.WriteLine($_) 
+                        if ($process.HasExited) {
+                            break processExited
+                        }
+				    }
+                }
+                else {
+                    Get-ChildItem . -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+                        & $loopProcess -item $_ 
+                        if ($process.HasExited) {
+                            break processExited
+                        }
+				    }
+                }
+                 
 			} else {
                 foreach ($i in $Input) {
-					# check some common parameter names:
-					$inputStr = $i.FullName
-					if ($inputStr -eq $null) {
-						$inputStr = $i.Name
-						if ($inputStr -eq $null) {
-							$inputStr = $i.ToString()
-						}
-					}
-					if ($inputStr -ne $null) {
-						$process.StandardInput.WriteLine($inputStr) 
-					}
+                    & $loopProcess -item $i
 				}				
 			}
 			$process.StandardInput.Flush()
