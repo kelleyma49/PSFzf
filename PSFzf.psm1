@@ -145,8 +145,11 @@ function Invoke-Fzf {
 		try {
 			# handle no piped input:
 			if (!$hasInput) {
-                gci . -Recurse -ErrorAction SilentlyContinue | ForEach-Object { 
-					$process.StandardInput.WriteLine($_.FullName) 
+                cmd.exe /c ($script:DefaultFileSystemCmd -f $resolvedPath.ProviderPath) | ForEach-Object { 
+					$process.StandardInput.WriteLine($_) 
+                    if ($process.HasExited) {
+                        break processExited
+                    }
 				} 
 			} else {
                 foreach ($i in $Input) {
@@ -167,6 +170,11 @@ function Invoke-Fzf {
 		} catch {
 			# do nothing
 		}
+
+        # dummy loop:
+        :processExited while ($false) {
+
+        }
 
 		# if process has exited, stop pipeline:
         if ($process.HasExited) {
