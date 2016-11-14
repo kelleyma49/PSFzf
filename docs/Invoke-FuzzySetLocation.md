@@ -25,7 +25,7 @@ Invoke-FuzzySetLocation c:\Windows
 ```
 
 ## PARAMETERS
-## -Directory
+### -Directory
 The path to a directory that contains the subdirectories that the user will choose from.
 
 ```yaml
