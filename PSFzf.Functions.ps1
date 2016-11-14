@@ -68,7 +68,7 @@ function Invoke-FuzzySetLocation() {
     param($Directory=$null)
 
     if ($Directory -eq $null) { $Directory = $PWD.Path }
-    $result = Get-ChildItem $Directory -Recurse | ?{ $_.PSIsContainer } | % { $_.FullName } | Invoke-Fzf 
+    $result = Get-ChildItem $Directory -Recurse -ErrorAction SilentlyContinue | ?{ $_.PSIsContainer } | % { $_.FullName } | Invoke-Fzf 
     Set-Location $result
 }
 Set-Alias -Name fd -Value Invoke-FuzzySetLocation
