@@ -72,7 +72,7 @@ function Invoke-Fzf {
 			[string]$Filter,
 			
 		  	[Parameter(ValueFromPipeline=$True)]
-            [string[]]$Input,
+            [object[]]$Input,
             [switch]$ThrowException # work around for ReadlineHandler
     )
 
@@ -150,7 +150,17 @@ function Invoke-Fzf {
 				} 
 			} else {
                 foreach ($i in $Input) {
-					$process.StandardInput.WriteLine($i) 
+					# check some common parameter names:
+					$inputStr = $i.FullName
+					if ($inputStr -eq $null) {
+						$inputStr = $i.Name
+						if ($inputStr -eq $null) {
+							$inputStr = $i.ToString()
+						}
+					}
+					if ($inputStr -ne $null) {
+						$process.StandardInput.WriteLine($inputStr) 
+					}
 				}				
 			}
 			$process.StandardInput.Flush()
@@ -160,7 +170,11 @@ function Invoke-Fzf {
 
 		# if process has exited, stop pipeline:
         if ($process.HasExited) {
-            $process.StandardInput.Close() | Out-Null
+			try {
+           		$process.StandardInput.Close() | Out-Null
+			} catch {
+				# do nothing
+			}
             Unregister-Event -SourceIdentifier $stdOutEvent.Name
             $stdOutStr.ToString().Split([System.Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries)
             if ($ThrowException) {
