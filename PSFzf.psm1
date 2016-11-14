@@ -145,7 +145,7 @@ function Invoke-Fzf {
 		try {
 			# handle no piped input:
 			if (!$hasInput) {
-                gci . -Recurse | ForEach-Object { 
+                gci . -Recurse -ErrorAction SilentlyContinue | ForEach-Object { 
 					$process.StandardInput.WriteLine($_.FullName) 
 				} 
 			} else {
@@ -283,7 +283,7 @@ function Invoke-FzfPsReadlineHandler {
                 'FileSystem'    { cmd.exe /c ($script:DefaultFileSystemCmd -f $resolvedPath.ProviderPath) | Invoke-Fzf -Multi -ThrowException | % { $result += $_ } }
                 'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select Name -ExpandProperty Name | Invoke-Fzf -Multi -ThrowException | % { $result += $_ } }
                 $null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select FullName -ExpandProperty FullName | Invoke-Fzf -Multi -ThrowException | % { $result += $_ } }
-                Default {}
+                Default         {}
             }
         }
     }
