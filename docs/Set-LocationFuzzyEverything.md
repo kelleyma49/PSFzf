@@ -38,6 +38,6 @@ This cmdlet does not accept any input.
 ### None
 This cmdlet does not generate any output.
 ## NOTES
-
+This function will be created if [PSEverything](https://github.com/powercode/PSEverything) can be found by PowerShell.
 ## RELATED LINKS
 
