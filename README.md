@@ -4,6 +4,16 @@
 
 PSFzf is a PowerShell module that wraps [fzf](https://github.com/junegunn/fzf), a fuzzy file finder for the command line.
 
+# Helper Functions
+In addition to its core function [Invoke-Fzf](docs/Invoke-Fzf.md), PSFzf includes a set of useful functions and aliases:
+
+1. [Invoke-FuzzyEdit](docs/Invoke-FuzzyEdit.md)
+2. [Invoke-FuzzyFasd](docs/Invoke-FuzzyFasd.md)
+3. [Invoke-FuzzyHistory](docs/Invoke-FuzzyHistory.md)
+4. [Invoke-FuzzyKillProcess](docs/Invoke-FuzzyKillProcess.md)
+5. [Invoke-FuzzySetLocation](docs/Invoke-FuzzySetLocation.md)
+6. [Set-LocationFuzzyEverything](docs/Set-LocationFuzzyEverything.md)
+
 # Prerequisites
 Follow the [installation instructions for fzf] (https://github.com/junegunn/fzf#installation) before installing PSFzf.  PSFzf will run `Get-Command` to find `fzf` in your path.  
 
