@@ -400,7 +400,7 @@ function FindFzf()
     }
     
     if ($script:FzfLocation -eq $null) {
-        throw 'Failed to find fzf binary in PATH' 
+        throw 'Failed to find fzf binary in PATH.  You can download a binary from this page: https://github.com/junegunn/fzf-bin/releases' 
     }
 }
 
