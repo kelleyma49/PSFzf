@@ -1,0 +1,43 @@
+TOPIC
+    about_PSFzf
+
+SHORT DESCRIPTION
+
+    PSFzf is a wrapper around the fuzzy finder fzf.
+
+LONG DESCRIPTION
+
+    PSFzf is a wrapper around the fuzzy finder fzf.  It provides:
+
+      * Integration with PSReadline - press CTRL+T to start fzf
+      * Convenience function for selecting a file to edit (Invoke-FuzzyEdit, or fe)
+      * Convenience function for selecting a frecent file use Fasdr (Invoke-FuzzyFasd, or ff)
+      * Convenience function for invoking previous history (Invoke-FuzzyHistory, or fh)
+      * Convenience function for killing processes (Invoke-FuzzyKillProcess, or fkill)
+      * Convenience function for setting the current location (Invoke-FuzzySetLocation, or fd)
+      * Convenience function for selecting a file or folder from Everything (Set-LocationFuzzyEverything, or cde)
+      
+  Basic Usage
+  -----------
+  Invoke-PSFzf reads input from the pipeline.  For example, the following command allows the user to 
+  to select a file from the interface and set the current location to that folder:
+  
+    cd (gci -Recurse | where {$_.PSIsContainer} | Invoke-Fzf)
+  
+  If Invoke-PSFzf is passed an object, it attempts to find a common property to display, like Name or FullName.
+  For example, these will display just the name rather than the string representation of the object:
+  
+    Get-Process | Invoke-Fzf
+    gci alias: | Invoke-Fzf
+    
+  POWERSHELL COMPATIBILITY
+
+    PSReadline has been tested on PowerShell version 5.
+
+FEEDBACK
+
+    https://github.com/kelleyma49/PSFzf
+
+CONTRIBUTING TO PSREADLINE
+
+    Feel free to submit a pull request or submit feedback on the github page.
