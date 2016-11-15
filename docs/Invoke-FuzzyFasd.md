@@ -38,6 +38,6 @@ This cmdlet does not accept any input.
 ### None
 This cmdlet does not generate any output.
 ## NOTES
-
+This function will be created if [fasdr](https://github.com/kelleyma49/fasdr) can be found by PowerShell.
 ## RELATED LINKS
 
