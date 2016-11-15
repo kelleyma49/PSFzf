@@ -146,14 +146,19 @@ function Invoke-Fzf {
             param($item)
 
             # check some common parameter names:
-            $str = $item.FullName
-            if ($str -eq $null) {
-                $str = $item.Name
-                if ($str -eq $null) {
-                    $str = $item.ToString()
-                }
-            }
-            if ($str -ne $null) {
+			if ($item -is [System.String]) {
+				$str = $item
+			} else {
+				# search through common properties:
+				$str = $item.FullName
+				if ($str -eq $null) {
+					$str = $item.Name
+					if ($str -eq $null) {
+						$str = $item.ToString()
+					}
+				}
+			}
+            if (![System.String]::IsNullOrWhiteSpace($str)) {
                 $process.StandardInput.WriteLine($str) 
             }
         }
