@@ -1,7 +1,7 @@
 $script:IsWindows = Get-Variable IsWindows -Scope Global -ErrorAction SilentlyContinue
 if ($script:IsWindows -eq $null -or $script:IsWindows.Value -eq $true) {	
 	$script:IsWindows = $true
-	$script:ShellCmd = 'cmd.exe /c "{0}"'	
+	$script:ShellCmd = 'cmd.exe /S /C {0}'	
 	$script:DefaultFileSystemCmd = @"
 dir /s/b "{0}"
 "@ 
