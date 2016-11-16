@@ -30,7 +30,7 @@ LONG DESCRIPTION
     Get-Process | Invoke-Fzf
     gci alias: | Invoke-Fzf
     
-  POWERSHELL COMPATIBILITY
+POWERSHELL COMPATIBILITY
 
     PSFzf has been tested on PowerShell version 5.
 
