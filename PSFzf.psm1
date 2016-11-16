@@ -28,7 +28,7 @@ function Invoke-Fzf {
 			[Alias("x")]
 			[switch]$Extended,
 			[Alias('e')]
-		  	[switch]$ExtendedExact,
+		  	[switch]$Exact,
 			[Alias('i')]
 		  	[switch]$CaseInsensitive,
 		  	[switch]$CaseSensitive,
@@ -66,9 +66,9 @@ function Invoke-Fzf {
             # Scripting
 			[Alias('q')]
 			[string]$Query,
-			[Alias('1')]
+			[Alias('s1')]
 			[switch]$Select1,
-			[Alias('0')]
+			[Alias('e0')]
 			[switch]$Exit0,
 			[Alias('f')]
 			[string]$Filter,
@@ -81,7 +81,7 @@ function Invoke-Fzf {
 		# process parameters: 
 		$arguments = ''
 		if ($Extended) 										{ $arguments += '--extended '}
-		if ($ExtendedExact) 								{ $arguments += '--extended-exact '}
+		if ($Exact) 			        					{ $arguments += '--exact '}
 		if ($CaseInsensitive) 								{ $arguments += '-i '}
 		if ($CaseSensitive) 								{ $arguments += '+i '}
 		if (![string]::IsNullOrWhiteSpace($Delimiter)) 		{ $arguments += "--delimiter=$Delimiter "}
