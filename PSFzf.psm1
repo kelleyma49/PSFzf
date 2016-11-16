@@ -1,13 +1,15 @@
 $script:IsWindows = Get-Variable IsWindows -Scope Global -ErrorAction SilentlyContinue
 if ($script:IsWindows -eq $null -or $script:IsWindows.Value -eq $true) {	
-	$script:IsWindows = $true	
+	$script:IsWindows = $true
+	$script:ShellCmd = 'cmd.exe /c "{0}"'	
 	$script:DefaultFileSystemCmd = @"
 dir /s/b "{0}"
 "@ 
 } else {
 	$script:IsWindows = $false
+	$script:ShellCmd = '/bin/sh -c "{0}"'
 	$script:DefaultFileSystemCmd = @"
-find {0} -path '*/\.*' -prune -o -type f -print -o -type l -print 2> /dev/null | sed s/^..//
+find {0} -path '*/\.*' -prune -o -type f -print -o -type l -print 2> /dev/null
 "@
 }
 
@@ -136,10 +138,22 @@ function Invoke-Fzf {
         $process.Start() | Out-Null
         $process.BeginOutputReadLine() | Out-Null
 
-        
+		$cleanup = [scriptblock] {
+			try {
+           		$process.StandardInput.Close() | Out-Null
+				$process.WaitForExit()
+			} catch {
+				# do nothing
+			}
+            Unregister-Event -SourceIdentifier $stdOutEvent.Name
+            $stdOutStr.ToString().Split([System.Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries) | ForEach-Object {
+				Write-Output $_
+			}			
+		}
 	}
 
 	Process {
+		$brokePipeline = $false
         $hasInput = $PSBoundParameters.ContainsKey('Input')
         
         $loopProcess = [scriptblock] {
@@ -168,10 +182,12 @@ function Invoke-Fzf {
 			if (!$hasInput) {
                 # optimization for filesystem provider:
                 if ($PWD.Provider.Name -eq 'FileSystem') {
-                    cmd.exe /c ($script:DefaultFileSystemCmd -f $PWD.Path) | ForEach-Object { 
+					$cmd = $script:ShellCmd -f ($script:DefaultFileSystemCmd -f $PWD.Path)
+					$cmd | out-file /Users/mikelley/shit.txt
+                    Invoke-Expression $cmd | ForEach-Object { 
                         $process.StandardInput.WriteLine($_) 
                         if ($process.HasExited) {
-                            break processExited
+                            throw "breaking inner pipeline"
                         }
 				    }
                 }
@@ -179,7 +195,7 @@ function Invoke-Fzf {
                     Get-ChildItem . -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
                         & $loopProcess -item $_ 
                         if ($process.HasExited) {
-                            break processExited
+                            throw "breaking inner pipeline"
                         }
 				    }
                 }
@@ -187,41 +203,26 @@ function Invoke-Fzf {
 			} else {
                 foreach ($i in $Input) {
                     & $loopProcess -item $i
-				}				
+					if ($process.HasExited) {
+						
+                            throw "breaking inner pipeline"
+					}
+				}
 			}
 			$process.StandardInput.Flush()
 		} catch {
 			# do nothing
+			$brokePipeline = $true
 		}
 
-        # dummy loop:
-        :processExited while ($false) {
-
-        }
-
-		# if process has exited, stop pipeline:
-        if ($process.HasExited) {
-			try {
-           		$process.StandardInput.Close() | Out-Null
-			} catch {
-				# do nothing
-			}
-            Unregister-Event -SourceIdentifier $stdOutEvent.Name
-            $stdOutStr.ToString().Split([System.Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries)
-            if ($ThrowException) {
-                throw "Exit"
-            } else {
-                break
-            }
-            
-        }
+		if ($brokePipeline) {
+			& $cleanup
+			throw "Stopped fzf pipeline input"
+		}
 	}
 
 	End {
-	    $process.StandardInput.Close() | Out-Null
-        $process.WaitForExit() | Out-Null
-        Unregister-Event -SourceIdentifier $stdOutEvent.Name | Out-Null
-        $stdOutStr.ToString().Split([System.Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries)
+		& $cleanup
 	}
 }
 
@@ -311,9 +312,9 @@ function Invoke-FzfPsReadlineHandler {
             switch ($providerName) {
                 # Get-ChildItem is way too slow - we optimize for the FileSystem provider by 
                 # using batch commands:
-                'FileSystem'    { cmd.exe /c ($script:DefaultFileSystemCmd -f $resolvedPath.ProviderPath) | Invoke-Fzf -Multi -ThrowException | % { $result += $_ } }
-                'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select Name -ExpandProperty Name | Invoke-Fzf -Multi -ThrowException | % { $result += $_ } }
-                $null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select FullName -ExpandProperty FullName | Invoke-Fzf -Multi -ThrowException | % { $result += $_ } }
+                'FileSystem'    { Invoke-Expression ($script:ShellCmd -f ($script:DefaultFileSystemCmd -f $resolvedPath.ProviderPath)) | Invoke-Fzf -Multi | % { $result += $_ } }
+                'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select Name -ExpandProperty Name | Invoke-Fzf -Multi | % { $result += $_ } }
+                $null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select FullName -ExpandProperty FullName | Invoke-Fzf -Multi | % { $result += $_ } }
                 Default         {}
             }
         }
