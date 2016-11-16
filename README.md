@@ -4,6 +4,8 @@
 
 PSFzf is a PowerShell module that wraps [fzf](https://github.com/junegunn/fzf), a fuzzy file finder for the command line.
 
+![](https://raw.github.com/kelleyma49/PSFzf/master/docs/PSFzfExample.gif)
+
 # Helper Functions
 In addition to its core function [Invoke-Fzf](docs/Invoke-Fzf.md), PSFzf includes a set of useful functions and aliases:
 
