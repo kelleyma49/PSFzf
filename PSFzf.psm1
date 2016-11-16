@@ -302,7 +302,7 @@ function Invoke-FzfPsReadlineHandler {
     try 
     {
         if ([string]::IsNullOrWhiteSpace($currentPath)) {
-            Invoke-Fzf -Multi -ThrowException | % { $result += $_ }
+            Invoke-Fzf -Multi | % { $result += $_ }
         } else {
             $resolvedPath = Resolve-Path $currentPath -ErrorAction SilentlyContinue
             $providerName = $null

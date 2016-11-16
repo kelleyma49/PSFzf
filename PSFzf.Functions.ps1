@@ -1,7 +1,12 @@
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyEdit()
 {
-    $files = Invoke-Fzf -Multi
+    $files = @()
+    try {
+        Invoke-Fzf -Multi | % { $files += """$_""" }
+    } catch {
+        
+    }
 
     $editor = $env:EDITOR
     if ($editor -eq $null) {
@@ -22,7 +27,7 @@ if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
     function Invoke-FuzzyFasd() {
         $result = $null
         try {
-            Get-Frecents | % { $_.FullPath } | Invoke-Fzf -ReverseInput -NoSort -ThrowException | % { $result = $_ }
+            Get-Frecents | % { $_.FullPath } | Invoke-Fzf -ReverseInput -NoSort | % { $result = $_ }
         } catch {
             
         }
@@ -37,7 +42,7 @@ if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
     function Invoke-FuzzyFasd() {
         $result = $null
         try {
-            fasd -l | Invoke-Fzf -ReverseInput -NoSort -ThrowException | % { $result = $_ }
+            fasd -l | Invoke-Fzf -ReverseInput -NoSort | % { $result = $_ }
         } catch {
             
         }
@@ -84,7 +89,7 @@ if (Get-Command Search-Everything -ErrorAction SilentlyContinue) {
     function Set-LocationFuzzyEverything() {
         $result = $null
         try {
-            Search-Everything | Invoke-Fzf -ThrowException | % { $result = $_ }
+            Search-Everything | Invoke-Fzf | % { $result = $_ }
         } catch {
             
         }
