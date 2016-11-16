@@ -74,8 +74,7 @@ function Invoke-Fzf {
 			[string]$Filter,
 			
 		  	[Parameter(ValueFromPipeline=$True)]
-            [object[]]$Input,
-            [switch]$ThrowException # work around for ReadlineHandler
+            [object[]]$Input
     )
 
 	Begin {
