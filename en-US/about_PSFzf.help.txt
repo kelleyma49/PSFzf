@@ -32,12 +32,12 @@ LONG DESCRIPTION
     
   POWERSHELL COMPATIBILITY
 
-    PSReadline has been tested on PowerShell version 5.
+    PSFzf has been tested on PowerShell version 5.
 
 FEEDBACK
 
     https://github.com/kelleyma49/PSFzf
 
-CONTRIBUTING TO PSREADLINE
+CONTRIBUTING TO PSFZF
 
     Feel free to submit a pull request or submit feedback on the github page.
