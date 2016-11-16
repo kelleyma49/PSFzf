@@ -8,16 +8,25 @@ function Invoke-FuzzyEdit()
         
     }
 
-    $editor = $env:EDITOR
-    if ($editor -eq $null) {
-        if (!$IsWindows) {
-            $editor = 'vim'
-        } else {
-            $editor = 'code'
+    # HACK to check to see if we're running under Visual Studio Code.
+    # If so, reuse Visual Studio Code currently open windows:
+    $editorOptions = ''
+    if ($env:VSCODE_PID -ne $null) {
+        $editor = 'code'
+        $editorOptions += '--reuse-window'
+    } else {
+        $editor = $env:EDITOR
+        if ($editor -eq $null) {
+            if (!$IsWindows) {
+                $editor = 'vim'
+            } else {
+                $editor = 'code'
+            }
         }
     }
+    
     if ($files -ne $null) {
-        Invoke-Expression -Command ("$editor {0}" -f ($files -join ' ')) 
+        Invoke-Expression -Command ("$editor $editorOptions {0}" -f ($files -join ' ')) 
     }
 }
 Set-Alias -Name fe -Value Invoke-FuzzyEdit
