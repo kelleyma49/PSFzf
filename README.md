@@ -19,6 +19,8 @@ To edit a file:
 Get-ChildItem . -Recurse | where { -not $_.PSIsContainer } | Invoke-Fzf | % { notepad $_ }
 ```
 
+For day-to-day usage, see the [helper functions included with this module](https://github.com/kelleyma49/PSFzf#helper-functions).
+
 ## Note
 If you make your selection before fzf has finished receiving and parsing from standard out, you might see a ```Stopped pipeline input``` error.  This is because PSFzf must throw an exception to cancel pipeline processing.  If you pipe the output of Invoke-Fzf to whatever action you wish to do based on your selection, the action will occur.  The following will not work if the pipeline is cancelled:
 
@@ -35,12 +37,15 @@ Get-ChildItem . -Recurse | where { $_.PSIsContainer } | Invoke-Fzf | Set-Locatio
 # Helper Functions
 In addition to its core function [Invoke-Fzf](docs/Invoke-Fzf.md), PSFzf includes a set of useful functions and aliases:
 
-1. [Invoke-FuzzyEdit](docs/Invoke-FuzzyEdit.md)
-2. [Invoke-FuzzyFasd](docs/Invoke-FuzzyFasd.md)
-3. [Invoke-FuzzyHistory](docs/Invoke-FuzzyHistory.md)
-4. [Invoke-FuzzyKillProcess](docs/Invoke-FuzzyKillProcess.md)
-5. [Invoke-FuzzySetLocation](docs/Invoke-FuzzySetLocation.md)
-6. [Set-LocationFuzzyEverything](docs/Set-LocationFuzzyEverything.md)
+
+| Function                                                             | Alias      |
+| ---------------------------------------------------------------------| ---------- |
+| [`Invoke-FuzzyEdit`](docs/Invoke-FuzzyEdit.md)                       | `fe`       |
+| [`Invoke-FuzzyFasd`](docs/Invoke-FuzzyFasd.md)                       | `ff`       |
+| [`Invoke-FuzzyHistory`](docs/Invoke-FuzzyHistory.md)                 | `fh`       |
+| [`Invoke-FuzzyKillProcess`](docs/Invoke-FuzzyKillProcess.md)         | `fkill`    |
+| [`Invoke-FuzzySetLocation`](docs/Invoke-FuzzySetLocation.md)         | `fd`       |
+| [`Set-LocationFuzzyEverything`](docs/Set-LocationFuzzyEverything.md) | `cde`      |
 
 # Prerequisites
 Follow the [installation instructions for fzf] (https://github.com/junegunn/fzf#installation) before installing PSFzf.  PSFzf will run `Get-Command` to find `fzf` in your path.  
