@@ -27,7 +27,7 @@ Press <kbd>CTRL+T</kbd> to start PSFzf.  PSFzf will parse the current token and 
 Multiple items can be selected in PSFzf.  If more than one it is selected by the user, the results are returned as a comma separated list.  Results are properly quoted if they contain whitespace.
 
 ## Using within a Pipeline
-`Invoke-Fzf` works with input from a pipeline.  However, if you make your selection before fzf has finished receiving and parsing from standard in, you might see a ```Stopped pipeline input``` error.  This is because PSFzf must throw an exception to cancel pipeline processing.  If you pipe the output of Invoke-Fzf to whatever action you wish to do based on your selection, the action will occur.  The following will not work if the pipeline is cancelled:
+`Invoke-Fzf` works with input from a pipeline.  However, if you make your selection before fzf has finished receiving and parsing from standard in, you might see a ```Stopped pipeline input``` error.  This is because PSFzf must throw an exception to cancel pipeline processing.  If you pipe the output of `Invoke-Fzf` to whatever action you wish to do based on your selection, the action will occur.  The following will not work if the pipeline is cancelled:
 
 ```powershell
 Set-Location (Get-ChildItem . -Recurse | where { $_.PSIsContainer } | Invoke-Fzf)
