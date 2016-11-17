@@ -46,7 +46,7 @@ In addition to its core function [Invoke-Fzf](docs/Invoke-Fzf.md), PSFzf include
 | Function                                                             | Alias      |
 | ---------------------------------------------------------------------| ---------- |
 | [`Invoke-FuzzyEdit`](docs/Invoke-FuzzyEdit.md)                       | `fe`       |
-| [`Invoke-FuzzyFasd`](docs/Invoke-FuzzyFasd.md)                       | `ff`       |
+| [`Invoke-FuzzyFasd`](docs/Invoke-FuzzyFasd.md)                       | `ff`       | 
 | [`Invoke-FuzzyHistory`](docs/Invoke-FuzzyHistory.md)                 | `fh`       |
 | [`Invoke-FuzzyKillProcess`](docs/Invoke-FuzzyKillProcess.md)         | `fkill`    |
 | [`Invoke-FuzzySetLocation`](docs/Invoke-FuzzySetLocation.md)         | `fd`       |
@@ -67,3 +67,7 @@ PSFzf has been tested with the latest PowerShell 6.0 alpha.
 
 # Installation
 PSFzf is available on the [PowerShell Gallery](https://www.powershellgallery.com/packages/PSFzf).  PSReadline should be imported before PSFzf as PSFzf registers <kbd>CTRL+T</kbd> as a PSReadline key handler.
+
+[`Invoke-FuzzyFasd`](docs/Invoke-FuzzyFasd.md) requires [Fasdr] (https://github.com/kelleyma49/fasdr) to be previously installed.
+
+[`Set-LocationFuzzyEverything`](docs/Set-LocationFuzzyEverything.md) works only under Windows and requires [PSEverything](https://www.powershellgallery.com/packages/PSEverything) to be previously installed.
