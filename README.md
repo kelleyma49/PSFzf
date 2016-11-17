@@ -21,6 +21,11 @@ Get-ChildItem . -Recurse | where { -not $_.PSIsContainer } | Invoke-Fzf | % { no
 
 For day-to-day usage, see the [helper functions included with this module](https://github.com/kelleyma49/PSFzf#helper-functions).
 
+## PSReadline Integration
+Press <kbd>CTRL+T</kbd> to start PSFzf.  PSFzf will parse the current token and use that as the starting path to search from.  If current token is empty, or the token isn't a valid path, PSFzf will search below the current working directory.  
+
+Multiple items can be selected in PSFzf.  If more than one it is selected by the user, the results are returned as a comma separated list.  Results are properly quoted if they contain whitespace.
+
 ## Note
 If you make your selection before fzf has finished receiving and parsing from standard out, you might see a ```Stopped pipeline input``` error.  This is because PSFzf must throw an exception to cancel pipeline processing.  If you pipe the output of Invoke-Fzf to whatever action you wish to do based on your selection, the action will occur.  The following will not work if the pipeline is cancelled:
 
@@ -62,9 +67,3 @@ PSFzf has been tested with the latest PowerShell 6.0 alpha.
 
 # Installation
 PSFzf is available on the [PowerShell Gallery](https://www.powershellgallery.com/packages/PSFzf).  PSReadline should be imported before PSFzf as PSFzf registers <kbd>CTRL+T</kbd> as a PSReadline key handler.
-
-# Usage
-Press <kbd>CTRL+T</kbd> to start PSFzf.  PSFzf will parse the current token and use that as the starting path to search from.  If current token is empty, or the token isn't a valid path, PSFzf will search below the current working directory.  
-
-Multiple items can be selected in PSFzf.  If more than one it is selected by the user, the results are returned as a comma separated list.  Results are properly quoted if they contain whitespace.
-
