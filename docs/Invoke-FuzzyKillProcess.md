@@ -16,7 +16,7 @@ Invoke-FuzzyEdit
 Runs Stop-Process on all processes selected by the the user in fzf.
 ## EXAMPLES
 
-### Launch Invoke-FuzzyKilLProcess
+### Launch Invoke-FuzzyKillProcess
 	
 Launches fzf and stops the selected processes.
 
