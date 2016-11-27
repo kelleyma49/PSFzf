@@ -379,7 +379,7 @@ function SetPsReadlineShortcut($Chord,[switch]$Override,$BriefDesc,$Desc,[script
 	}
 
 	if ((Get-PSReadlineKeyHandler -Bound | Where Key -eq $Chord) -and -not $Override) {
-		Write-Warning ("PSReadline chord {0} already in use - keyboard handler not installed" -f $Chord)
+		Write-Warning ("PSReadline chord {0} already in use - keyboard handler not installed.  To bind your own keyboard chord, use the -ArgumentList parameter when you call Import-Module." -f $Chord)
 	} else {
 		$script:PSReadlineHandlerChords += $Chord
 		Set-PSReadlineKeyHandler -Key $Chord -Description $Desc -BriefDescription $BriefDesc -ScriptBlock $scriptBlock
