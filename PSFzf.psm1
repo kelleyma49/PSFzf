@@ -372,7 +372,7 @@ function Invoke-FzfPsReadlineHandlerHistory {
 	}
 }
 
-function SetPsReadlineShortcut($Chord,$BriefDesc,$Desc,[scriptblock]$scriptBlock,[switch]$Override)
+function SetPsReadlineShortcut($Chord,[switch]$Override,$BriefDesc,$Desc,[scriptblock]$scriptBlock)
 {
 	if ([string]::IsNullOrEmpty($Chord)) {
 		return
@@ -415,8 +415,8 @@ function FindFzf()
     }
 }
 if (Get-Module -ListAvailable -Name PSReadline) { 
-	SetPsReadlineShortcut "$PSReadlineChordProvider" 'Fzf Provider Select' 'Run fzf for current provider based on current token' { Invoke-FzfPsReadlineHandlerProvider }
-	SetPsReadlineShortcut "$PSReadlineChordReverseHistory" 'Fzf Reverse History Select' 'Run fzf to search through PSReadline history' { Invoke-FzfPsReadlineHandlerHistory } -Override
+	SetPsReadlineShortcut "$PSReadlineChordProvider" -Override:$PSBoundParameters.ContainsKey('PSReadlineChordProvider') 'Fzf Provider Select' 'Run fzf for current provider based on current token' { Invoke-FzfPsReadlineHandlerProvider }
+	SetPsReadlineShortcut "$PSReadlineChordReverseHistory" -Override:$PSBoundParameters.ContainsKey('PSReadlineChordReverseHistory') 'Fzf Reverse History Select' 'Run fzf to search through PSReadline history' { Invoke-FzfPsReadlineHandlerHistory }
 } else {
 	Write-Warning "PSReadline module not found - keyboard handlers not installed" 
 }
