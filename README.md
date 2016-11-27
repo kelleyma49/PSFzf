@@ -22,10 +22,20 @@ Get-ChildItem . -Recurse | where { -not $_.PSIsContainer } | Invoke-Fzf | % { no
 For day-to-day usage, see the [helper functions included with this module](https://github.com/kelleyma49/PSFzf#helper-functions).
 
 ## PSReadline Integration
-Press <kbd>CTRL+T</kbd> to start PSFzf.  PSFzf will parse the current token and use that as the starting path to search from.  If current token is empty, or the token isn't a valid path, PSFzf will search below the current working directory.  
+### Select Current Provider Path (default chord: <kbd>CTRL+T</kbd>) 
+Press <kbd>CTRL+T</kbd> to start PSFzf to select provider paths.  PSFzf will parse the current token and use that as the starting path to search from.  If current token is empty, or the token isn't a valid path, PSFzf will search below the current working directory.  
 
-Multiple items can be selected in PSFzf.  If more than one it is selected by the user, the results are returned as a comma separated list.  Results are properly quoted if they contain whitespace.
+Multiple items can be selected.  If more than one it is selected by the user, the results are returned as a comma separated list.  Results are properly quoted if they contain whitespace.
 
+### Reverse Search Through PSReadline History (default chord: <kbd>CTRL+R</kbd>)
+
+PSFzf does not override <kbd>CTRL+R</kbd> by default.  To confirm that you want to override PSReadline's chord binding, you must pass in the chord when you import the module.  For example:
+
+```powershell
+Import-Module PSFzf -ArgumentList 'Ctrl+T','Ctrl+R' # or replace these strings with your preferred bindins
+``` 
+
+Press <kbd>CTRL+R</kbd> to start PSFzf to select a command in the command history saved by PSReadline.  PSFzf will insert the command into the current line, but it will not execute the command.
 ## Using within a Pipeline
 `Invoke-Fzf` works with input from a pipeline.  However, if you make your selection before fzf has finished receiving and parsing from standard in, you might see a ```Stopped pipeline input``` error.  This is because PSFzf must throw an exception to cancel pipeline processing.  If you pipe the output of `Invoke-Fzf` to whatever action you wish to do based on your selection, the action will occur.  The following will not work if the pipeline is cancelled:
 
