@@ -36,7 +36,7 @@ PSFzf does not override <kbd>CTRL+R</kbd> by default.  To confirm that you want 
 The first option is to remove the handler from PSReadline.  For example:
 
 ```powershell
-Remove-PSReadlineKeyHandler CTRL+R
+Remove-PSReadlineKeyHandler 'CTRL+R'
 Import-Module PSFzf
 ```
 
