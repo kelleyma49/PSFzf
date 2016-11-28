@@ -1,6 +1,7 @@
 param(
 	[parameter(Position=0,Mandatory=$false)][string]$PSReadlineChordProvider = 'Ctrl+T',
-	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordReverseHistory = 'Ctrl+R')
+	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordReverseHistory = 'Ctrl+R',
+	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordSetLocation = 'Alt+C')
 
 $script:IsWindows = Get-Variable IsWindows -Scope Global -ErrorAction SilentlyContinue
 if ($script:IsWindows -eq $null -or $script:IsWindows.Value -eq $true) {	
@@ -372,6 +373,18 @@ function Invoke-FzfPsReadlineHandlerHistory {
 	}
 }
 
+function Invoke-FzfPsReadlineHandlerSetLocation {
+	try 
+    {
+		Get-ChildItem . -Recurse -ErrorAction SilentlyContinue -Directory | Invoke-Fzf | % { Set-Location $_ }
+    } 
+	catch 
+	{
+		# catch custom exception
+	}
+	[Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+}
+
 function SetPsReadlineShortcut($Chord,[switch]$Override,$BriefDesc,$Desc,[scriptblock]$scriptBlock)
 {
 	if ([string]::IsNullOrEmpty($Chord)) {
@@ -417,6 +430,7 @@ function FindFzf()
 if (Get-Module -ListAvailable -Name PSReadline) { 
 	SetPsReadlineShortcut "$PSReadlineChordProvider" -Override:$PSBoundParameters.ContainsKey('PSReadlineChordProvider') 'Fzf Provider Select' 'Run fzf for current provider based on current token' { Invoke-FzfPsReadlineHandlerProvider }
 	SetPsReadlineShortcut "$PSReadlineChordReverseHistory" -Override:$PSBoundParameters.ContainsKey('PSReadlineChordReverseHistory') 'Fzf Reverse History Select' 'Run fzf to search through PSReadline history' { Invoke-FzfPsReadlineHandlerHistory }
+	SetPsReadlineShortcut "$PSReadlineChordSetLocation" -Override:$PSBoundParameters.ContainsKey('PSReadlineChordSetLocation') 'Fzf Set Location' 'Run fzf to select directory to set current location' { Invoke-FzfPsReadlineHandlerSetLocation }
 } else {
 	Write-Warning "PSReadline module not found - keyboard handlers not installed" 
 }
