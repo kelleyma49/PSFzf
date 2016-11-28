@@ -84,13 +84,7 @@ AliasesToExport = '*'
 # FileList = @()
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess
-PrivateData = @{
-    PSData = @{
-        Tags = 'fzf'
-        LicenseUri = 'https://github.com/kelleyma49/PSFzf/blob/master/LICENSE'
-        ProjectUri = 'https://github.com/kelleyma49/PSFzf'
-    }
-}
+# PrivateData = ''
 
 # HelpInfo URI of this module
 # HelpInfoURI = ''
