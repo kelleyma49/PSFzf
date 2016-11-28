@@ -45,6 +45,10 @@ The other option is to pass in the chord when you import the module.  For exampl
 ```powershell
 Import-Module PSFzf -ArgumentList 'Ctrl+T','Ctrl+R' # or replace these strings with your preferred bindings
 ``` 
+### Set-Location Based on Selected Directory (default chord: <kbd>ALT+C</kbd>)
+
+Press <kbd>ALT+C</kbd> to start PSFzf to select a directory.  `Set-Location` will be called with the selected directory.
+
 
 ## Using within a Pipeline
 `Invoke-Fzf` works with input from a pipeline.  However, if you make your selection before fzf has finished receiving and parsing from standard in, you might see a ```Stopped pipeline input``` error.  This is because PSFzf must throw an exception to cancel pipeline processing.  If you pipe the output of `Invoke-Fzf` to whatever action you wish to do based on your selection, the action will occur.  The following will not work if the pipeline is cancelled:
