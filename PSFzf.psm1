@@ -1,7 +1,8 @@
 param(
 	[parameter(Position=0,Mandatory=$false)][string]$PSReadlineChordProvider = 'Ctrl+T',
 	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordReverseHistory = 'Ctrl+R',
-	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordSetLocation = 'Alt+C')
+	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordSetLocation = 'Alt+C',
+	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordReverseHistoryArgs = 'Alt+A')
 
 $script:IsWindows = Get-Variable IsWindows -Scope Global -ErrorAction SilentlyContinue
 if ($script:IsWindows -eq $null -or $script:IsWindows.Value -eq $true) {	
@@ -373,6 +374,39 @@ function Invoke-FzfPsReadlineHandlerHistory {
 	}
 }
 
+function TokenizeFromPipeline {
+		param([Parameter(ValueFromPipeline=$True)][object[]]$Input)
+
+		Process {
+			[System.Management.Automation.PsParser]::Tokenize($Input, [ref] $null)
+		}
+}
+function Invoke-FzfPsReadlineHandlerHistoryArgs {
+		
+	try 
+    {
+		$line = $null
+		$cursor = $null
+		[Microsoft.PowerShell.PSConsoleReadline]::GetBufferState([ref]$line, [ref]$cursor)
+		$line = $line.Insert($cursor,"{}") # add marker for fzf
+
+		Get-Content (Get-PSReadlineOption).HistorySavePath |
+			% { [System.Management.Automation.PsParser]::Tokenize($_, [ref] $null) } |
+			Where-Object {$_.type -eq "commandargument" -or $_.type -eq "string"} | ForEach-Object { $_.Content } | 
+				Invoke-Fzf -NoSort -ReverseInput -Preview "echo $line" -PreviewWindow "up:20%" | ForEach-Object { $result = $_ }
+	}
+	catch 
+	{
+		# catch custom exception
+	}
+	if (-not [string]::IsNullOrEmpty($result)) {
+		if ($result.Contains(" ") -or $result.Contains("`t")) {
+			$result = "'{0}'" -f $result.Replace("'","''")
+		}
+		[Microsoft.PowerShell.PSConsoleReadLine]::Replace($cursor,0,$result)
+	}
+}
+
 function Invoke-FzfPsReadlineHandlerSetLocation {
 	try 
     {
@@ -431,6 +465,7 @@ if (Get-Module -ListAvailable -Name PSReadline) {
 	SetPsReadlineShortcut "$PSReadlineChordProvider" -Override:$PSBoundParameters.ContainsKey('PSReadlineChordProvider') 'Fzf Provider Select' 'Run fzf for current provider based on current token' { Invoke-FzfPsReadlineHandlerProvider }
 	SetPsReadlineShortcut "$PSReadlineChordReverseHistory" -Override:$PSBoundParameters.ContainsKey('PSReadlineChordReverseHistory') 'Fzf Reverse History Select' 'Run fzf to search through PSReadline history' { Invoke-FzfPsReadlineHandlerHistory }
 	SetPsReadlineShortcut "$PSReadlineChordSetLocation" -Override:$PSBoundParameters.ContainsKey('PSReadlineChordSetLocation') 'Fzf Set Location' 'Run fzf to select directory to set current location' { Invoke-FzfPsReadlineHandlerSetLocation }
+	SetPsReadlineShortcut "$PSReadlineChordReverseHistoryArgs" -Override:$PSBoundParameters.ContainsKey('PSReadlineChordReverseHistoryArgs') 'Fzf Reverse History Arg Select' 'Run fzf to search through command line arguments in PSReadline history' { Invoke-FzfPsReadlineHandlerHistoryArgs }
 } else {
 	Write-Warning "PSReadline module not found - keyboard handlers not installed" 
 }
