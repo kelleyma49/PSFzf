@@ -381,8 +381,7 @@ function TokenizeFromPipeline {
 			[System.Management.Automation.PsParser]::Tokenize($Input, [ref] $null)
 		}
 }
-function Invoke-FzfPsReadlineHandlerHistoryArgs {
-		
+function Invoke-FzfPsReadlineHandlerHistoryArgs {	
 	try 
     {
 		$line = $null
@@ -392,7 +391,7 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 
 		Get-Content (Get-PSReadlineOption).HistorySavePath |
 			% { [System.Management.Automation.PsParser]::Tokenize($_, [ref] $null) } |
-			Where-Object {$_.type -eq "commandargument" -or $_.type -eq "string"} | ForEach-Object { $_.Content } | 
+			Where-Object {$_.type -eq "commandargument" -or $_.type -eq "string"} | ForEach-Object { $_.Content } | Sort-Object -Unique |
 				Invoke-Fzf -NoSort -ReverseInput -Preview "echo $line" -PreviewWindow "up:20%" | ForEach-Object { $result = $_ }
 	}
 	catch 
@@ -400,6 +399,7 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 		# catch custom exception
 	}
 	if (-not [string]::IsNullOrEmpty($result)) {
+		# add quotes:
 		if ($result.Contains(" ") -or $result.Contains("`t")) {
 			$result = "'{0}'" -f $result.Replace("'","''")
 		}
