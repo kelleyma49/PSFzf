@@ -388,10 +388,12 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 		$cursor = $null
 		[Microsoft.PowerShell.PSConsoleReadline]::GetBufferState([ref]$line, [ref]$cursor)
 		$line = $line.Insert($cursor,"{}") # add marker for fzf
-
+        
+        $contentTable = @{}
 		Get-Content (Get-PSReadlineOption).HistorySavePath |
 			% { [System.Management.Automation.PsParser]::Tokenize($_, [ref] $null) } |
-			Where-Object {$_.type -eq "commandargument" -or $_.type -eq "string"} | ForEach-Object { $_.Content } | Sort-Object -Unique |
+			Where-Object {$_.type -eq "commandargument" -or $_.type -eq "string"} | 
+                ForEach-Object { if (!$contentTable.ContainsKey($_.Content)) { $_.Content ; $contentTable[$_.Content] = $true } } |
 				Invoke-Fzf -NoSort -ReverseInput -Preview "echo $line" -PreviewWindow "up:20%" | ForEach-Object { $result = $_ }
 	}
 	catch 
