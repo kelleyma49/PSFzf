@@ -374,13 +374,6 @@ function Invoke-FzfPsReadlineHandlerHistory {
 	}
 }
 
-function TokenizeFromPipeline {
-		param([Parameter(ValueFromPipeline=$True)][object[]]$Input)
-
-		Process {
-			[System.Management.Automation.PsParser]::Tokenize($Input, [ref] $null)
-		}
-}
 function Invoke-FzfPsReadlineHandlerHistoryArgs {	
 	try 
     {
@@ -410,15 +403,19 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 }
 
 function Invoke-FzfPsReadlineHandlerSetLocation {
+    $result = $null
 	try 
     {
-		Get-ChildItem . -Recurse -ErrorAction SilentlyContinue -Directory | Invoke-Fzf | % { Set-Location $_ }
+		Get-ChildItem . -Recurse -ErrorAction SilentlyContinue -Directory | Invoke-Fzf | % { $result = $_ }
     } 
 	catch 
 	{
 		# catch custom exception
 	}
-	[Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+    if (-not [string]::IsNullOrEmpty($result)) {
+        Set-Location $result
+        [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+    }
 }
 
 function SetPsReadlineShortcut($Chord,[switch]$Override,$BriefDesc,$Desc,[scriptblock]$scriptBlock)
