@@ -96,7 +96,7 @@ PSFzf has been tested with the latest PowerShell 6.0 alpha.
 PSFzf has not been tested under Linux.
 
 # Installation
-PSFzf is available on the [PowerShell Gallery](https://www.powershellgallery.com/packages/PSFzf).  PSReadline should be imported before PSFzf as PSFzf registers <kbd>CTRL+T</kbd> as a PSReadline key handler.
+PSFzf is available on the [PowerShell Gallery](https://www.powershellgallery.com/packages/PSFzf).  PSReadline should be imported before PSFzf as PSFzf registers PSReadline key handlers listed in the [PSReadline integration section](https://github.com/kelleyma49/PSFzf#psreadline-integration).
 
 [`Invoke-FuzzyFasd`](docs/Invoke-FuzzyFasd.md) requires [Fasdr] (https://github.com/kelleyma49/fasdr) to be previously installed under Windows.  Other platforms require [Fasd](https://github.com/clvv/fasd) to be installed.
 
