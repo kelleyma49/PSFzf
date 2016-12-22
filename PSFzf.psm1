@@ -188,8 +188,7 @@ function Invoke-Fzf {
                 # optimization for filesystem provider:
                 if ($PWD.Provider.Name -eq 'FileSystem') {
 					$cmd = $script:ShellCmd -f ($script:DefaultFileSystemCmd -f $PWD.Path)
-					$cmd | out-file /Users/mikelley/shit.txt
-                    Invoke-Expression $cmd | ForEach-Object { 
+					Invoke-Expression $cmd | ForEach-Object { 
                         $process.StandardInput.WriteLine($_) 
                         if ($process.HasExited) {
                             throw "breaking inner pipeline"
