@@ -170,28 +170,7 @@ function Invoke-Fzf {
 		$brokePipeline = $false
         $hasInput = $PSBoundParameters.ContainsKey('Input')
         
-        $loopProcess = [scriptblock] {
-            param($item)
-
-            # check some common parameter names:
-			if ($item -is [System.String]) {
-				$str = $item
-			} else {
-				# search through common properties:
-				$str = $item.FullName
-				if ($str -eq $null) {
-					$str = $item.Name
-					if ($str -eq $null) {
-						$str = $item.ToString()
-					}
-				}
-			}
-            if (![System.String]::IsNullOrWhiteSpace($str)) {
-                $process.StandardInput.WriteLine($str) 
-            }
-        }
-
-		try {
+        try {
 			# handle no piped input:
 			if (!$hasInput) {
                 # optimization for filesystem provider:
@@ -206,7 +185,23 @@ function Invoke-Fzf {
                 }
                 else {
                     Get-ChildItem . -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
-                        & $loopProcess -item $_ 
+                        $item = $_ 
+                        if ($item -is [System.String]) {
+                            $str = $item
+                        } else {
+                            # search through common properties:
+                            $str = $item.FullName
+                            if ($str -eq $null) {
+                                $str = $item.Name
+                                if ($str -eq $null) {
+                                    $str = $item.ToString()
+                                }
+                            }
+                        }
+                        if (![System.String]::IsNullOrWhiteSpace($str)) {
+                            $process.StandardInput.WriteLine($str) 
+                        }
+
                         if ($processHasExited.flag) {
                             throw "breaking inner pipeline"
                         }
@@ -214,9 +209,23 @@ function Invoke-Fzf {
                 }
                  
 			} else {
-                foreach ($i in $Input) {
-                    & $loopProcess -item $i
-					if ($processHasExited.flag) {
+                foreach ($item in $Input) {
+                    if ($item -is [System.String]) {
+				    $str = $item
+                    } else {
+                        # search through common properties:
+                        $str = $item.FullName
+                        if ($str -eq $null) {
+                            $str = $item.Name
+                            if ($str -eq $null) {
+                                $str = $item.ToString()
+                            }
+                        }
+                    }
+                    if (![System.String]::IsNullOrWhiteSpace($str)) {
+                        $process.StandardInput.WriteLine($str) 
+                    }
+                    if ($processHasExited.flag) {
                         throw "breaking inner pipeline"
 					}
 				}
