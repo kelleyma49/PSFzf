@@ -131,14 +131,23 @@ function Invoke-Fzf {
         $stdOutStr = New-Object -TypeName System.Text.StringBuilder
 
         # Adding event handers for stdout:
-        $scripBlock = {
+        $scriptBlockRecv = {
             if (! [String]::IsNullOrEmpty($EventArgs.Data)) {
                 $Event.MessageData.AppendLine($EventArgs.Data)
             }
         }
         $stdOutEvent = Register-ObjectEvent -InputObject $process `
-        -Action $scripBlock -EventName 'OutputDataReceived' `
+        -Action $scriptBlockRecv -EventName 'OutputDataReceived' `
         -MessageData $stdOutStr
+
+        $processHasExited = new-object psobject -property @{flag = $false}
+        # register on exit:
+        $scriptBlockExited = {
+            $Event.MessageData.flag = $true
+        }
+        $exitedEvent = Register-ObjectEvent -InputObject $process `
+        -Action $scriptBlockExited -EventName 'Exited' `
+        -MessageData $processHasExited
 
         $process.Start() | Out-Null
         $process.BeginOutputReadLine() | Out-Null
@@ -190,7 +199,7 @@ function Invoke-Fzf {
 					$cmd = $script:ShellCmd -f ($script:DefaultFileSystemCmd -f $PWD.Path)
 					Invoke-Expression $cmd | ForEach-Object { 
                         $process.StandardInput.WriteLine($_) 
-                        if ($process.HasExited) {
+                        if ($processHasExited.flag) {
                             throw "breaking inner pipeline"
                         }
 				    }
@@ -198,7 +207,7 @@ function Invoke-Fzf {
                 else {
                     Get-ChildItem . -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
                         & $loopProcess -item $_ 
-                        if ($process.HasExited) {
+                        if ($processHasExited.flag) {
                             throw "breaking inner pipeline"
                         }
 				    }
@@ -207,9 +216,8 @@ function Invoke-Fzf {
 			} else {
                 foreach ($i in $Input) {
                     & $loopProcess -item $i
-					if ($process.HasExited) {
-						
-                            throw "breaking inner pipeline"
+					if ($processHasExited.flag) {
+                        throw "breaking inner pipeline"
 					}
 				}
 			}
