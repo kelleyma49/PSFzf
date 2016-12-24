@@ -14,6 +14,13 @@ Invoke-FuzzyGitStatus
 
 ## DESCRIPTION
 Allows the user to select files listed from the output of the `git status` function executed in the current directory.
+
+These keyboard shortcuts are supported:
+
+- <kbd>CTRL+A</kbd> selects all items
+- <kbd>CTRL+D</kbd> deselects all items 
+- <kbd>CTRL+T</kbd> toggles the selection state of all items 
+ 
 ## EXAMPLES
 
 ### Launch Invoke-FuzzyGitStatus

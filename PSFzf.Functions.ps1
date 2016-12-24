@@ -118,7 +118,7 @@ if (Get-Command Search-Everything -ErrorAction SilentlyContinue) {
     Set-Alias -Name cde -Value Set-LocationFuzzyEverything
 }
 
-if (Get-Command git.exe -ErrorAction SilentlyContinue) {
+if (Get-Command git -ErrorAction SilentlyContinue) {
     #.ExternalHelp PSFzf.psm1-help.xml
     function Invoke-FuzzyGitStatus() {
         $result = @()
