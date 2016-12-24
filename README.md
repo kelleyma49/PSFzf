@@ -73,7 +73,8 @@ In addition to its core function [Invoke-Fzf](docs/Invoke-Fzf.md), PSFzf include
 | Function                                                             | Alias      |
 | ---------------------------------------------------------------------| ---------- |
 | [`Invoke-FuzzyEdit`](docs/Invoke-FuzzyEdit.md)                       | `fe`       |
-| [`Invoke-FuzzyFasd`](docs/Invoke-FuzzyFasd.md)                       | `ff`       | 
+| [`Invoke-FuzzyFasd`](docs/Invoke-FuzzyFasd.md)                       | `ff`       |
+| [`Invoke-FuzzyGitStatus`](docs/Invoke-FuzzyGitStatus.md)             | `fgs`      | 
 | [`Invoke-FuzzyHistory`](docs/Invoke-FuzzyHistory.md)                 | `fh`       |
 | [`Invoke-FuzzyKillProcess`](docs/Invoke-FuzzyKillProcess.md)         | `fkill`    |
 | [`Invoke-FuzzySetLocation`](docs/Invoke-FuzzySetLocation.md)         | `fd`       |
