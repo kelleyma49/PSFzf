@@ -51,6 +51,8 @@ function Invoke-Fzf {
 			[Alias('m')]
 		  	[switch]$Multi,
 			[switch]$NoMouse,
+            [string]
+		  	$Bind,
 			[switch]$Cycle,
 			[switch]$NoHScroll,
 
@@ -96,6 +98,7 @@ function Invoke-Fzf {
 		if (![string]::IsNullOrWhiteSpace($Tiebreak))		{ $arguments += "--tiebreak=$Tiebreak "}
 		if ($Multi) 										{ $arguments += '--multi '}
 		if ($NoMouse)					 					{ $arguments += '--no-mouse '}
+        if (![string]::IsNullOrWhiteSpace($Bind))		    { $arguments += "--bind=$Bind "}
 		if ($Reverse)					 					{ $arguments += '--reverse '}
 		if ($Cycle)						 					{ $arguments += '--cycle '}
 		if ($NoHScroll) 									{ $arguments += '--no-hscroll '}
