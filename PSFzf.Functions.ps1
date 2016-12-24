@@ -36,7 +36,7 @@ if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
     function Invoke-FuzzyFasd() {
         $result = $null
         try {
-            Get-Frecents | % { $_.FullPath } | Invoke-Fzf -ReverseInput -NoSort | % { $result = $_ }
+            Get-Frecents | ForEach-Object { $_.FullPath } | Invoke-Fzf -ReverseInput -NoSort | ForEach-Object { $result = $_ }
         } catch {
             
         }
@@ -51,7 +51,7 @@ if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
     function Invoke-FuzzyFasd() {
         $result = $null
         try {
-            fasd -l | Invoke-Fzf -ReverseInput -NoSort | % { $result = $_ }
+            fasd -l | Invoke-Fzf -ReverseInput -NoSort | ForEach-Object { $result = $_ }
         } catch {
             
         }
@@ -65,7 +65,7 @@ if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyHistory() {
-    $result = Get-History | % { $_.CommandLine } | Invoke-Fzf -Reverse -NoSort
+    $result = Get-History | ForEach-Object { $_.CommandLine } | Invoke-Fzf -Reverse -NoSort
     if ($result -ne $null) {
         Write-Output "Invoking '$result'`n"
         Invoke-Expression "$result" -Verbose
@@ -75,8 +75,8 @@ Set-Alias -Name fh -Value Invoke-FuzzyHistory
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyKillProcess() {
-    $result = Get-Process | where { ![string]::IsNullOrEmpty($_.ProcessName) } | % { "{0}: {1}" -f $_.Id,$_.ProcessName } | Invoke-Fzf -Multi
-    $result | % {
+    $result = Get-Process | Where-Object { ![string]::IsNullOrEmpty($_.ProcessName) } | ForEach-Object { "{0}: {1}" -f $_.Id,$_.ProcessName } | Invoke-Fzf -Multi
+    $result | ForEach-Object {
         $id = $_ -replace "([0-9]+)(:)(.*)",'$1' 
         Stop-Process $id -Verbose
     }
@@ -90,7 +90,7 @@ function Invoke-FuzzySetLocation() {
     if ($Directory -eq $null) { $Directory = $PWD.Path }
     $result = $null
     try {
-        Get-ChildItem $Directory -Recurse -ErrorAction SilentlyContinue | ?{ $_.PSIsContainer } | Invoke-Fzf | % { $result = $_ }
+        Get-ChildItem $Directory -Recurse -ErrorAction SilentlyContinue | Where-Object{ $_.PSIsContainer } | Invoke-Fzf | ForEach-Object { $result = $_ }
     } catch {
         
     }
@@ -116,4 +116,20 @@ if (Get-Command Search-Everything -ErrorAction SilentlyContinue) {
         }
     }
     Set-Alias -Name cde -Value Set-LocationFuzzyEverything
+}
+
+if (Get-Command git.exe -ErrorAction SilentlyContinue) {
+    #.ExternalHelp PSFzf.psm1-help.xml
+    function Invoke-FuzzyGitStatus() {
+        $result = @()
+        try {
+            git status --porcelain | Invoke-Fzf -Multi -Bind 'ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all' | ForEach-Object { $result += '{0}' -f $_.Substring('?? '.Length) }
+        } catch {
+            # do nothing
+        }
+        if ($result -ne $null) {
+            $result
+        }
+    }
+    Set-Alias -Name fgs -Value Invoke-FuzzyGitStatus
 }
