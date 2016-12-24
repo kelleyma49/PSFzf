@@ -5,7 +5,7 @@ schema: 2.0.0
 
 # Invoke-FuzzyKillProcess
 ## SYNOPSIS
-Runs Stop-Process on processes selected by the user in fzf.
+Runs `Stop-Process` on processes selected by the user in fzf.
 ## SYNTAX
 
 ```
