@@ -99,9 +99,7 @@ PSFzf has not been tested under Linux.
 # Installation
 PSFzf is available on the [PowerShell Gallery](https://www.powershellgallery.com/packages/PSFzf).  PSReadline should be imported before PSFzf as PSFzf registers PSReadline key handlers listed in the [PSReadline integration section](https://github.com/kelleyma49/PSFzf#psreadline-integration).
 
-[`Invoke-FuzzyFasd`](docs/Invoke-FuzzyFasd.md) requires [Fasdr] (https://github.com/kelleyma49/fasdr) to be previously installed under Windows.  Other platforms require [Fasd](https://github.com/clvv/fasd) to be installed.
-
-[`Set-LocationFuzzyEverything`](docs/Set-LocationFuzzyEverything.md) works only under Windows and requires [PSEverything](https://www.powershellgallery.com/packages/PSEverything) to be previously installed.
-
-
-[`Invoke-FuzzyGitStatus`](docs/Invoke-FuzzyGitStatus.md) requires [git](https://git-scm.com/) to be installed.
+## Installation Requirements
+* [`Invoke-FuzzyFasd`](docs/Invoke-FuzzyFasd.md) requires [Fasdr] (https://github.com/kelleyma49/fasdr) to be previously installed under Windows.  Other platforms require [Fasd](https://github.com/clvv/fasd) to be installed.
+* [`Set-LocationFuzzyEverything`](docs/Set-LocationFuzzyEverything.md) works only under Windows and requires [PSEverything](https://www.powershellgallery.com/packages/PSEverything) to be previously installed.
+* [`Invoke-FuzzyGitStatus`](docs/Invoke-FuzzyGitStatus.md) requires [git](https://git-scm.com/) to be installed.
