@@ -4,15 +4,13 @@ param(
 	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordSetLocation = 'Alt+C',
 	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordReverseHistoryArgs = 'Alt+A')
 
-$script:IsWindows = Get-Variable IsWindows -Scope Global -ErrorAction SilentlyContinue
-if ($script:IsWindows -eq $null -or $script:IsWindows.Value -eq $true) {	
-	$script:IsWindows = $true
+$script:IsWindows = ($PSVersionTable.PSVersion.Major -le 5) -or $IsWindows
+if ($script:IsWindows) {	
 	$script:ShellCmd = 'cmd.exe /S /C {0}'	
 	$script:DefaultFileSystemCmd = @"
 dir /s/b "{0}"
 "@ 
 } else {
-	$script:IsWindows = $false
 	$script:ShellCmd = '/bin/sh -c "{0}"'
 	$script:DefaultFileSystemCmd = @"
 find {0} -path '*/\.*' -prune -o -type f -print -o -type l -print 2> /dev/null
@@ -326,7 +324,7 @@ function Invoke-FzfPsReadlineHandlerProvider {
     try 
     {
         if ([string]::IsNullOrWhiteSpace($currentPath)) {
-            Invoke-Fzf -Multi | % { $result += $_ }
+            Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
         } else {
             $resolvedPath = Resolve-Path $currentPath -ErrorAction SilentlyContinue
             $providerName = $null
@@ -336,9 +334,9 @@ function Invoke-FzfPsReadlineHandlerProvider {
             switch ($providerName) {
                 # Get-ChildItem is way too slow - we optimize for the FileSystem provider by 
                 # using batch commands:
-                'FileSystem'    { Invoke-Expression ($script:ShellCmd -f ($script:DefaultFileSystemCmd -f $resolvedPath.ProviderPath)) | Invoke-Fzf -Multi | % { $result += $_ } }
-                'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select Name -ExpandProperty Name | Invoke-Fzf -Multi | % { $result += $_ } }
-                $null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select FullName -ExpandProperty FullName | Invoke-Fzf -Multi | % { $result += $_ } }
+                'FileSystem'    { Invoke-Expression ($script:ShellCmd -f ($script:DefaultFileSystemCmd -f $resolvedPath.ProviderPath)) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
+                'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object Name -ExpandProperty Name | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
+                $null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object FullName -ExpandProperty FullName | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
                 Default         {}
             }
         }
@@ -403,7 +401,7 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
         
         $contentTable = @{}
 		Get-Content (Get-PSReadlineOption).HistorySavePath |
-			% { [System.Management.Automation.PsParser]::Tokenize($_, [ref] $null) } |
+			ForEach-Object { [System.Management.Automation.PsParser]::Tokenize($_, [ref] $null) } |
 			Where-Object {$_.type -eq "commandargument" -or $_.type -eq "string"} | 
                 ForEach-Object { if (!$contentTable.ContainsKey($_.Content)) { $_.Content ; $contentTable[$_.Content] = $true } } |
 				Invoke-Fzf -NoSort -ReverseInput -Preview "echo $line" -PreviewWindow "up:20%" | ForEach-Object { $result = $_ }
@@ -425,7 +423,7 @@ function Invoke-FzfPsReadlineHandlerSetLocation {
     $result = $null
 	try 
     {
-		Get-ChildItem . -Recurse -ErrorAction SilentlyContinue -Directory | Invoke-Fzf | % { $result = $_ }
+		Get-ChildItem . -Recurse -ErrorAction SilentlyContinue -Directory | Invoke-Fzf | ForEach-Object { $result = $_ }
     } 
 	catch 
 	{
@@ -443,7 +441,7 @@ function SetPsReadlineShortcut($Chord,[switch]$Override,$BriefDesc,$Desc,[script
 		return
 	}
 
-	if ((Get-PSReadlineKeyHandler -Bound | Where Key -eq $Chord) -and -not $Override) {
+	if ((Get-PSReadlineKeyHandler -Bound | Where-Object Key -eq $Chord) -and -not $Override) {
 		Write-Warning ("PSReadline chord {0} already in use - keyboard handler not installed.  To bind your own keyboard chord, use the -ArgumentList parameter when you call Import-Module." -f $Chord)
 	} else {
 		$script:PSReadlineHandlerChords += $Chord
@@ -490,7 +488,7 @@ if (Get-Module -ListAvailable -Name PSReadline) {
 
 FindFzf
 
-@('PSFzf.Functions.ps1') | % {  Join-Path $PSScriptRoot $_ } | ForEach-Object {
+@('PSFzf.Functions.ps1') | ForEach-Object {  Join-Path $PSScriptRoot $_ } | ForEach-Object {
 	. $_
 }
 

@@ -3,7 +3,7 @@ function Invoke-FuzzyEdit()
 {
     $files = @()
     try {
-        Invoke-Fzf -Multi | % { $files += """$_""" }
+        Invoke-Fzf -Multi | ForEach-Object { $files += """$_""" }
     } catch {
         
     }
@@ -106,7 +106,7 @@ if (Get-Command Search-Everything -ErrorAction SilentlyContinue) {
     function Set-LocationFuzzyEverything() {
         $result = $null
         try {
-            Search-Everything | Invoke-Fzf | % { $result = $_ }
+            Search-Everything | Invoke-Fzf | ForEach-Object { $result = $_ }
         } catch {
             
         }
