@@ -94,7 +94,7 @@ Use Homebrew or download the binary and place it in your path.  Run `Get-Command
 PSFzf has been tested with the latest PowerShell 6.0 alpha.
 
 ## Linux
-PSFzf has not been tested under Linux.
+PSFzf has been tested under WSL with the latest PowerShell 6.0 alpha.
 
 # Installation
 PSFzf is available on the [PowerShell Gallery](https://www.powershellgallery.com/packages/PSFzf).  PSReadline should be imported before PSFzf as PSFzf registers PSReadline key handlers listed in the [PSReadline integration section](https://github.com/kelleyma49/PSFzf#psreadline-integration).
