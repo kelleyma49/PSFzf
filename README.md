@@ -84,7 +84,7 @@ In addition to its core function [Invoke-Fzf](docs/Invoke-Fzf.md), PSFzf include
 Follow the [installation instructions for fzf] (https://github.com/junegunn/fzf#installation) before installing PSFzf.  PSFzf will run `Get-Command` to find `fzf` in your path.  
 
 ## Windows
-Download the `fzf` binary and place it in your path.  Run `Get-Command fzf*-Windows-*.exe` to verify that PowerShell can find the executable.
+Download the `fzf` binary and place it in your path.  Run `Get-Command fzf*.exe` to verify that PowerShell can find the executable.
 
 PSFzf has only been tested on PowerShell 5.0.
 
