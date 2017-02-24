@@ -123,7 +123,8 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
     function Invoke-FuzzyGitStatus() {
         $result = @()
         try {
-            git status --porcelain | Invoke-Fzf -Multi -Bind 'ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all' | ForEach-Object { $result += '{0}' -f $_.Substring('?? '.Length) }
+            $gitRoot = git rev-parse --show-toplevel
+            git status --porcelain | Invoke-Fzf -Multi -Bind 'ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all' | ForEach-Object { $result += Join-Path $gitRoot $('{0}' -f $_.Substring('?? '.Length)) }
         } catch {
             # do nothing
         }
