@@ -81,10 +81,10 @@ In addition to its core function [Invoke-Fzf](docs/Invoke-Fzf.md), PSFzf include
 | [`Set-LocationFuzzyEverything`](docs/Set-LocationFuzzyEverything.md) | `cde`      | Sets the current location based on the [Everything](https://www.voidtools.com/) database.
 
 # Prerequisites
-Follow the [installation instructions for fzf] (https://github.com/junegunn/fzf#installation) before installing PSFzf.  PSFzf will run `Get-Command` to find `fzf` in your path.  
+Follow the [installation instructions for fzf] (https://github.com/junegunn/fzf#installation) before installing PSFzf.   PSFzf will run `Get-Command` to find `fzf` in your path.  
 
 ## Windows
-Download the `fzf` binary and place it in your path.  Run `Get-Command fzf*.exe` to verify that PowerShell can find the executable.
+The latest version of `fzf` is available via [Chocolatey] (https://chocolatey.org/packages/fzf), or you can download the `fzf` binary and place it in your path.  Run `Get-Command fzf*.exe` to verify that PowerShell can find the executable.
 
 PSFzf has only been tested on PowerShell 5.0.
 
