@@ -104,9 +104,16 @@ Set-Alias -Name fd -Value Invoke-FuzzySetLocation
 if (Get-Command Search-Everything -ErrorAction SilentlyContinue) {
     #.ExternalHelp PSFzf.psm1-help.xml
     function Set-LocationFuzzyEverything() {
+        param($Directory=$null)
+        if ($Directory -eq $null) {
+            $Directory = $PWD.Path
+            $Global = $False
+        } else {
+            $Global = $True
+        }
         $result = $null
         try {
-            Search-Everything -FolderInclude @('') | Invoke-Fzf | ForEach-Object { $result = $_ }
+            Search-Everything -Global:$Global -PathInclude $Directory -FolderInclude @('') | Invoke-Fzf | ForEach-Object { $result = $_ }
         } catch {
             
         }

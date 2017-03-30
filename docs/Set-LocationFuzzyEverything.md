@@ -9,7 +9,7 @@ Sets the current location based on the Everything database.
 ## SYNTAX
 
 ```
-Set-LocationFuzzyEverything
+Set-LocationFuzzyEverything [-Directory <string>]
 ```
 
 ## DESCRIPTION
@@ -25,7 +25,30 @@ Launches fzf and sets the current location based on the user selection.
 Set-LocationFuzzyEverything
 ```
 
+### Launch Set-LocationFuzzyEverything specifying a path filter
+  
+Launches fzf for all subdirectories of c:\Windows and sets the current location based on the user selection.
+
+
+```
+Set-LocationFuzzyEverything c:\Windows
+```
+
 ## PARAMETERS
+### -Directory
+The path to a directory that contains the subdirectories that the user will choose from.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 0
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
 
 ### CommonParameters
 This cmdlet does not support common parameters.
