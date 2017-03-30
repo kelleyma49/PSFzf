@@ -106,7 +106,7 @@ if (Get-Command Search-Everything -ErrorAction SilentlyContinue) {
     function Set-LocationFuzzyEverything() {
         $result = $null
         try {
-            Search-Everything | Invoke-Fzf | ForEach-Object { $result = $_ }
+            Search-Everything -FolderInclude @('') | Invoke-Fzf | ForEach-Object { $result = $_ }
         } catch {
             
         }
