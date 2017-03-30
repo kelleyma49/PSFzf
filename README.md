@@ -74,6 +74,7 @@ In addition to its core function [Invoke-Fzf](docs/Invoke-Fzf.md), PSFzf include
 | ---------------------------------------------------------------------| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`Invoke-FuzzyEdit`](docs/Invoke-FuzzyEdit.md)                       | `fe`       | Starts an editor for the selected files in the fuzzy finder.
 | [`Invoke-FuzzyFasd`](docs/Invoke-FuzzyFasd.md)                       | `ff`       | Starts fzf with input from the files saved in [fasd ](https://github.com/clvv/fasd)(non-Windows) or [fasdr](https://github.com/kelleyma49/fasdr) (Windows) and sets the current location.
+| [`Invoke-FuzzyZLocation`](docs/Invoke-FuzzyZLocation.md)             | `fz`       | Starts fzf with input from the history of [ZLocation](https://github.com/vors/ZLocation) and sets the current location.
 | [`Invoke-FuzzyGitStatus`](docs/Invoke-FuzzyGitStatus.md)             | `fgs`      |  Starts fzf with input from output of the `git status` function.
 | [`Invoke-FuzzyHistory`](docs/Invoke-FuzzyHistory.md)                 | `fh`       | Rerun a previous command from history based on the user's selection in fzf.
 | [`Invoke-FuzzyKillProcess`](docs/Invoke-FuzzyKillProcess.md)         | `fkill`    | Runs `Stop-Process` on processes selected by the user in fzf.
@@ -101,5 +102,6 @@ PSFzf is available on the [PowerShell Gallery](https://www.powershellgallery.com
 
 ## Helper Function Requirements
 * [`Invoke-FuzzyFasd`](docs/Invoke-FuzzyFasd.md) requires [Fasdr](https://github.com/kelleyma49/fasdr) to be previously installed under Windows.  Other platforms require [Fasd](https://github.com/clvv/fasd) to be installed.
+* [`Invoke-FuzzyZLocation`](docs/Invoke-FuzzyZLocation.md) requires [ZLocation](https://github.com/vors/ZLocation) and works only under Windows.
 * [`Set-LocationFuzzyEverything`](docs/Set-LocationFuzzyEverything.md) works only under Windows and requires [PSEverything](https://www.powershellgallery.com/packages/PSEverything) to be previously installed.
 * [`Invoke-FuzzyGitStatus`](docs/Invoke-FuzzyGitStatus.md) requires [git](https://git-scm.com/) to be installed.

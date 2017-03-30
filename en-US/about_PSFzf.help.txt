@@ -12,6 +12,7 @@ LONG DESCRIPTION
       * Integration with PSReadline - press CTRL+T to start fzf
       * Convenience function for selecting a file to edit (Invoke-FuzzyEdit, or fe)
       * Convenience function for selecting a frecent file use Fasdr (Invoke-FuzzyFasd, or ff)
+      * Convenience function for selecting a recent directory using ZLocation (Invoke-FuzzyZLocation, or fz)
       * Convenience function for selecting files from git status (Invoke-FuzzyGitStatus, or fgs)
       * Convenience function for invoking previous history (Invoke-FuzzyHistory, or fh)
       * Convenience function for killing processes (Invoke-FuzzyKillProcess, or fkill)
