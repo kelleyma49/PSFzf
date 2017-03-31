@@ -118,6 +118,22 @@ if (Get-Command Search-Everything -ErrorAction SilentlyContinue) {
     Set-Alias -Name cde -Value Set-LocationFuzzyEverything
 }
 
+if (Get-Command Get-ZLocation -ErrorAction SilentlyContinue) {
+    #.ExternalHelp PSFzf.psm1-help.xml
+    function Invoke-FuzzyZLocation() {
+        $result = $null
+        try {
+            (Get-ZLocation).GetEnumerator() | Sort-Object { $_.Value } -Descending | ForEach-Object{ $_.Key } | Invoke-Fzf -NoSort | ForEach-Object { $result = $_ }
+        } catch {
+            
+        }
+        if ($result -ne $null) {
+            cd $result
+        }
+    }
+    Set-Alias -Name fz -Value Invoke-FuzzyZLocation
+} 
+
 if (Get-Command git -ErrorAction SilentlyContinue) {
     #.ExternalHelp PSFzf.psm1-help.xml
     function Invoke-FuzzyGitStatus() {
