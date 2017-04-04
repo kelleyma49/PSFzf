@@ -378,16 +378,21 @@ function Invoke-FzfPsReadlineHandlerProvider {
 }
 function Invoke-FzfPsReadlineHandlerHistory {
 	$result = $null
-    try 
-    {
-		Get-Content (Get-PSReadlineOption).HistorySavePath | Invoke-Fzf -NoSort -ReverseInput | ForEach-Object { $result = $_ }
+	try
+	{
+		if ((Get-PSReadlineOption).HistoryNoDuplicates) {
+			$modifier = { $input | Select-Object -Unique }
+		} else {
+			$modifier = { process { $_ } }
+		}
+		Get-Content (Get-PSReadlineOption).HistorySavePath | & $modifier | Invoke-Fzf -NoSort -ReverseInput | ForEach-Object { $result = $_ }
 	}
-	catch 
+	catch
 	{
 		# catch custom exception
 	}
 	if (-not [string]::IsNullOrEmpty($result)) {
-	  	[Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
+		[Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
 	}
 }
 
