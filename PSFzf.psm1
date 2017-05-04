@@ -340,10 +340,15 @@ function Invoke-FzfPsReadlineHandlerProvider {
             if ($resolvedPath -ne $null) {
                 $providerName = $resolvedPath.Provider.Name 
             }
+            if ($line.TrimStart().StartsWith('cd ')) {
+              $dirCmd = 'dir /s /b /ad "{0}"'
+            } else {
+              $dirCmd = $script:DefaultFileSystemCmd
+            }
             switch ($providerName) {
                 # Get-ChildItem is way too slow - we optimize for the FileSystem provider by 
                 # using batch commands:
-                'FileSystem'    { Invoke-Expression ($script:ShellCmd -f ($script:DefaultFileSystemCmd -f $resolvedPath.ProviderPath)) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
+                'FileSystem'    { Invoke-Expression ($script:ShellCmd -f ($dirCmd -f $resolvedPath.ProviderPath)) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
                 'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object Name -ExpandProperty Name | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
                 $null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object FullName -ExpandProperty FullName | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
                 Default         {}
