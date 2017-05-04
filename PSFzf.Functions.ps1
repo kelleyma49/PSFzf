@@ -1,11 +1,21 @@
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyEdit()
 {
+    param($Directory=$null)
+
     $files = @()
     try {
+        if ($Directory) {
+            $prevDir = $PWD.Path
+            cd $Directory
+        }
         Invoke-Fzf -Multi | ForEach-Object { $files += """$_""" }
     } catch {
-        
+    }
+    finally {
+        if ($prevDir) {
+            cd $prevDir
+        }
     }
 
     # HACK to check to see if we're running under Visual Studio Code.
