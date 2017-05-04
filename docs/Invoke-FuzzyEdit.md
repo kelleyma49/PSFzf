@@ -9,7 +9,7 @@ Starts an editor for the selected files in the fuzzy finder.
 ## SYNTAX
 
 ```
-Invoke-FuzzyEdit
+Invoke-FuzzyEdit [-Directory <string>]
 ```
 
 ## DESCRIPTION
@@ -18,8 +18,8 @@ If Invoke-FuzzyEdit is executed in the Visual Studio Code integrated terminal, t
 ## EXAMPLES
 
 ### Launch Invoke-FuzzyEdit
-	
-Launches fzf and loads the selected files in the default editor.
+  
+Launches fzf in the current directory and loads the selected files in the default editor.
 
 
 ```
@@ -27,6 +27,20 @@ Invoke-FuzzyEdit
 ```
 
 ## PARAMETERS
+### -Directory
+Path to directory to start fzf in. If not passed defaults to current directory.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 0
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
 
 ### CommonParameters
 This cmdlet does not support common parameters.
