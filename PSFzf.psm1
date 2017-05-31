@@ -137,8 +137,10 @@ function Invoke-Fzf {
                 $Event.MessageData.AppendLine($EventArgs.Data)
             }
         }
+		$stdOutEventId = "PsFzfStdOutEh-" + [System.Guid]::NewGuid()
         $stdOutEvent = Register-ObjectEvent -InputObject $process `
         -Action $scriptBlockRecv -EventName 'OutputDataReceived' `
+		-SourceIdentifier $stdOutEventId `
         -MessageData $stdOutStr
 
         $processHasExited = new-object psobject -property @{flag = $false}
@@ -146,8 +148,10 @@ function Invoke-Fzf {
         $scriptBlockExited = {
             $Event.MessageData.flag = $true
         }
+        $exitedEventId = "PsFzfExitedEh-" + [System.Guid]::NewGuid()
         $exitedEvent = Register-ObjectEvent -InputObject $process `
         -Action $scriptBlockExited -EventName 'Exited' `
+		-SourceIdentifier $exitedEventId `
         -MessageData $processHasExited
 
         $process.Start() | Out-Null
@@ -160,7 +164,12 @@ function Invoke-Fzf {
 			} catch {
 				# do nothing
 			}
-            Unregister-Event -SourceIdentifier $stdOutEvent.Name
+
+			$stdOutEventId,$exitedEventId | ForEach-Object {
+				Unregister-Event $_
+				Stop-Job $_
+				Remove-Job $_ -Force
+			}
             $stdOutStr.ToString().Split([System.Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries) | ForEach-Object {
 				Write-Output $_
 			}			
