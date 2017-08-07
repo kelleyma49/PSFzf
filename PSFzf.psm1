@@ -390,11 +390,12 @@ function Invoke-FzfPsReadlineHandlerHistory {
 	try
 	{
 		if ((Get-PSReadlineOption).HistoryNoDuplicates) {
-			$modifier = { $input | Select-Object -Unique }
+			$history = Get-Content (Get-PSReadlineOption).HistorySavePath
+			[array]::reverse($history)
+			$history | Select-Object -Unique | Invoke-Fzf -NoSort | ForEach-Object { $result = $_ }
 		} else {
-			$modifier = { process { $_ } }
+			Get-Content (Get-PSReadlineOption).HistorySavePath | Invoke-Fzf -NoSort -ReverseInput | ForEach-Object { $result = $_ }
 		}
-		Get-Content (Get-PSReadlineOption).HistorySavePath | & $modifier | Invoke-Fzf -NoSort -ReverseInput | ForEach-Object { $result = $_ }
 	}
 	catch
 	{
