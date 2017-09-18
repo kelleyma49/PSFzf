@@ -389,13 +389,15 @@ function Invoke-FzfPsReadlineHandlerHistory {
 	$result = $null
 	try
 	{
-		if ((Get-PSReadlineOption).HistoryNoDuplicates) {
-			$history = Get-Content (Get-PSReadlineOption).HistorySavePath
-			[array]::reverse($history)
-			$history | Select-Object -Unique | Invoke-Fzf -NoSort | ForEach-Object { $result = $_ }
-		} else {
-			Get-Content (Get-PSReadlineOption).HistorySavePath | Invoke-Fzf -NoSort -ReverseInput | ForEach-Object { $result = $_ }
-		}
+		$reader = New-Object MiscUtil.IO.ReverseLineReader -ArgumentList $((Get-PSReadlineOption).HistorySavePath)
+
+		$fileHist = @{}
+		$reader.GetEnumerator() | ForEach-Object {
+			if (-not $fileHist.ContainsKey($_)) {
+				$fileHist.Add($_,$true)
+				$_
+			}
+		} | Invoke-Fzf -NoSort | ForEach-Object { $result = $_ }
 	}
 	catch
 	{
@@ -507,4 +509,7 @@ FindFzf
 	. $_
 }
 
-	
+# load and add C# type to read file in reverse:
+$typeDef = $(Get-Content $(Join-Path $PSScriptRoot "ReverseLineReader.cs")) -join "`n"
+Add-Type -TypeDefinition $typeDef
+
