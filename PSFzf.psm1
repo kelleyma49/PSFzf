@@ -389,7 +389,7 @@ function Invoke-FzfPsReadlineHandlerHistory {
 	$result = $null
 	try
 	{
-		$reader = New-Object MiscUtil.IO.ReverseLineReader -ArgumentList $((Get-PSReadlineOption).HistorySavePath)
+		$reader = New-Object PSFzf.IO.ReverseLineReader -ArgumentList $((Get-PSReadlineOption).HistorySavePath)
 
 		$fileHist = @{}
 		$reader.GetEnumerator() | ForEach-Object {
@@ -402,6 +402,11 @@ function Invoke-FzfPsReadlineHandlerHistory {
 	catch
 	{
 		# catch custom exception
+	}
+	finally 
+	{
+		# ensure that stream is closed:
+		$reader.Dispose()
 	}
 	if (-not [string]::IsNullOrEmpty($result)) {
 		[Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)

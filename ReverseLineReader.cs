@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 
 // borrowed from https://stackoverflow.com/a/452945
-namespace MiscUtil.IO
+namespace PSFzf.IO
 {
     /// <summary>
     /// Takes an encoding (defaulting to UTF-8) and a function which produces a seekable stream
@@ -117,6 +117,8 @@ namespace MiscUtil.IO
             }
         }
 
+        private Stream currStream;
+
         /// <summary>
         /// Returns the enumerator reading strings backwards. If this method discovers that
         /// the returned stream is either unreadable or unseekable, a NotSupportedException is thrown.
@@ -124,6 +126,7 @@ namespace MiscUtil.IO
         public IEnumerator<string> GetEnumerator()
         {
             Stream stream = streamSource();
+            currStream = stream;
             if (!stream.CanSeek)
             {
                 stream.Dispose();
@@ -263,6 +266,15 @@ namespace MiscUtil.IO
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public void Dispose()
+        {
+            if (currStream!=null)
+            {
+                currStream.Dispose();
+                currStream = null;
+            }
         }
     }
 }
