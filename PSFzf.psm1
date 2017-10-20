@@ -422,16 +422,28 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 		$line = $line.Insert($cursor,"{}") # add marker for fzf
         
         $contentTable = @{}
-		Get-Content (Get-PSReadlineOption).HistorySavePath |
-			ForEach-Object { [System.Management.Automation.PsParser]::Tokenize($_, [ref] $null) } |
-			Where-Object {$_.type -eq "commandargument" -or $_.type -eq "string"} | 
-                ForEach-Object { if (!$contentTable.ContainsKey($_.Content)) { $_.Content ; $contentTable[$_.Content] = $true } } |
-				Invoke-Fzf -NoSort -ReverseInput -Preview "echo $line" -PreviewWindow "up:20%" | ForEach-Object { $result = $_ }
+		$reader = New-Object PSFzf.IO.ReverseLineReader -ArgumentList $((Get-PSReadlineOption).HistorySavePath)
+		
+		$fileHist = @{}
+		$reader.GetEnumerator() | ForEach-Object {
+			if (-not $fileHist.ContainsKey($_)) {
+				$fileHist.Add($_,$true)
+				[System.Management.Automation.PsParser]::Tokenize($_, [ref] $null) 
+			}  
+		} | Where-Object {$_.type -eq "commandargument" -or $_.type -eq "string"} | 
+				ForEach-Object { 
+					if (!$contentTable.ContainsKey($_.Content)) { $_.Content ; $contentTable[$_.Content] = $true } 
+				} | Invoke-Fzf -NoSort -Preview "echo $line" -PreviewWindow "up:20%" | ForEach-Object { $result = $_ }
 	}
 	catch 
 	{
 		# catch custom exception
 	}
+	finally
+	{
+		$reader.Dispose()
+	}
+	
 	if (-not [string]::IsNullOrEmpty($result)) {
 		# add quotes:
 		if ($result.Contains(" ") -or $result.Contains("`t")) {
