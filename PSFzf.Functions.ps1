@@ -39,7 +39,7 @@ function Invoke-FuzzyEdit()
         Invoke-Expression -Command ("$editor $editorOptions {0}" -f ($files -join ' ')) 
     }
 }
-Set-Alias -Name fe -Value Invoke-FuzzyEdit
+New-Alias -Name fe -Value Invoke-FuzzyEdit -ErrorAction SilentlyContinue
 
 if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
     #.ExternalHelp PSFzf.psm1-help.xml
@@ -55,7 +55,7 @@ if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
             cd $result
         }
     }
-    Set-Alias -Name ff -Value Invoke-FuzzyFasd
+    New-Alias -Name ff -Value Invoke-FuzzyFasd -ErrorAction SilentlyContinue
 } elseif (Get-Command fasd -ErrorAction SilentlyContinue) {
     #.ExternalHelp PSFzf.psm1-help.xml
     function Invoke-FuzzyFasd() {
@@ -70,7 +70,7 @@ if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
             cd $result
         }
     }
-    Set-Alias -Name ff -Value Invoke-FuzzyFasd    
+    New-Alias -Name ff -Value Invoke-FuzzyFasd -ErrorAction SilentlyContinue    
 }
 
 #.ExternalHelp PSFzf.psm1-help.xml
@@ -81,7 +81,7 @@ function Invoke-FuzzyHistory() {
         Invoke-Expression "$result" -Verbose
     }
 }
-Set-Alias -Name fh -Value Invoke-FuzzyHistory
+New-Alias -Name fh -Value Invoke-FuzzyHistory -ErrorAction SilentlyContinue
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyKillProcess() {
@@ -91,7 +91,7 @@ function Invoke-FuzzyKillProcess() {
         Stop-Process $id -Verbose
     }
 }
-Set-Alias -Name fkill -Value Invoke-FuzzyKillProcess
+New-Alias -Name fkill -Value Invoke-FuzzyKillProcess -ErrorAction SilentlyContinue
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzySetLocation() {
@@ -109,7 +109,7 @@ function Invoke-FuzzySetLocation() {
         Set-Location $result
     } 
 }
-Set-Alias -Name fd -Value Invoke-FuzzySetLocation
+New-Alias -Name fd -Value Invoke-FuzzySetLocation -ErrorAction SilentlyContinue
 
 if (Get-Command Search-Everything -ErrorAction SilentlyContinue) {
     #.ExternalHelp PSFzf.psm1-help.xml
@@ -132,7 +132,7 @@ if (Get-Command Search-Everything -ErrorAction SilentlyContinue) {
             cd $result
         }
     }
-    Set-Alias -Name cde -Value Set-LocationFuzzyEverything
+    New-Alias -Name cde -Value Set-LocationFuzzyEverything -ErrorAction SilentlyContinue
 }
 
 if (Get-Command Get-ZLocation -ErrorAction SilentlyContinue) {
@@ -148,7 +148,7 @@ if (Get-Command Get-ZLocation -ErrorAction SilentlyContinue) {
             cd $result
         }
     }
-    Set-Alias -Name fz -Value Invoke-FuzzyZLocation
+    New-Alias -Name fz -Value Invoke-FuzzyZLocation -ErrorAction SilentlyContinue
 } 
 
 if (Get-Command git -ErrorAction SilentlyContinue) {
@@ -165,5 +165,5 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
             $result
         }
     }
-    Set-Alias -Name fgs -Value Invoke-FuzzyGitStatus
+    New-Alias -Name fgs -Value Invoke-FuzzyGitStatus -ErrorAction SilentlyContinue
 }
