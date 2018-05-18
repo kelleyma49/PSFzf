@@ -115,35 +115,42 @@ Describe "Invoke-Fzf" {
 	InModuleScope PsFzf {
 		Context "Function Exists" {
 			It "Should Return Nothing" {
-				$result = '' | Invoke-Fzf -Query 'file1.txt' -Select1 -Exit0
-				#$result | Should Be $null
+				$result = '' | Invoke-Fzf -Query 'file1.txt' -Select1 -Exit0 -Filter ' '
+				$result | Should Be $null
 			}
 
 			It "Should Return 1 Item, 1 Element" {
-				$result = 'file1.txt' | Invoke-Fzf -Query 'file1.txt' -Select1 -Exit0
-				#$result | Should Be 'file1.txt'
+				$result = 'file1.txt' | Invoke-Fzf -Select1 -Exit0 -Filter 'file1.txt'
+				$result | Should Be 'file1.txt'
 			}
 
 			It "Should Return 1 Item, Case Insensitive" {
-				$result = 'file1.txt' | Invoke-Fzf -Query 'FILE1.TXT' -Select1 -Exit0 -CaseInsensitive
-				#$result | Should Be 'file1.txt'
+				$result = 'file1.txt' | Invoke-Fzf -Select1 -Exit0 -CaseInsensitive -Filter 'FILE1.TXT'
+				$result | Should Be 'file1.txt'
 			}
 
 			It "Should Return Nothing, Case Sensitive" {
-				$result = 'file1.txt' | Invoke-Fzf -Query 'FILE1.TXT' -Select1 -Exit0 -CaseSensitive
-				#$result | Should Be $null
+				$result = 'file1.txt' | Invoke-Fzf -Select1 -Exit0 -CaseSensitive -Filter 'FILE1.TXT'
+				$result | Should Be $null
 			}
 
 			It "Should Return 1 Item, No Multi" {
-				$result = 'file1.txt','file2.txt' | Invoke-Fzf -Multi -Query 'file1' -Select1 -Exit0 -Filter "file1" -ReverseInput
-				#$result | Should Be 'file1.txt'
+				$result = 'file1.txt','file2.txt' | Invoke-Fzf -Multi -Select1 -Exit0 -Filter "file1"
+				$result | Should Be 'file1.txt'
 			}
 
 			It "Should Return 2 Item, Multi" {
-				$result = 'file1.txt','file2.txt' | Invoke-Fzf -Multi -Query 'file' -Select1 -Exit0 -Filter "file" -ReverseInput
-				#$result.Length | Should Be 2
-				#$result[0] | Should Be 'file2.txt'
-				#$result[1] | Should Be 'file1.txt'
+				$result = 'file1.txt','file2.txt' | Invoke-Fzf -Multi -Select1 -Exit0 -Filter "file"
+				$result.Length | Should Be 2
+				$result[0] | Should Be 'file1.txt'
+				$result[1] | Should Be 'file2.txt'
+			}
+
+			It "Should Return 2 Item, Multi, Input Reversed" {
+				$result = 'file1.txt','file2.txt' | Invoke-Fzf -Multi -Select1 -Exit0 -Filter "file" -ReverseInput
+				$result.Length | Should Be 2
+				$result[0] | Should Be 'file2.txt'
+				$result[1] | Should Be 'file1.txt'
 			}
 		}
 	}
