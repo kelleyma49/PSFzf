@@ -111,6 +111,9 @@ Describe "Find-CurrentPath" {
 	}
 }
 
+# CI has problems running fzf under Windows:
+if ( $IsLinux ) {
+ 
 Describe "Invoke-Fzf" {
 	InModuleScope PsFzf {
 		Context "Function Exists" {
@@ -154,4 +157,5 @@ Describe "Invoke-Fzf" {
 			}
 		}
 	}
+}
 }
