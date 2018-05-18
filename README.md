@@ -1,6 +1,9 @@
 # PSFzf
+[![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/PSFzf.svg)](https://img.shields.io/powershellgallery/dt/PSFzf.svg)
+![PowerShell Gallery](https://img.shields.io/powershellgallery/v/PSFzf.svg)
 [![Build status](https://ci.appveyor.com/api/projects/status/ikihhqqlp46tm42x?svg=true)](https://ci.appveyor.com/project/kelleyma49/psfzf)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kelleyma49/PSFzf/blob/master/LICENSE)
+
 
 PSFzf is a PowerShell module that wraps [fzf](https://github.com/junegunn/fzf), a fuzzy file finder for the command line.
 
@@ -87,15 +90,15 @@ Follow the [installation instructions for fzf](https://github.com/junegunn/fzf#i
 ## Windows
 The latest version of `fzf` is available via [Chocolatey](https://chocolatey.org/packages/fzf), or you can download the `fzf` binary and place it in your path.  Run `Get-Command fzf*.exe` to verify that PowerShell can find the executable.
 
-PSFzf has only been tested on PowerShell 5.0.
+PSFzf has been tested on PowerShell 5.0 & 6.0.
 
 ## MacOS
 Use Homebrew or download the binary and place it in your path.  Run `Get-Command fzf*` to verify that PowerShell can find the executable.
 
-PSFzf has been tested with the latest PowerShell 6.0 alpha.
+PSFzf has been tested under PowerShell 6.0.
 
 ## Linux
-PSFzf has been tested under Bash on Ubuntu on Windows (WSL) with the latest PowerShell 6.0 alpha.
+PSFzf has been tested under Bash on Ubuntu on Windows (WSL) with under PowerShell 6.0.
 
 # Installation
 PSFzf is available on the [PowerShell Gallery](https://www.powershellgallery.com/packages/PSFzf).  PSReadline should be imported before PSFzf as PSFzf registers PSReadline key handlers listed in the [PSReadline integration section](https://github.com/kelleyma49/PSFzf#psreadline-integration).
