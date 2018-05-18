@@ -111,7 +111,7 @@ function Invoke-Fzf {
 		if (![string]::IsNullOrWhiteSpace($Query))			{ $arguments += "--query=$Query "}
 		if ($Select1)										{ $arguments += '--select-1 '}
 		if ($Exit0)											{ $arguments += '--exit-0 '}
-		if (![string]::IsNullOrWhiteSpace($Filter))			{ $arguments += "--filter=$Filter " }
+		if (![string]::IsNullOrEmpty($Filter))			    { $arguments += "--filter=$Filter " }
 	
         # Windows only - if running under ConEmu, use option:
         if ($script:IsWindows) {
