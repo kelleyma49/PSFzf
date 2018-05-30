@@ -489,10 +489,12 @@ function FindFzf()
 	if ($script:IsWindows) {
 		$AppNames = @('fzf-*-windows_*.exe','fzf.exe')
 	} else {
-		if ($IsOSX) {
+		if ($IsMacOS) {
 			$AppNames = @('fzf-*-darwin_*','fzf')
 		} elseif ($IsLinux) {
 			$AppNames = @('fzf-*-linux_*','fzf')
+		} else {
+			throw 'Unknown OS'
 		}
 	}
 
