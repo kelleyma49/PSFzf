@@ -457,7 +457,11 @@ function Invoke-FzfPsReadlineHandlerSetLocation {
     $result = $null
 	try 
     {
-		Get-ChildItem . -Recurse -ErrorAction SilentlyContinue -Directory | Invoke-Fzf | ForEach-Object { $result = $_ }
+		if ($env:FZF_ALT_C_COMMAND -eq $null) {
+			Get-ChildItem . -Recurse -ErrorAction SilentlyContinue -Directory | Invoke-Fzf | ForEach-Object { $result = $_ }
+		} else {
+			Invoke-Expression ($env:FZF_ALT_C_COMMAND + ' ' + $env:FZF_ALT_C_OPTS) | Invoke-Fzf | ForEach-Object { $result = $_ }
+		}
     } 
 	catch 
 	{
