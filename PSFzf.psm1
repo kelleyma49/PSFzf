@@ -332,23 +332,27 @@ function Invoke-FzfPsReadlineHandlerProvider {
     $result = @()
     try 
     {
-        if ([string]::IsNullOrWhiteSpace($currentPath)) {
-            Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
-        } else {
-            $resolvedPath = Resolve-Path $currentPath -ErrorAction SilentlyContinue
-            $providerName = $null
-            if ($resolvedPath -ne $null) {
-                $providerName = $resolvedPath.Provider.Name 
-            }
-            switch ($providerName) {
-                # Get-ChildItem is way too slow - we optimize for the FileSystem provider by 
-                # using batch commands:
-                'FileSystem'    { Invoke-Expression ($script:ShellCmd -f ($script:DefaultFileSystemCmd -f $resolvedPath.ProviderPath)) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
-                'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object Name -ExpandProperty Name | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
-                $null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object FullName -ExpandProperty FullName | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
-                Default         {}
-            }
-        }
+        if (-not [System.String]::IsNullOrWhiteSpace($env:FZF_CTRL_T_COMMAND)) {
+			Invoke-Expression ($env:FZF_CTRL_T_COMMAND) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
+		} else {
+			if ([string]::IsNullOrWhiteSpace($currentPath)) {
+				Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
+			} else {
+				$resolvedPath = Resolve-Path $currentPath -ErrorAction SilentlyContinue
+				$providerName = $null
+				if ($resolvedPath -ne $null) {
+					$providerName = $resolvedPath.Provider.Name 
+				}
+				switch ($providerName) {
+					# Get-ChildItem is way too slow - we optimize for the FileSystem provider by 
+					# using batch commands:
+					'FileSystem'    { Invoke-Expression ($script:ShellCmd -f ($script:DefaultFileSystemCmd -f $resolvedPath.ProviderPath)) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
+					'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object Name -ExpandProperty Name | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
+					$null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object FullName -ExpandProperty FullName | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
+					Default         {}
+				}
+			}
+		}
     }
     catch 
     {
