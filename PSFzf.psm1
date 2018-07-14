@@ -17,6 +17,15 @@ find {0} -path '*/\.*' -prune -o -type f -print -o -type l -print 2> /dev/null
 "@
 }
 
+function Get-FileSystemCmd
+{
+	if ([string]::IsNullOrWhiteSpace($env:FZF_DEFAULT_COMMAND)) {
+		$script:DefaultFileSystemCmd
+	} else {
+		$env:FZF_DEFAULT_COMMAND
+	}
+}
+
 $script:FzfLocation = $null
 $script:PSReadlineHandlerChords = @()
 $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
@@ -111,8 +120,10 @@ function Invoke-Fzf {
 		if (![string]::IsNullOrWhiteSpace($Query))			{ $arguments += "--query=$Query "}
 		if ($Select1)										{ $arguments += '--select-1 '}
 		if ($Exit0)											{ $arguments += '--exit-0 '}
-		if (![string]::IsNullOrEmpty($Filter))			    { $arguments += "--filter=$Filter " }
+		if (![string]::IsNullOrEmpty($Filter))				{ $arguments += "--filter=$Filter " }
 	
+		$fileSystemCmd = Get-FileSystemCmd
+		
         # Windows only - if running under ConEmu, use option:
         if ($script:IsWindows) {
             if ("$env:ConEmuHooks" -eq 'Enabled') {
@@ -185,7 +196,7 @@ function Invoke-Fzf {
 			if (!$hasInput) {
                 # optimization for filesystem provider:
                 if ($PWD.Provider.Name -eq 'FileSystem') {
-					$cmd = $script:ShellCmd -f ($script:DefaultFileSystemCmd -f $PWD.Path)
+					$cmd = $script:ShellCmd -f ($fileSystemCmd -f $PWD.Path)
 					Invoke-Expression $cmd | ForEach-Object { 
                         $process.StandardInput.WriteLine($_) 
                         if ($processHasExited.flag) {
@@ -328,7 +339,9 @@ function Invoke-FzfPsReadlineHandlerProvider {
 	if ([String]::IsNullOrWhitespace($currentPath) -or !(Test-Path $currentPath)) {
 		$currentPath = $PWD
 	}
-    
+
+	$fileSystemCmd = Get-FileSystemCmd
+
     $result = @()
     try 
     {
@@ -346,7 +359,7 @@ function Invoke-FzfPsReadlineHandlerProvider {
 				switch ($providerName) {
 					# Get-ChildItem is way too slow - we optimize for the FileSystem provider by 
 					# using batch commands:
-					'FileSystem'    { Invoke-Expression ($script:ShellCmd -f ($script:DefaultFileSystemCmd -f $resolvedPath.ProviderPath)) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
+					'FileSystem'    { Invoke-Expression ($script:ShellCmd -f ($fileSystemCmd -f $resolvedPath.ProviderPath)) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
 					'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object Name -ExpandProperty Name | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
 					$null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object FullName -ExpandProperty FullName | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
 					Default         {}
