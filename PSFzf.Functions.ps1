@@ -1,4 +1,19 @@
 #.ExternalHelp PSFzf.psm1-help.xml
+
+$addedAliases = @()
+function script:SetPsFzfAlias {
+    param($Name,$Function)
+    if (-not (Get-Command -Name $Name -ErrorAction SilentlyContinue)) {
+        New-Alias -Name $Name -Value $Function -ErrorAction SilentlyContinue
+        $addedAliases += $Name
+    }    
+}
+
+function script:RemovePsFzfAliases {
+    $addedAliases | ForEach-Object {
+        Remove-Item -Path Alias:$_
+    }
+}
 function Invoke-FuzzyEdit()
 {
     param($Directory=$null)
@@ -39,7 +54,8 @@ function Invoke-FuzzyEdit()
         Invoke-Expression -Command ("$editor $editorOptions {0}" -f ($files -join ' ')) 
     }
 }
-New-Alias -Name fe -Value Invoke-FuzzyEdit -ErrorAction SilentlyContinue
+
+SetPsFzfAlias "fe" Invoke-FuzzyEdit
 
 if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
     #.ExternalHelp PSFzf.psm1-help.xml
@@ -55,7 +71,7 @@ if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
             cd $result
         }
     }
-    New-Alias -Name ff -Value Invoke-FuzzyFasd -ErrorAction SilentlyContinue
+    SetPsFzfAlias "ff" Invoke-FuzzyFasd
 } elseif (Get-Command fasd -ErrorAction SilentlyContinue) {
     #.ExternalHelp PSFzf.psm1-help.xml
     function Invoke-FuzzyFasd() {
@@ -70,7 +86,7 @@ if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
             cd $result
         }
     }
-    New-Alias -Name ff -Value Invoke-FuzzyFasd -ErrorAction SilentlyContinue    
+    SetPsFzfAlias "ff" Invoke-FuzzyFasd
 }
 
 #.ExternalHelp PSFzf.psm1-help.xml
@@ -81,7 +97,7 @@ function Invoke-FuzzyHistory() {
         Invoke-Expression "$result" -Verbose
     }
 }
-New-Alias -Name fh -Value Invoke-FuzzyHistory -ErrorAction SilentlyContinue
+SetPsFzfAlias "fh" Invoke-FuzzyHistory
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyKillProcess() {
@@ -91,7 +107,7 @@ function Invoke-FuzzyKillProcess() {
         Stop-Process $id -Verbose
     }
 }
-New-Alias -Name fkill -Value Invoke-FuzzyKillProcess -ErrorAction SilentlyContinue
+SetPsFzfAlias "fkill" Invoke-FuzzyKillProcess
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzySetLocation() {
@@ -109,7 +125,7 @@ function Invoke-FuzzySetLocation() {
         Set-Location $result
     } 
 }
-New-Alias -Name fd -Value Invoke-FuzzySetLocation -ErrorAction SilentlyContinue
+SetPsFzfAlias "fd" Invoke-FuzzySetLocation
 
 if (Get-Command Search-Everything -ErrorAction SilentlyContinue) {
     #.ExternalHelp PSFzf.psm1-help.xml
@@ -132,7 +148,7 @@ if (Get-Command Search-Everything -ErrorAction SilentlyContinue) {
             cd $result
         }
     }
-    New-Alias -Name cde -Value Set-LocationFuzzyEverything -ErrorAction SilentlyContinue
+    SetPsFzfAlias "cde" Set-LocationFuzzyEverything 
 }
 
 if (Get-Command Get-ZLocation -ErrorAction SilentlyContinue) {
@@ -148,7 +164,8 @@ if (Get-Command Get-ZLocation -ErrorAction SilentlyContinue) {
             cd $result
         }
     }
-    New-Alias -Name fz -Value Invoke-FuzzyZLocation -ErrorAction SilentlyContinue
+    
+    SetPsFzfAlias "fz" Invoke-FuzzyZLocation
 } 
 
 if (Get-Command git -ErrorAction SilentlyContinue) {
@@ -165,5 +182,5 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
             $result
         }
     }
-    New-Alias -Name fgs -Value Invoke-FuzzyGitStatus -ErrorAction SilentlyContinue
+    SetPsFzfAlias "fgs" Invoke-FuzzyGitStatus
 }

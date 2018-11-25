@@ -33,6 +33,7 @@ $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
 	$script:PSReadlineHandlerChords | ForEach-Object {
 			Remove-PSReadlineKeyHandler $_
 	}
+	RemovePsFzfAliases
 }
 
 function Invoke-Fzf {
