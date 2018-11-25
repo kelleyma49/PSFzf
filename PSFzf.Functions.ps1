@@ -4,7 +4,7 @@ $addedAliases = @()
 function script:SetPsFzfAlias {
     param($Name,$Function)
     if (-not (Get-Command -Name $Name -ErrorAction SilentlyContinue)) {
-        New-Alias -Name $Name -Value $Function -ErrorAction SilentlyContinue
+        New-Alias -Name $Name -Scope Global -Value $Function -ErrorAction SilentlyContinue
         $addedAliases += $Name
     }    
 }
