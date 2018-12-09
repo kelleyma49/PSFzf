@@ -3,10 +3,18 @@
 $addedAliases = @()
 function script:SetPsFzfAlias {
     param($Name,$Function)
+
+    # prevent Get-Command from loading PSFzf
+    $script:PSModuleAutoLoadingPreferencePrev=$PSModuleAutoLoadingPreference
+    $PSModuleAutoLoadingPreference='None'
+
     if (-not (Get-Command -Name $Name -ErrorAction SilentlyContinue)) {
         New-Alias -Name $Name -Scope Global -Value $Function -ErrorAction SilentlyContinue
         $addedAliases += $Name
     }    
+
+    # restore module auto loading
+    $PSModuleAutoLoadingPreference=$script:PSModuleAutoLoadingPreferencePrev
 }
 
 function script:RemovePsFzfAliases {
@@ -113,15 +121,19 @@ SetPsFzfAlias "fkill" Invoke-FuzzyKillProcess
 function Invoke-FuzzySetLocation() {
     param($Directory=$null)
 
-    if ($Directory -eq $null) { $Directory = $PWD.Path }
+    if ($null -eq $Directory) { $Directory = $PWD.Path }
     $result = $null
     try {
-        Get-ChildItem $Directory -Recurse -ErrorAction SilentlyContinue | Where-Object{ $_.PSIsContainer } | Invoke-Fzf | ForEach-Object { $result = $_ }
+        if ([string]::IsNullOrWhiteSpace($env:FZF_DEFAULT_COMMAND)) {
+            Get-ChildItem $Directory -Recurse -ErrorAction SilentlyContinue | Where-Object{ $_.PSIsContainer } | Invoke-Fzf | ForEach-Object { $result = $_ }
+        } else {
+            Invoke-Fzf | ForEach-Object { $result = $_ }
+        }
     } catch {
         
     }
 
-    if ($result -ne $null) {
+    if ($null -ne $result) {
         Set-Location $result
     } 
 }
