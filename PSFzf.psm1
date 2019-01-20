@@ -1,8 +1,8 @@
 param(
-	[parameter(Position=0,Mandatory=$false)][string]$PSReadlineChordProvider = 'Ctrl+T',
-	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordReverseHistory = 'Ctrl+R',
-	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordSetLocation = 'Alt+C',
-	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordReverseHistoryArgs = 'Alt+A')
+	[parameter(Position=0,Mandatory=$false)][string]$PSReadlineChordProvider = 'Ctrl+t',
+	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordReverseHistory = 'Ctrl+r',
+	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordSetLocation = 'Alt+c',
+	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordReverseHistoryArgs = 'Alt+a')
 
 $script:IsWindows = ($PSVersionTable.PSVersion.Major -le 5) -or $IsWindows
 if ($script:IsWindows) {	
@@ -496,8 +496,6 @@ function SetPsReadlineShortcut($Chord,[switch]$Override,$BriefDesc,$Desc,[script
 	if ([string]::IsNullOrEmpty($Chord)) {
 		return
 	}
-
-	$Chord=$Chord.ToLower()
 	if ((Get-PSReadlineKeyHandler -Bound | Where-Object {$_.Key.ToLower() -eq $Chord}) -and -not $Override) {
 		Write-Warning ("PSReadline chord {0} already in use - keyboard handler not installed.  To bind your own keyboard chord, use the -ArgumentList parameter when you call Import-Module." -f $Chord)
 	} else {
