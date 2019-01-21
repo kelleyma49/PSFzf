@@ -51,7 +51,7 @@ Description = 'A thin wrapper around Fzf (https://github.com/junegunn/fzf).  If 
 # RequiredModules = @()
 
 # Assemblies that must be loaded prior to importing this module
-# RequiredAssemblies = @()
+RequiredAssemblies = @('PSFzf.dll')
 
 # Script files (.ps1) that are run in the caller's environment prior to importing this module.
 # ScriptsToProcess = @()

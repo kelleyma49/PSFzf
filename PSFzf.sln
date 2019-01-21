@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F5034706-568F-408A-B7B3-4D38C6DB8A32}") = "PSFzf", "PSFzf.pssproj", "{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PSFzf-Binary", "PSFzf-Binary\PSFzf-Binary.csproj", "{AC91F17D-066F-4DE0-9DE4-E3B75DE12C8C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC91F17D-066F-4DE0-9DE4-E3B75DE12C8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC91F17D-066F-4DE0-9DE4-E3B75DE12C8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC91F17D-066F-4DE0-9DE4-E3B75DE12C8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC91F17D-066F-4DE0-9DE4-E3B75DE12C8C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

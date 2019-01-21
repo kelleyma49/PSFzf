@@ -548,8 +548,3 @@ FindFzf
 @('PSFzf.Functions.ps1') | ForEach-Object {  Join-Path $PSScriptRoot $_ } | ForEach-Object {
 	. $_
 }
-
-# load and add C# type to read file in reverse:
-$typeDef = $(Get-Content $(Join-Path $PSScriptRoot "ReverseLineReader.cs")) -join "`n"
-Add-Type -TypeDefinition $typeDef
-
