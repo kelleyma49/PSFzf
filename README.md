@@ -24,36 +24,36 @@ Get-ChildItem . -Recurse | ? { -not $_.PSIsContainer } | Invoke-Fzf | % { notepa
 For day-to-day usage, see the [helper functions included with this module](https://github.com/kelleyma49/PSFzf#helper-functions).
 
 ## PSReadline Integration
-### Select Current Provider Path (default chord: <kbd>CTRL+T</kbd>) 
-Press <kbd>CTRL+T</kbd> to start PSFzf to select provider paths.  PSFzf will parse the current token and use that as the starting path to search from.  If current token is empty, or the token isn't a valid path, PSFzf will search below the current working directory.  
+### Select Current Provider Path (default chord: <kbd>Ctrl+t</kbd>) 
+Press <kbd>Ctrl+t</kbd> to start PSFzf to select provider paths.  PSFzf will parse the current token and use that as the starting path to search from.  If current token is empty, or the token isn't a valid path, PSFzf will search below the current working directory.  
 
 Multiple items can be selected.  If more than one it is selected by the user, the results are returned as a comma separated list.  Results are properly quoted if they contain whitespace.
 
-### Reverse Search Through PSReadline History (default chord: <kbd>CTRL+R</kbd>)
+### Reverse Search Through PSReadline History (default chord: <kbd>Ctrl+r</kbd>)
 
-Press <kbd>CTRL+R</kbd> to start PSFzf to select a command in the command history saved by PSReadline.  PSFzf will insert the command into the current line, but it will not execute the command.
+Press <kbd>Ctrl+r</kbd> to start PSFzf to select a command in the command history saved by PSReadline.  PSFzf will insert the command into the current line, but it will not execute the command.
 
-PSFzf does not override <kbd>CTRL+R</kbd> by default.  To confirm that you want to override PSReadline's chord binding, you have two options.
+PSFzf does not override <kbd>Ctrl+r</kbd> by default.  To confirm that you want to override PSReadline's chord binding, you have two options.
 
 The first option is to remove the handler from PSReadline.  For example:
 
 ```powershell
-Remove-PSReadlineKeyHandler 'CTRL+R'
+Remove-PSReadlineKeyHandler 'Ctrl+r'
 Import-Module PSFzf
 ```
 
 The other option is to pass in the chord when you import the module.  For example:
 
 ```powershell
-Import-Module PSFzf -ArgumentList 'Ctrl+T','Ctrl+R' # or replace these strings with your preferred bindings
+Import-Module PSFzf -ArgumentList 'Ctrl+t','Ctrl+r' # or replace these strings with your preferred bindings
 ``` 
-### Set-Location Based on Selected Directory (default chord: <kbd>ALT+C</kbd>)
+### Set-Location Based on Selected Directory (default chord: <kbd>Alt+c</kbd>)
 
-Press <kbd>ALT+C</kbd> to start PSFzf to select a directory.  `Set-Location` will be called with the selected directory.
+Press <kbd>Alt+c</kbd> to start PSFzf to select a directory.  `Set-Location` will be called with the selected directory.
 
-### Search Through Command Line Arguments in PSReadline History (default chord: <kbd>ALT+A</kbd>)
+### Search Through Command Line Arguments in PSReadline History (default chord: <kbd>Alt+a</kbd>)
 
-Press <kbd>ALT+A</kbd> to start PSFzf to select command line arguments used in PSReadline history.  The picked argument will be inserted in the current line.  The line that would result from the selection is shown in the preview window.
+Press <kbd>Alt+a</kbd> to start PSFzf to select command line arguments used in PSReadline history.  The picked argument will be inserted in the current line.  The line that would result from the selection is shown in the preview window.
 
 ## Using within a Pipeline
 `Invoke-Fzf` works with input from a pipeline.  However, if you make your selection before fzf has finished receiving and parsing from standard in, you might see a ```Stopped pipeline input``` error.  This is because PSFzf must throw an exception to cancel pipeline processing.  If you pipe the output of `Invoke-Fzf` to whatever action you wish to do based on your selection, the action will occur.  The following *will not work* if the pipeline is cancelled:
@@ -71,8 +71,8 @@ Get-ChildItem . -Recurse | ? { $_.PSIsContainer } | Invoke-Fzf | Set-Location
 ## Overriding Behavior
 PsFzf supports overriding behavior by setting these fzf environment variables:
 * `FZF_DEFAULT_COMMAND` - The command specified in this environment variable will override the default command when PSFZF detects that the current location is a file system provider.
-* `FZF_CTRL_T_COMMAND` - The command specified in this environment variable will be used when <kbd>CTRL+T</kbd> is pressed by the user.
-* `FZF_ALT_C_COMMAND` - The command specified in this environment variable will be used when <kbd>ALT+C</kbd> is pressed by the user.
+* `FZF_CTRL_T_COMMAND` - The command specified in this environment variable will be used when <kbd>Ctrl+t</kbd> is pressed by the user.
+* `FZF_Alt_C_COMMAND` - The command specified in this environment variable will be used when <kbd>Alt+c</kbd> is pressed by the user.
 
 # Helper Functions
 In addition to its core function [Invoke-Fzf](docs/Invoke-Fzf.md), PSFzf includes a set of useful functions and aliases:

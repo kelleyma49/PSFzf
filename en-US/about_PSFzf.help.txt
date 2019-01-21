@@ -9,7 +9,7 @@ LONG DESCRIPTION
 
     PSFzf is a wrapper around the fuzzy finder fzf.  It provides:
 
-      * Integration with PSReadline - press CTRL+T to start fzf
+      * Integration with PSReadline - press Ctrl+t to start fzf
       * Convenience function for selecting a file to edit (Invoke-FuzzyEdit, or fe)
       * Convenience function for selecting a frecent file use Fasdr (Invoke-FuzzyFasd, or ff)
       * Convenience function for selecting a recent directory using ZLocation (Invoke-FuzzyZLocation, or fz)

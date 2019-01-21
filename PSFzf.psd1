@@ -27,7 +27,7 @@ CompanyName = 'Unknown'
 Copyright = '(c) 2016 . All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'A thin wrapper around Fzf (https://github.com/junegunn/fzf).  If PSReadline is loaded, this wrapper registers Fzf with the keyboard chord CTRL+T.'
+Description = 'A thin wrapper around Fzf (https://github.com/junegunn/fzf).  If PSReadline is loaded, this wrapper registers Fzf with the keyboard chord Ctrl+t.'
 
 # Minimum version of the Windows PowerShell engine required by this module
 # PowerShellVersion = ''
