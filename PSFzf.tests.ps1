@@ -111,6 +111,19 @@ Describe "Find-CurrentPath" {
 	}
 }
 
+Describe "Add-BinaryModuleTypes" {
+	InModuleScope PsFzf {
+		Context "Module Loaded" {
+			It "Be Able to Create Type" {
+				$filePath = Join-Path $env:TEMP 'TestFile.txt'
+				1..100 | Add-Content $filePath
+				$newObject = New-Object PSFzf.IO.ReverseLineReader -ArgumentList $filePath
+				$newObject | Should Not Be $null
+			}
+		}
+	}
+}
+
 # CI has problems running fzf under Windows:
 if ( $IsLinux ) {
  
