@@ -27,6 +27,7 @@
   </PropertyGroup>
   <ItemGroup />
   <ItemGroup>
+    <Compile Include="PSFzf.Functions.ps1" />
     <Compile Include="PSFzf.psd1" />
     <Compile Include="PSFzf.psm1" />
     <Compile Include="PSFzf.tests.ps1" />
