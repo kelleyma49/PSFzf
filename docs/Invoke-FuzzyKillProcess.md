@@ -9,7 +9,7 @@ Runs `Stop-Process` on processes selected by the user in fzf.
 ## SYNTAX
 
 ```
-Invoke-FuzzyEdit
+Invoke-FuzzyKillProcess
 ```
 
 ## DESCRIPTION
