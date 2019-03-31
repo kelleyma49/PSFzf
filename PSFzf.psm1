@@ -59,8 +59,7 @@ function Invoke-Fzf {
 			[Alias('m')]
 		  	[switch]$Multi,
 			[switch]$NoMouse,
-            [string]
-		  	$Bind,
+            [string]$Bind,
 			[switch]$Cycle,
 			[switch]$NoHScroll,
 
@@ -415,7 +414,7 @@ function Invoke-FzfPsReadlineHandlerHistory {
 				$fileHist.Add($_,$true)
 				$_
 			}
-		} | Invoke-Fzf -NoSort | ForEach-Object { $result = $_ }
+		} | Invoke-Fzf -NoSort -Bind ctrl-r:toggle-sort | ForEach-Object { $result = $_ }
 	}
 	catch
 	{
