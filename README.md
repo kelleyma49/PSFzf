@@ -27,7 +27,7 @@ For day-to-day usage, see the [helper functions included with this module](https
 ### Select Current Provider Path (default chord: <kbd>Ctrl+t</kbd>) 
 Press <kbd>Ctrl+t</kbd> to start PSFzf to select provider paths.  PSFzf will parse the current token and use that as the starting path to search from.  If current token is empty, or the token isn't a valid path, PSFzf will search below the current working directory.  
 
-Multiple items can be selected.  If more than one it is selected by the user, the results are returned as a comma separated list.  Results are properly quoted if they contain whitespace.
+Multiple items can be selected.  If more than one is selected by the user, the results are returned as a comma separated list.  Results are properly quoted if they contain whitespace.
 
 ### Reverse Search Through PSReadline History (default chord: <kbd>Ctrl+r</kbd>)
 
