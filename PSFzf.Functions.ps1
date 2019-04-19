@@ -44,12 +44,12 @@ function Invoke-FuzzyEdit()
     # HACK to check to see if we're running under Visual Studio Code.
     # If so, reuse Visual Studio Code currently open windows:
     $editorOptions = ''
-    if ($env:VSCODE_PID -ne $null) {
+    if ($null -ne $env:VSCODE_PID) {
         $editor = 'code'
         $editorOptions += '--reuse-window'
     } else {
         $editor = $env:EDITOR
-        if ($editor -eq $null) {
+        if ($null -eq $editor) {
             if (!$IsWindows) {
                 $editor = 'vim'
             } else {
@@ -58,7 +58,7 @@ function Invoke-FuzzyEdit()
         }
     }
     
-    if ($files -ne $null) {
+    if ($null -ne $files) {
         Invoke-Expression -Command ("$editor $editorOptions {0}" -f ($files -join ' ')) 
     }
 }
@@ -74,7 +74,7 @@ if (Get-Command Get-Frecents -ErrorAction Ignore) {
         } catch {
             
         }
-        if ($result -ne $null) {
+        if ($null -ne $result) {
             # use cd in case it's aliased to something else:
             cd $result
         }
@@ -89,7 +89,7 @@ if (Get-Command Get-Frecents -ErrorAction Ignore) {
         } catch {
             
         }
-        if ($result -ne $null) {
+        if ($null -ne $result) {
             # use cd in case it's aliased to something else:
             cd $result
         }
@@ -100,7 +100,7 @@ if (Get-Command Get-Frecents -ErrorAction Ignore) {
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyHistory() {
     $result = Get-History | ForEach-Object { $_.CommandLine } | Invoke-Fzf -Reverse -NoSort
-    if ($result -ne $null) {
+    if ($null -ne $result) {
         Write-Output "Invoking '$result'`n"
         Invoke-Expression "$result" -Verbose
     }
@@ -143,7 +143,7 @@ if (Get-Command Search-Everything -ErrorAction Ignore) {
     #.ExternalHelp PSFzf.psm1-help.xml
     function Set-LocationFuzzyEverything() {
         param($Directory=$null)
-        if ($Directory -eq $null) {
+        if ($null -eq $Directory) {
             $Directory = $PWD.Path
             $Global = $False
         } else {
@@ -155,7 +155,7 @@ if (Get-Command Search-Everything -ErrorAction Ignore) {
         } catch {
             
         }
-        if ($result -ne $null) {
+        if ($null -ne $result) {
             # use cd in case it's aliased to something else:
             cd $result
         }
@@ -172,7 +172,8 @@ if (Get-Command Get-ZLocation -ErrorAction Ignore) {
         } catch {
             
         }
-        if ($result -ne $null) {
+        if ($null -ne $result) {
+            # use cd in case it's aliased to something else:
             cd $result
         }
     }
@@ -190,7 +191,7 @@ if (Get-Command git -ErrorAction Ignore) {
         } catch {
             # do nothing
         }
-        if ($result -ne $null) {
+        if ($null -ne $result) {
             $result
         }
     }

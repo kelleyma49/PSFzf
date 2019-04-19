@@ -212,9 +212,9 @@ function Invoke-Fzf {
                         } else {
                             # search through common properties:
                             $str = $item.FullName
-                            if ($str -eq $null) {
+                            if ($null -eq $str) {
                                 $str = $item.Name
-                                if ($str -eq $null) {
+                                if ($null -eq $str) {
                                     $str = $item.ToString()
                                 }
                             }
@@ -236,9 +236,9 @@ function Invoke-Fzf {
                     } else {
                         # search through common properties:
                         $str = $item.FullName
-                        if ($str -eq $null) {
+                        if ($null -eq $str) {
                             $str = $item.Name
-                            if ($str -eq $null) {
+                            if ($null -eq $str) {
                                 $str = $item.ToString()
                             }
                         }
@@ -335,7 +335,7 @@ function Invoke-FzfPsReadlineHandlerProvider {
 	$cursor = $null
 	[Microsoft.PowerShell.PSConsoleReadline]::GetBufferState([ref]$line, [ref]$cursor)
 	$currentPath = Find-CurrentPath $line $cursor ([ref]$leftCursor) ([ref]$rightCursor)
-	$addSpace = $currentPath -ne $null -and $currentPath.StartsWith(" ")
+	$addSpace = $null -ne $currentPath -and $currentPath.StartsWith(" ")
 	if ([String]::IsNullOrWhitespace($currentPath) -or !(Test-Path $currentPath)) {
 		$currentPath = $PWD
 	}
@@ -353,7 +353,7 @@ function Invoke-FzfPsReadlineHandlerProvider {
 			} else {
 				$resolvedPath = Resolve-Path $currentPath -ErrorAction SilentlyContinue
 				$providerName = $null
-				if ($resolvedPath -ne $null) {
+				if ($null -ne $resolvedPath) {
 					$providerName = $resolvedPath.Provider.Name 
 				}
 				switch ($providerName) {
@@ -372,7 +372,7 @@ function Invoke-FzfPsReadlineHandlerProvider {
         # catch custom exception
     }
 	
-	if ($result -ne $null) {
+	if ($null -ne $result) {
 		# quote strings if we need to:
 		if ($result -is [system.array]) {
 			for ($i = 0;$i -lt $result.Length;$i++) {
@@ -474,7 +474,7 @@ function Invoke-FzfPsReadlineHandlerSetLocation {
     $result = $null
 	try 
     {
-		if ($env:FZF_ALT_C_COMMAND -eq $null) {
+		if ($null -eq $env:FZF_ALT_C_COMMAND) {
 			Get-ChildItem . -Recurse -ErrorAction SilentlyContinue -Directory | Invoke-Fzf | ForEach-Object { $result = $_ }
 		} else {
 			Invoke-Expression ($env:FZF_ALT_C_COMMAND + ' ' + $env:FZF_ALT_C_OPTS) | Invoke-Fzf | ForEach-Object { $result = $_ }
@@ -521,7 +521,7 @@ function FindFzf()
     # find it in our path:
     $script:FzfLocation = $null
     $AppNames | ForEach-Object {
-        if ($script:FzfLocation -eq $null) {
+        if ($null -eq $script:FzfLocation) {
             $result = Get-Command $_ -ErrorAction SilentlyContinue
             $result | ForEach-Object {
                 $script:FzfLocation = Resolve-Path $_.Source   
@@ -529,7 +529,7 @@ function FindFzf()
         }
     }
     
-    if ($script:FzfLocation -eq $null) {
+    if ($null -eq $script:FzfLocation) {
         throw 'Failed to find fzf binary in PATH.  You can download a binary from this page: https://github.com/junegunn/fzf-bin/releases' 
     }
 }
