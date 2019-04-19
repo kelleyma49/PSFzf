@@ -8,8 +8,8 @@ function script:SetPsFzfAlias {
     $script:PSModuleAutoLoadingPreferencePrev=$PSModuleAutoLoadingPreference
     $PSModuleAutoLoadingPreference='None'
 
-    if (-not (Get-Command -Name $Name -ErrorAction SilentlyContinue)) {
-        New-Alias -Name $Name -Scope Global -Value $Function -ErrorAction SilentlyContinue
+    if (-not (Get-Command -Name $Name -ErrorAction Ignore)) {
+        New-Alias -Name $Name -Scope Global -Value $Function -ErrorAction Ignore
         $addedAliases += $Name
     }    
 
@@ -65,7 +65,7 @@ function Invoke-FuzzyEdit()
 
 SetPsFzfAlias "fe" Invoke-FuzzyEdit
 
-if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
+if (Get-Command Get-Frecents -ErrorAction Ignore) {
     #.ExternalHelp PSFzf.psm1-help.xml
     function Invoke-FuzzyFasd() {
         $result = $null
@@ -80,7 +80,7 @@ if (Get-Command Get-Frecents -ErrorAction SilentlyContinue) {
         }
     }
     SetPsFzfAlias "ff" Invoke-FuzzyFasd
-} elseif (Get-Command fasd -ErrorAction SilentlyContinue) {
+} elseif (Get-Command fasd -ErrorAction Ignore) {
     #.ExternalHelp PSFzf.psm1-help.xml
     function Invoke-FuzzyFasd() {
         $result = $null
@@ -125,7 +125,7 @@ function Invoke-FuzzySetLocation() {
     $result = $null
     try {
         if ([string]::IsNullOrWhiteSpace($env:FZF_DEFAULT_COMMAND)) {
-            Get-ChildItem $Directory -Recurse -ErrorAction SilentlyContinue | Where-Object{ $_.PSIsContainer } | Invoke-Fzf | ForEach-Object { $result = $_ }
+            Get-ChildItem $Directory -Recurse -ErrorAction Ignore | Where-Object{ $_.PSIsContainer } | Invoke-Fzf | ForEach-Object { $result = $_ }
         } else {
             Invoke-Fzf | ForEach-Object { $result = $_ }
         }
@@ -139,7 +139,7 @@ function Invoke-FuzzySetLocation() {
 }
 SetPsFzfAlias "fd" Invoke-FuzzySetLocation
 
-if (Get-Command Search-Everything -ErrorAction SilentlyContinue) {
+if (Get-Command Search-Everything -ErrorAction Ignore) {
     #.ExternalHelp PSFzf.psm1-help.xml
     function Set-LocationFuzzyEverything() {
         param($Directory=$null)
@@ -163,7 +163,7 @@ if (Get-Command Search-Everything -ErrorAction SilentlyContinue) {
     SetPsFzfAlias "cde" Set-LocationFuzzyEverything 
 }
 
-if (Get-Command Get-ZLocation -ErrorAction SilentlyContinue) {
+if (Get-Command Get-ZLocation -ErrorAction Ignore) {
     #.ExternalHelp PSFzf.psm1-help.xml
     function Invoke-FuzzyZLocation() {
         $result = $null
@@ -180,7 +180,7 @@ if (Get-Command Get-ZLocation -ErrorAction SilentlyContinue) {
     SetPsFzfAlias "fz" Invoke-FuzzyZLocation
 } 
 
-if (Get-Command git -ErrorAction SilentlyContinue) {
+if (Get-Command git -ErrorAction Ignore) {
     #.ExternalHelp PSFzf.psm1-help.xml
     function Invoke-FuzzyGitStatus() {
         $result = @()
