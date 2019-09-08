@@ -2,8 +2,8 @@
 if (-not $isLinux) {
     $ErrorActionPreference = "Stop"
     
-    $psdir = $env:APPVEYOR_BUILD_FOLDER
-    $installdir = join-path $psdir $env:APPVEYOR_PROJECT_NAME
+    $psdir = $env:GITHUB_WORKSPACE
+    $installdir = join-path $psdir 'PSFzf'
     new-item $installdir -ItemType Directory -verbose
     copy-item $psdir\*.ps* $installdir -verbose
     copy-item $psdir\PSFzf.dll $installdir -verbose
@@ -16,16 +16,16 @@ if (-not $isLinux) {
     copy-item $psdir\en-US\*.txt $docdir -verbose
     
     # get contents of current psd, update version and save it back out in the publish directory:
-    $psdFilePath = Join-Path $installdir ($env:APPVEYOR_PROJECT_NAME + '.psd1')
+    $psdFilePath = Join-Path $installdir 'PSFzf.psd1'
     $psdTable = Invoke-Expression (Get-Content $psdFilePath  | out-string) 
-    $version = $env:APPVEYOR_REPO_TAG_NAME
+    $version = $env:GITHUB_REF
     if ($version -eq '' -or $null -eq $version) {
-      $version = $env:LAST_TAG
+      throw 'Version not found in $GITHUB_REF'
     }
-    $version = $version.Replace('v','')
+    $version = $version.Split('/')[-1].Replace('v','')
     write-host ("publishing version {0}" -f $version)
     $psdTable.ModuleVersion = $version
     New-ModuleManifest $psdFilePath @psdTable
     
-    Publish-Module -NugetApiKey $env:POWERSHELLGALLERY_APIKEY -Path $installdir
+    # Publish-Module -NugetApiKey $env:POWERSHELLGALLERY_APIKEY -Path $installdir
 }
