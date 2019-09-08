@@ -13,7 +13,7 @@ jobs:
       run: ./.github/scripts/Install.ps1
       env:
         LAST_TAG: v1.1.15
-        FZF_VERSION: 0.17.3
+        FZF_VERSION: 0.18.0
       shell: pwsh
     - name: Build PSFzf-Binary
       run: ./.github/scripts/Build.ps1
