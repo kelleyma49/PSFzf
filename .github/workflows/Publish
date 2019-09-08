@@ -1,0 +1,23 @@
+name: Publish
+
+on: [create]
+
+jobs:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install needed software
+      run: ./.github/scripts/Install.ps1
+      env:
+        LAST_TAG: v1.1.15
+        FZF_VERSION: 0.18.0
+      shell: powershell
+    - name: Build PSFzf-Binary
+      run: ./.github/scripts/Build.ps1
+      shell: powershell
+    - name: Publish
+      run: ./.github/scripts/Deploy.ps1
+      shell: powershell
+      env:
+        POWERSHELLGALLERY_APIKEY: ${{ secrets.POWERSHELLGALLERY_APIKEY }}
