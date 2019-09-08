@@ -26,4 +26,4 @@ write-host ("publishing version {0}" -f $version)
 $psdTable.ModuleVersion = $version
 New-ModuleManifest $psdFilePath @psdTable
 
-# Publish-Module -NugetApiKey $env:POWERSHELLGALLERY_APIKEY -Path $installdir
+Publish-Module -NugetApiKey $env:POWERSHELLGALLERY_APIKEY -Path $installdir
