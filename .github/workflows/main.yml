@@ -9,10 +9,15 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
-    - name: Run a one-line script
-      run: echo Hello, world!
-    - name: Run a multi-line script
-      run: |
-        echo Add other actions to build,
-        echo test, and deploy your project.
+    - name: Install needed software
+      run: ./github/scripts/Install.ps1
       shell: pwsh
+    - name: Build PSFzf-Binary
+      run: ./github/scripts/Build.ps1
+      shell: pwsh
+    - name: Run tests
+      run: ./github/scripts/Tests.ps1
+      shell: pwsh
+      env:
+        LAST_TAG: v1.1.15
+        FZF_VERSION: 0.17.3
