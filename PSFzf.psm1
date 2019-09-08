@@ -135,9 +135,10 @@ function Invoke-Fzf {
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo.FileName = $script:FzfLocation
 		$process.StartInfo.Arguments = $arguments
-        $process.StartInfo.RedirectStandardInput = 1
-        $process.StartInfo.RedirectStandardOutput = 1
-        $process.StartInfo.UseShellExecute = 0
+        $process.StartInfo.RedirectStandardInput = $true
+        $process.StartInfo.RedirectStandardOutput = $true
+		$process.StartInfo.UseShellExecute = $false
+		$process.StartInfo.WorkingDirectory = $pwd.Path 
         
         # Creating string builders to store stdout:
         $stdOutStr = New-Object -TypeName System.Text.StringBuilder
