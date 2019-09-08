@@ -10,13 +10,13 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Install needed software
-      run: ./github/scripts/Install.ps1
+      run: ./.github/scripts/Install.ps1
       shell: pwsh
     - name: Build PSFzf-Binary
-      run: ./github/scripts/Build.ps1
+      run: ./.github/scripts/Build.ps1
       shell: pwsh
     - name: Run tests
-      run: ./github/scripts/Tests.ps1
+      run: ./.github/scripts/Tests.ps1
       shell: pwsh
       env:
         LAST_TAG: v1.1.15
