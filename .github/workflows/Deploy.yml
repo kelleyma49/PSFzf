@@ -1,6 +1,8 @@
 name: Deploy
 
-on: [create]
+on:
+release:
+    types: [created]
 
 jobs:
     windows:
