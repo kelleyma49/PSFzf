@@ -1,5 +1,6 @@
 # PSFzf
 [![PowerShell Gallery](https://img.shields.io/powershellgallery/v/PSFzf.svg)](https://www.powershellgallery.com/packages/PSFzf)
+[![Build status](https://github.com/kelleyma49/PSFzf/workflows/CI/badge.svg)](https://github.com/kelleyma49/PSFzf/actions)
 [![Build status](https://ci.appveyor.com/api/projects/status/ikihhqqlp46tm42x?svg=true)](https://ci.appveyor.com/project/kelleyma49/psfzf)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kelleyma49/PSFzf/blob/master/LICENSE)
 
