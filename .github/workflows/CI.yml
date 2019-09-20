@@ -21,6 +21,26 @@ jobs:
     - name: Run tests
       run: ./.github/scripts/Tests.ps1
       shell: pwsh
+      
+
+  Mac:
+
+    runs-on: macOS-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install needed software
+      run: ./.github/scripts/Install.ps1
+      env:
+        LAST_TAG: v1.1.15
+        FZF_VERSION: 0.18.0
+      shell: pwsh
+    - name: Build PSFzf-Binary
+      run: ./.github/scripts/Build.ps1
+      shell: pwsh
+    - name: Run tests
+      run: ./.github/scripts/Tests.ps1
+      shell: pwsh      
   
   windows:
 
