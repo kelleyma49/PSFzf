@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 Get-PackageProvider -Name NuGet -Force -Verbose
 
 # get fzf:
-if ($isLinux) {
+if ($IsLinux -or $IsOSX) {
   $modules = 'Pester', 'platyPS'
   Invoke-WebRequest https://github.com/junegunn/fzf-bin/releases/download/${env:FZF_VERSION}/fzf-${env:FZF_VERSION}-linux_amd64.tgz -OutFile fzf.tgz -Verbose
   mkdir ./fzf/
