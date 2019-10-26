@@ -63,7 +63,7 @@ Description = 'A thin wrapper around Fzf (https://github.com/junegunn/fzf).  If 
 # FormatsToProcess = @()
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-NestedModules = @('PsFzf_Binary.dll')
+NestedModules = @('PsFzf.dll')
 
 # Functions to export from this module
 FunctionsToExport = @('Invoke-Fzf','Invoke-FuzzyEdit','Invoke-FuzzyFasd','Invoke-FuzzyZLocation','Invoke-FuzzyGitStatus','Invoke-FuzzyHistory','Invoke-FuzzyKillProcess','Invoke-FuzzySetLocation','Set-LocationFuzzyEverything')

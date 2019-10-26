@@ -350,38 +350,50 @@ function Invoke-FzfPsReadlineHandlerProvider {
 			Invoke-Expression ($env:FZF_CTRL_T_COMMAND) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
 		} else {
 			if ([string]::IsNullOrWhiteSpace($currentPath)) {
-				Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
+				try 
+				{
+					Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
+				}
+				catch 
+				{
+
+				}
 			} else {
 				$resolvedPath = Resolve-Path $currentPath -ErrorAction SilentlyContinue
 				$providerName = $null
 				if ($null -ne $resolvedPath) {
 					$providerName = $resolvedPath.Provider.Name 
 				}
+
+				$ErrorActionPreference = 'SilentlyContinue'
 				switch ($providerName) {
 					# Get-ChildItem is way too slow - we optimize for the FileSystem provider by 
 					# using batch commands:
-					'FileSystem'    { Invoke-Expression ($script:ShellCmd -f ($fileSystemCmd -f $resolvedPath.ProviderPath)) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
-					'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object Name -ExpandProperty Name | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
-					$null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object FullName -ExpandProperty FullName | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
+					'FileSystem'    { Invoke-Expression ($script:ShellCmd -f ($fileSystemCmd	 -f $resolvedPath.ProviderPath)) | Invoke-Fzf -Multi -ThrowCustomException | ForEach-Object { $result += $_ } }
+					'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object Name -ExpandProperty Name | Invoke-Fzf -Multi -ThrowCustomException | ForEach-Object { $result += $_ } }
+					$null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object FullName -ExpandProperty FullName | Invoke-Fzf -Multi -ThrowCustomException | ForEach-Object { $result += $_ } }
 					Default         {}
 				}
 			}
 		}
     }
-    catch 
+    catch [PSFzf.FzfPipelineException]
     {
-        # catch custom exception
+		# catch PSFzf exception
     }
-	
+
 	if ($null -ne $result) {
 		# quote strings if we need to:
 		if ($result -is [system.array]) {
 			for ($i = 0;$i -lt $result.Length;$i++) {
-				if ($result[$i].Contains(" ") -or $result[$i].Contains("`t")) {
-					$result[$i] = "'{0}'" -f $result[$i].Replace("`r`n","")
-				} else {
-                    $result[$i] = $result[$i].Replace("`r`n","")
-                }
+				$item = $result[$i]
+				if (-not [string]::IsNullOrWhiteSpace($item)) {
+					if ($item.Contains(" ") -or $item.Contains("`t")) {
+					$result[$i] = "'{0}'" -f $item.Replace("`r`n","")
+					} else {
+						$result[$i] = $item.Replace("`r`n","")
+					}
+				}
 			}
 		} else {
 			if ($result.Contains(" ") -or $result.Contains("`t")) {

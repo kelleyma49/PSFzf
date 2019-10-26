@@ -165,10 +165,17 @@ namespace PSFzf
         /*[Parameter()]
         public bool Version { get; set; }*/
 
+        [Parameter()]
+        public SwitchParameter ThrowCustomException { get; set; }
         #endregion
 
         private Process Process;
         private List<string> OutputStr = new List<string>();
+        private string FileSystemDirectory =>  @"c:\";
+            //this.SessionState.Path.CurrentFileSystemLocation.ProviderPath;
+
+        private bool IsFileSystem => true;
+            //SessionState.Path.CurrentFileSystemLocation.Provider.Name == "FileSystem";
 
         private static void AddArg(StringBuilder args, SwitchParameter val, string fzfArg)
         {
@@ -245,8 +252,8 @@ namespace PSFzf
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
-                    WorkingDirectory = System.Environment.CurrentDirectory
-                }
+                    WorkingDirectory = this.FileSystemDirectory
+              }
             };
 
             Process.OutputDataReceived += (_, e) => OutputStr.Add(e.Data);
@@ -257,37 +264,32 @@ namespace PSFzf
 
         protected override void ProcessRecord()
         {
+            // if not input, get listing from current provider:
             if (Input == null)
             {
-                using (PowerShell ps = PowerShell.Create())
+                if (IsFileSystem)
                 {
-                    ps.AddScript("$PWD.Provider.Name");
-                    var result = ps.Invoke();
-                    bool runShellCommand = "FileSystem" == result?[0]?.ToString();
-                    if (runShellCommand)
-                    {
-                        //RunShellCmd();
-                        RunProcess();
-                    }
-                    else
-                    {
-                        RunGetChildItem();
-                    }
+                    //RunShellCmd();
+                    RunProcess();
+                }
+                else
+                {
+                    RunGetChildItem();
                 }
             }
             else
             {
                 foreach (var item in Input)
                 {
-                    if (!string.IsNullOrWhiteSpace(item))
-                    {
-                        Process.StandardInput.WriteLine(item);
-                    }
-
-                 
                     if (Process.HasExited)
                     {
                         FzfCompleted();
+                        break;
+                    }
+  
+                    if (!string.IsNullOrWhiteSpace(item))
+                    {
+                        Process.StandardInput.WriteLine(item);
                     }
                 }
             }
@@ -298,8 +300,7 @@ namespace PSFzf
             using (PowerShell ps = PowerShell.Create())
             {
                 ps.AddCommand("Invoke-Expression");
-                var cmd = FzfOptions.Options.GetFormattedShellCmd(
-                    System.Environment.CurrentDirectory);
+                var cmd = FzfOptions.Options.GetFormattedShellCmd(FileSystemDirectory);
                 ps.AddParameter("Command", cmd);
 
                 var output = new PSDataCollection<PSObject>();
@@ -324,7 +325,7 @@ namespace PSFzf
                 {
                     FileName = "cmd.exe",
                     Arguments = "/S /C " + FzfOptions.Options.GetFormattedFileSystemCmd(
-                    System.Environment.CurrentDirectory),
+                        FileSystemDirectory),
                     UseShellExecute = false,
                     RedirectStandardOutput = true
                 };
@@ -335,7 +336,10 @@ namespace PSFzf
                 {
                     if (Process.HasExited)
                     {
+                        process.CancelOutputRead();
+                        process.Kill();
                         FzfCompleted();
+                        break;
                     }
                     Task.Delay(100).Wait();
                 }
@@ -344,7 +348,7 @@ namespace PSFzf
 
         private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
-            if (!string.IsNullOrWhiteSpace(e.Data))
+            if (!string.IsNullOrWhiteSpace(e.Data) && !Process.HasExited)
             {
                 Process.StandardInput.WriteLine(e.Data);
             }
@@ -367,6 +371,7 @@ namespace PSFzf
                     if (Process.HasExited)
                     {
                         FzfCompleted();
+                        break;
                     }
                     Task.Delay(100).Wait();
                 }
@@ -383,14 +388,15 @@ namespace PSFzf
             {
                 string str = result.ToString();
 
-                if (!string.IsNullOrWhiteSpace(str))
-                {
-                    Process.StandardInput.WriteLine(str);
-                }
-
                 if (Process.HasExited)
                 {
                     FzfCompleted();
+                    break;
+                }
+
+                if (!string.IsNullOrWhiteSpace(str))
+                {
+                    Process.StandardInput.WriteLine(str);
                 }
             }
         }
@@ -406,16 +412,22 @@ namespace PSFzf
                 member = member ?? result.Members["Name"];
                 string str = member?.Value?.ToString() ?? result.ToString();
 
+                if (Process.HasExited)
+                {
+                    FzfCompleted();
+                    break;
+                }
+
                 if (!string.IsNullOrWhiteSpace(str))
                 {
                     Process.StandardInput.WriteLine(str);
                 }
-
-                if (Process.HasExited)
-                {
-                    FzfCompleted();
-                }
             }
+        }
+
+        protected override void StopProcessing()
+        {
+            FzfCompleted(throwException: false);
         }
 
         protected override void EndProcessing()
@@ -427,13 +439,28 @@ namespace PSFzf
 
         private void FzfCompleted(bool throwException=true)
         {
-             foreach (var s in OutputStr)
+            foreach (var s in OutputStr)
             {
-                WriteObject(s, true);
+                WriteObject(s);
             }
+            OutputStr.Clear();
+           
             Process?.StandardInput?.Close();
             if (throwException)
-                throw new PipelineStoppedException();
+            {
+                if (ThrowCustomException)
+                    throw new FzfPipelineException();
+                else
+                    throw new PipelineStoppedException();
+            }
         }
+    }
+
+    /// <summary>
+    /// C
+    /// </summary>
+    public class FzfPipelineException : System.Exception
+    {
+
     }
 }
