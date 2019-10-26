@@ -36,7 +36,7 @@ $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
 	RemovePsFzfAliases
 }
 
-function Invoke-Fzf {
+function Invoke-FzfOld {
 	param( 
             # Search
 			[Alias("x")]
@@ -520,19 +520,20 @@ function FindFzf()
 	}
 
     # find it in our path:
-    $script:FzfLocation = $null
+    $fzfLocation = $null
     $AppNames | ForEach-Object {
-        if ($null -eq $script:FzfLocation) {
+        if ($null -eq $fzfLocation) {
             $result = Get-Command $_ -ErrorAction SilentlyContinue
             $result | ForEach-Object {
-                $script:FzfLocation = Resolve-Path $_.Source   
+                $fzfLocation = Resolve-Path $_.Source   
             }
         }
     }
     
-    if ($null -eq $script:FzfLocation) {
+    if ($null -eq $fzfLocation) {
         throw 'Failed to find fzf binary in PATH.  You can download a binary from this page: https://github.com/junegunn/fzf-bin/releases' 
     }
+	$fzfLocation
 }
 if (Get-Module -ListAvailable -Name PSReadline) { 
 	SetPsReadlineShortcut "$PSReadlineChordProvider" -Override:$PSBoundParameters.ContainsKey('PSReadlineChordProvider') 'Fzf Provider Select' 'Run fzf for current provider based on current token' { Invoke-FzfPsReadlineHandlerProvider }
@@ -543,7 +544,17 @@ if (Get-Module -ListAvailable -Name PSReadline) {
 	Write-Warning "PSReadline module not found - keyboard handlers not installed" 
 }
 
-FindFzf
+#Import-Module PSFzf_Binary.dll
+
+# set shared options:
+$options = Get-FzfOption
+$options.FzfExeLocation = FindFzf
+$options.ShellCmd = $script:ShellCmd
+$options.DefaultFileSystemCmd = $script:DefaultFileSystemCmd
+$options.ChordProviderScriptBlock = {
+	param($chord)
+	SetPsReadlineShortcut "$chord" -Override 'Fzf Provider Select' 'Run fzf for current provider based on current token' { Invoke-FzfPsReadlineHandlerProvider }
+}
 
 @('PSFzf.Functions.ps1') | ForEach-Object {  Join-Path $PSScriptRoot $_ } | ForEach-Object {
 	. $_

@@ -51,7 +51,7 @@ Description = 'A thin wrapper around Fzf (https://github.com/junegunn/fzf).  If 
 # RequiredModules = @()
 
 # Assemblies that must be loaded prior to importing this module
-RequiredAssemblies = @('PSFzf.dll')
+#RequiredAssemblies = @('PSFzf.dll')
 
 # Script files (.ps1) that are run in the caller's environment prior to importing this module.
 # ScriptsToProcess = @()
@@ -63,7 +63,7 @@ RequiredAssemblies = @('PSFzf.dll')
 # FormatsToProcess = @()
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-# NestedModules = @()
+NestedModules = @('PsFzf_Binary.dll')
 
 # Functions to export from this module
 FunctionsToExport = @('Invoke-Fzf','Invoke-FuzzyEdit','Invoke-FuzzyFasd','Invoke-FuzzyZLocation','Invoke-FuzzyGitStatus','Invoke-FuzzyHistory','Invoke-FuzzyKillProcess','Invoke-FuzzySetLocation','Set-LocationFuzzyEverything')

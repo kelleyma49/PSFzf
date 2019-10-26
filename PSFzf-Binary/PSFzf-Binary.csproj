@@ -2,8 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <RootNamespace>PSFzf_Binary</RootNamespace>
-    <AssemblyName>PSFzf</AssemblyName>
+    <AssemblyName>PSFzf_Binary</AssemblyName>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PowerShellStandard.Library" Version="5.1.0-preview-06">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
 
 </Project>
