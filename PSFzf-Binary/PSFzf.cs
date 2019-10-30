@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace PSFzf
 {
     [Cmdlet(VerbsLifecycle.Invoke, "Fzf")]
-    public class PSFzfCommand : Cmdlet
+    public class PSFzfCommand : PSCmdlet
     {
         #region Parameters
         [Parameter(ValueFromPipeline = true)]
@@ -171,11 +171,9 @@ namespace PSFzf
 
         private Process Process;
         private List<string> OutputStr = new List<string>();
-        private string FileSystemDirectory =>  @"c:\";
-            //this.SessionState.Path.CurrentFileSystemLocation.ProviderPath;
+        private string FileSystemDirectory => SessionState.Path.CurrentFileSystemLocation.ProviderPath;
 
-        private bool IsFileSystem => true;
-            //SessionState.Path.CurrentFileSystemLocation.Provider.Name == "FileSystem";
+        private bool IsFileSystem => SessionState.Path.CurrentFileSystemLocation.Provider.Name == "FileSystem";
 
         private static void AddArg(StringBuilder args, SwitchParameter val, string fzfArg)
         {

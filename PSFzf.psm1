@@ -556,8 +556,6 @@ if (Get-Module -ListAvailable -Name PSReadline) {
 	Write-Warning "PSReadline module not found - keyboard handlers not installed" 
 }
 
-#Import-Module PSFzf_Binary.dll
-
 # set shared options:
 $options = Get-FzfOption
 $options.FzfExeLocation = FindFzf
