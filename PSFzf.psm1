@@ -50,7 +50,8 @@ function Invoke-Fzf {
 		  	[string]$Delimiter,
 		  	[switch]$NoSort,
 			[Alias('tac')]
-		  	[switch]$ReverseInput,
+			[switch]$ReverseInput,
+			[switch]$Phony,  
 		  	[ValidateSet('length','begin','end','index')]
 		  	[string]
 		  	$Tiebreak = 'length',
@@ -62,13 +63,21 @@ function Invoke-Fzf {
             [string]$Bind,
 			[switch]$Cycle,
 			[switch]$NoHScroll,
+			[switch]$FilepathWord,
 
             # Layout
-			[switch]$Reverse,
-			[switch]$InlineInfo,
+			[ValidateSet('default','reverse','reverse-list')]
+			[string]$Layout = 'default',
+			[switch]$Border,
+			[ValidateSet('default','inline','hidden')]
+			[string]$Info = 'default',
 			[string]$Prompt,
 			[string]$Header,
-            [int]$HeaderLines = -1,
+			[int]$HeaderLines = -1,
+			
+			# Display
+			[int]$Tabstop = 8, 
+			[switch]$NoBold,
 
             # History
 			[string]$History,
@@ -87,6 +96,7 @@ function Invoke-Fzf {
 			[switch]$Exit0,
 			[Alias('f')]
 			[string]$Filter,
+			[string]$Expect,
 			
 		  	[Parameter(ValueFromPipeline=$True)]
             [object[]]$Input
@@ -102,6 +112,7 @@ function Invoke-Fzf {
 		if (![string]::IsNullOrWhiteSpace($Delimiter)) 		{ $arguments += "--delimiter=$Delimiter "}
 		if ($NoSort) 										{ $arguments += '--no-sort '}
 		if ($ReverseInput) 									{ $arguments += '--tac '}
+		if ($Phony)											{ $arguments += '--phony '}
 		if (![string]::IsNullOrWhiteSpace($Tiebreak))		{ $arguments += "--tiebreak=$Tiebreak "}
 		if ($Multi) 										{ $arguments += '--multi '}
 		if ($NoMouse)					 					{ $arguments += '--no-mouse '}
@@ -109,10 +120,15 @@ function Invoke-Fzf {
 		if ($Reverse)					 					{ $arguments += '--reverse '}
 		if ($Cycle)						 					{ $arguments += '--cycle '}
 		if ($NoHScroll) 									{ $arguments += '--no-hscroll '}
-		if ($InlineInfo) 									{ $arguments += '--inline-info '}
+		if ($FilepathWord)									{ $arguments += '--filepath-word '}
+		if (![string]::IsNullOrWhiteSpace($Layout))			{ $arguments += "--layout=$Layout "}
+		if ($Border)										{ $arguments += '--border '}
+		if (![string]::IsNullOrWhiteSpace($Info)) 			{ $arguments += "--info=$Info "}
 		if (![string]::IsNullOrWhiteSpace($Prompt)) 		{ $arguments += "--prompt='$Prompt' "}
         if (![string]::IsNullOrWhiteSpace($Header)) 		{ $arguments += "--header=""$Header"" "}
-        if ($HeaderLines -ge 0) 		               		{ $arguments += "--header-lines=$HeaderLines "}
+		if ($HeaderLines -ge 0) 		               		{ $arguments += "--header-lines=$HeaderLines "}
+		if ($Tabstop -ge 0)									{ $arguments += "--tabstop=$Tabstop "}
+		if ($NoBold)										{ $arguments += '--no-bold '}
 		if ($History) 										{ $arguments += "--history='$History' "}
 		if ($HistorySize -ge 1)								{ $arguments += "--history-size=$HistorySize "}
         if (![string]::IsNullOrWhiteSpace($Preview)) 	    { $arguments += "--preview=""$Preview"" "}
@@ -121,7 +137,8 @@ function Invoke-Fzf {
 		if ($Select1)										{ $arguments += '--select-1 '}
 		if ($Exit0)											{ $arguments += '--exit-0 '}
 		if (![string]::IsNullOrEmpty($Filter))				{ $arguments += "--filter=$Filter " }
-	
+		if (![string]::IsNullOrWhiteSpace($Expect)) 	    { $arguments += "--expect=""$Expect"" "}
+     
 		$fileSystemCmd = Get-FileSystemCmd
 		
         # Windows only - if running under ConEmu, use option:
