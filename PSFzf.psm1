@@ -51,7 +51,7 @@ function Invoke-Fzf {
 		  	[switch]$NoSort,
 			[Alias('tac')]
 			[switch]$ReverseInput,
-			[switch]$Phony,  
+			[switch]$Phony,
 		  	[ValidateSet('length','begin','end','index')]
 		  	[string]
 		  	$Tiebreak = 'length',
@@ -74,9 +74,9 @@ function Invoke-Fzf {
 			[string]$Prompt,
 			[string]$Header,
 			[int]$HeaderLines = -1,
-			
+
 			# Display
-			[int]$Tabstop = 8, 
+			[int]$Tabstop = 8,
 			[switch]$NoBold,
 
             # History
@@ -85,7 +85,7 @@ function Invoke-Fzf {
 			
             #Preview
             [string]$Preview,
-            [string]$PreviewWindow,
+			[string]$PreviewWindow,
 
             # Scripting
 			[Alias('q')]
