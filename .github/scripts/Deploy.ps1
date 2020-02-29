@@ -16,23 +16,25 @@ copy-item $(Join-Path $psdir 'en-US' '*.txt') $docdir -verbose
 
 # get contents of current psd, update version and save it back out in the publish directory:
 $psdFilePath = Join-Path $installdir 'PSFzf.psd1'
+
+# update prerelease:
 $isPrerelease = "${env:GITHUB_PRERELEASE}" -eq 'true'
-$psdTableStr = Get-Content $psdFilePath  | Out-String
 if ($isPrerelease) {
-  $psdTableStr = $psdTableStr.Replace('# Prerelease','  Prerelease')
+  $psdStr = Get-Content $psdFilePath | Out-String
+  $psdStr = $psdStr.Replace('# Prerelease =','  Prerelease =')
+  Set-Content -Path $psdFilePath -Value $psdStr
 }
-$psdTable = Invoke-Expression $psdTableStr
+
 $version = $env:GITHUB_REF
 if ($version -eq '' -or $null -eq $version) {
   throw 'Version not found in $GITHUB_REF'
 }
 $version = $version.Split('/')[-1].Replace('v','')
-$psdTable.ModuleVersion = $version
+Update-ModuleManifest $psdFilePath -ModuleVersion $version
 
 if ($isPrerelease) {
   write-host ("publishing prerelease version {0}-alpha" -f $version)  
 } else {
   write-host ("publishing version {0}" -f $version)
 }
-New-ModuleManifest $psdFilePath @psdTable
-Publish-Module -NugetApiKey $env:POWERSHELLGALLERY_APIKEY -Path $installdir
+Publish-Module -NugetApiKey $env:POWERSHELLGALLERY_APIKEY -Path $installdir -Verbose
