@@ -24,8 +24,8 @@ if ($version -eq '' -or $null -eq $version) {
 $version = $version.Split('/')[-1].Replace('v','')
 $psdTable.ModuleVersion = $version
 
-$allowPrerelease = "${env:GITHUB_PRERELEASE}" -eq 'true' 
-if ($allowPrerelease) {
+$isPrerelease = "${env:GITHUB_PRERELEASE}" -eq 'true' 
+if ($isPrerelease) {
   $psdTable.PrivateData = @{
     PSData = @{
         Prerelease = 'alpha'
@@ -38,4 +38,4 @@ if ($allowPrerelease) {
 
 New-ModuleManifest $psdFilePath @psdTable
 
-Publish-Module -NugetApiKey $env:POWERSHELLGALLERY_APIKEY -Path $installdir -AllowPrerelease:$allowPrerelease
+Publish-Module -NugetApiKey $env:POWERSHELLGALLERY_APIKEY -Path $installdir
