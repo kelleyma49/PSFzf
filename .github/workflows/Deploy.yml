@@ -14,8 +14,7 @@ jobs:
         - name: Install needed software
           run: ./.github/scripts/Install.ps1
           env:
-            LAST_TAG: v1.1.15
-            FZF_VERSION: 0.18.0
+            FZF_VERSION: 0.20.0
           shell: powershell
         - name: Build PSFzf-Binary
           run: ./.github/scripts/Build.ps1
@@ -25,3 +24,4 @@ jobs:
           shell: powershell
           env:
             POWERSHELLGALLERY_APIKEY: ${{ secrets.POWERSHELLGALLERY_APIKEY }}
+            GITHUB_PRERELEASE: ${{ github.event.release.prerelease }}

@@ -22,8 +22,20 @@ if ($version -eq '' -or $null -eq $version) {
   throw 'Version not found in $GITHUB_REF'
 }
 $version = $version.Split('/')[-1].Replace('v','')
-write-host ("publishing version {0}" -f $version)
 $psdTable.ModuleVersion = $version
+
+$allowPrerelease = "${env:GITHUB_PRERELEASE}" -eq 'true' 
+if ($allowPrerelease) {
+  $psdTable.PrivateData = @{
+    PSData = @{
+        Prerelease = 'alpha'
+    }
+  }
+  write-host ("publishing prerelease version {0}-alpha" -f $version)  
+} else {
+  write-host ("publishing version {0}" -f $version)
+}
+
 New-ModuleManifest $psdFilePath @psdTable
 
-Publish-Module -NugetApiKey $env:POWERSHELLGALLERY_APIKEY -Path $installdir
+Publish-Module -NugetApiKey $env:POWERSHELLGALLERY_APIKEY -Path $installdir -AllowPrerelease:$allowPrerelease
