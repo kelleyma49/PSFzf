@@ -21,7 +21,7 @@ jobs:
           shell: powershell
         - name: Publish
           run: ./.github/scripts/Deploy.ps1
-          shell: powershell
+          shell: pwsh
           env:
             POWERSHELLGALLERY_APIKEY: ${{ secrets.POWERSHELLGALLERY_APIKEY }}
             GITHUB_PRERELEASE: ${{ github.event.release.prerelease }}
