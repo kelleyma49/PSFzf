@@ -84,7 +84,12 @@ AliasesToExport = '*'
 # FileList = @()
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess
-# PrivateData = ''
+PrivateData = @{
+
+    PSData = @{
+    # Prerelease = "alpha"
+    }
+}
 
 # HelpInfo URI of this module
 # HelpInfoURI = ''
