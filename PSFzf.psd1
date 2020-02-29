@@ -24,7 +24,7 @@ Author = 'Michael Kelley'
 CompanyName = 'Unknown'
 
 # Copyright statement for this module
-Copyright = '(c) 2016 . All rights reserved.'
+Copyright = '(c) 2020. All rights reserved.'
 
 # Description of the functionality provided by this module
 Description = 'A thin wrapper around Fzf (https://github.com/junegunn/fzf).  If PSReadline is loaded, this wrapper registers Fzf with the keyboard chord Ctrl+t.'

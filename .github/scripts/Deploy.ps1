@@ -26,16 +26,12 @@ $psdTable.ModuleVersion = $version
 
 $isPrerelease = "${env:GITHUB_PRERELEASE}" -eq 'true' 
 if ($isPrerelease) {
-  $psdTable.PrivateData = @{
-    PSData = @{
-        Prerelease = 'alpha'
-    }
-  }
   write-host ("publishing prerelease version {0}-alpha" -f $version)  
+  New-ModuleManifest $psdFilePath @psdTable -Prerelease 'alpha'
 } else {
   write-host ("publishing version {0}" -f $version)
+  New-ModuleManifest $psdFilePath @psdTable
 }
 
-New-ModuleManifest $psdFilePath @psdTable
 
 Publish-Module -NugetApiKey $env:POWERSHELLGALLERY_APIKEY -Path $installdir
