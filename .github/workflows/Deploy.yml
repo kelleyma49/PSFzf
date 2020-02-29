@@ -15,10 +15,10 @@ jobs:
           run: ./.github/scripts/Install.ps1
           env:
             FZF_VERSION: 0.20.0
-          shell: powershell
+          shell: pwsh
         - name: Build PSFzf-Binary
           run: ./.github/scripts/Build.ps1
-          shell: powershell
+          shell: pwsh
         - name: Publish
           run: ./.github/scripts/Deploy.ps1
           shell: pwsh
