@@ -390,6 +390,10 @@ function Invoke-FzfPsReadlineHandlerProvider {
         # catch custom exception
     }
 	
+	#HACK: workaround for fact that PSReadLine seems to clear screen 
+	# after keyboard shortcut action is executed:
+	[Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+
 	if ($null -ne $result) {
 		# quote strings if we need to:
 		if ($result -is [system.array]) {
@@ -443,6 +447,11 @@ function Invoke-FzfPsReadlineHandlerHistory {
 		# ensure that stream is closed:
 		$reader.Dispose()
 	}
+
+	#HACK: workaround for fact that PSReadLine seems to clear screen 
+	# after keyboard shortcut action is executed:
+	[Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+
 	if (-not [string]::IsNullOrEmpty($result)) {
 		[Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
 	}
@@ -479,6 +488,10 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 		$reader.Dispose()
 	}
 	
+	#HACK: workaround for fact that PSReadLine seems to clear screen 
+	# after keyboard shortcut action is executed:
+	[Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+
 	if (-not [string]::IsNullOrEmpty($result)) {
 		# add quotes:
 		if ($result.Contains(" ") -or $result.Contains("`t")) {
@@ -505,7 +518,11 @@ function Invoke-FzfPsReadlineHandlerSetLocation {
     if (-not [string]::IsNullOrEmpty($result)) {
         Set-Location $result
         [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
-    }
+	} else {
+		#HACK: workaround for fact that PSReadLine seems to clear screen 
+		# after keyboard shortcut action is executed:
+		[Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+	}
 }
 
 function SetPsReadlineShortcut($Chord,[switch]$Override,$BriefDesc,$Desc,[scriptblock]$scriptBlock)
