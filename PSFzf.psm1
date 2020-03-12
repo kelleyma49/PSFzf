@@ -62,16 +62,25 @@ function Invoke-Fzf {
 			[switch]$NoMouse,
             [string]$Bind,
 			[switch]$Cycle,
+			[switch]$KeepRight,
 			[switch]$NoHScroll,
 			[switch]$FilepathWord,
 
-            # Layout
+			# Layout
+			[ValidatePattern("^[1-9]+[0-9]+$|^[1-9][0-9]?%?$|^100%?$")]
+			[string]$Height,
+			[ValidateRange(1,[int]::MaxValue)]
+			[int]$MinHeight,
 			[ValidateSet('default','reverse','reverse-list')]
 			[string]$Layout = 'default',
 			[switch]$Border,
+			[ValidateSet('rounded','sharp','horizontal')]
+			[string]$BorderStyle,
 			[ValidateSet('default','inline','hidden')]
 			[string]$Info = 'default',
 			[string]$Prompt,
+			[string]$Pointer,
+			[string]$Marker,
 			[string]$Header,
 			[int]$HeaderLines = -1,
 
@@ -119,12 +128,18 @@ function Invoke-Fzf {
         if (![string]::IsNullOrWhiteSpace($Bind))		    { $arguments += "--bind=$Bind "}
 		if ($Reverse)					 					{ $arguments += '--reverse '}
 		if ($Cycle)						 					{ $arguments += '--cycle '}
+		if ($KeepRight)						 				{ $arguments += '--keep-right '}
 		if ($NoHScroll) 									{ $arguments += '--no-hscroll '}
 		if ($FilepathWord)									{ $arguments += '--filepath-word '}
+		if (![string]::IsNullOrWhiteSpace($Height))			{ $arguments += "--height=$height "}
+		if ($MinHeight -ge 0)								{ $arguments += "--min-height=$MinHeight "}
 		if (![string]::IsNullOrWhiteSpace($Layout))			{ $arguments += "--layout=$Layout "}
 		if ($Border)										{ $arguments += '--border '}
+		if (![string]::IsNullOrWhiteSpace($BorderStyle))	{ $arguments += "--border=$BorderStyle "}
 		if (![string]::IsNullOrWhiteSpace($Info)) 			{ $arguments += "--info=$Info "}
 		if (![string]::IsNullOrWhiteSpace($Prompt)) 		{ $arguments += "--prompt='$Prompt' "}
+		if (![string]::IsNullOrWhiteSpace($Pointer)) 		{ $arguments += "--pointer='$Pointer' "}
+		if (![string]::IsNullOrWhiteSpace($Marker)) 		{ $arguments += "--marker='$Marker' "}
         if (![string]::IsNullOrWhiteSpace($Header)) 		{ $arguments += "--header=""$Header"" "}
 		if ($HeaderLines -ge 0) 		               		{ $arguments += "--header-lines=$HeaderLines "}
 		if ($Tabstop -ge 0)									{ $arguments += "--tabstop=$Tabstop "}
@@ -138,16 +153,17 @@ function Invoke-Fzf {
 		if ($Exit0)											{ $arguments += '--exit-0 '}
 		if (![string]::IsNullOrEmpty($Filter))				{ $arguments += "--filter=$Filter " }
 		if (![string]::IsNullOrWhiteSpace($Expect)) 	    { $arguments += "--expect=""$Expect"" "}
-     
-		$fileSystemCmd = Get-FileSystemCmd
+	 
+		if ($script:UseHeightOption -and [string]::IsNullOrWhiteSpace($Height)) {
+			$arguments += "--height=40%"
+		}
 		
-        # Windows only - if running under ConEmu, use option:
-        if ($script:IsWindows) {
-            if ("$env:ConEmuHooks" -eq 'Enabled') {
-                #$arguments += '-new_console:s50H '
-            }
-        }
-        
+		if ($Border -eq $true -and -not [string]::IsNullOrWhiteSpace($BorderStyle)) {
+			throw '-Border and -BorderStyle are mutally exclusive'
+		}
+
+		$fileSystemCmd = Get-FileSystemCmd
+		  
 		# prepare to start process:
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo.FileName = $script:FzfLocation
@@ -578,6 +594,20 @@ if (Get-Module -ListAvailable -Name PSReadline) {
 }
 
 FindFzf
+
+try 
+{
+	$fzfVersion = $(& $script:FzfLocation --version).Split('.') 
+	$script:UseHeightOption = $fzfVersion.length -eq 3 -and `
+							  ([int]$fzfVersion[0] -gt 0 -or `
+							  [int]$fzfVersion[1] -ge 21) -and `
+							  [bool]($env:WT_Session) # running in Windows Terminal? 	
+}
+catch 
+{
+	# continue
+}
+
 
 @('PSFzf.Functions.ps1') | ForEach-Object {  Join-Path $PSScriptRoot $_ } | ForEach-Object {
 	. $_
