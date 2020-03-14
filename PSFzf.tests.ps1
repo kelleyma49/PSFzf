@@ -124,6 +124,58 @@ Describe "Add-BinaryModuleTypes" {
 	}
 }
 
+Describe "Check Parameters" {
+	InModuleScope PsFzf {
+		Context "Parameters Should Fail" {
+			It "Borders Should Be Mutally Exclusive" {
+				{ $_ = '' | Invoke-Fzf -Border -BorderStyle 'sharp' } | 
+					Should -Throw 'are mutally exclusive'
+			}
+
+			It "Validate Tiebreak" {
+				{ $_ = '' | Invoke-Fzf -Tiebreak 'Tiebreak' } | 
+				Should -Throw 'Cannot validate argument on parameter ''TieBreak'''
+			}
+
+			It "Validate BorderStyle" {
+				{ $_ = '' | Invoke-Fzf -BorderStyle 'InvalidStyle' } | 
+				Should -Throw 'Cannot validate argument on parameter ''BorderStyle'''
+			}
+
+			It "Validate Info" {
+				{ $_ = '' | Invoke-Fzf -Info 'InvalidInfo' } | 
+				Should -Throw 'Cannot validate argument on parameter ''Info'''
+			}
+
+			It "Validate Height Pattern Percentage" {
+				{ $_ = '' | Invoke-Fzf -Height '1000%' } | 
+					Should -Throw 'Cannot validate argument on parameter ''Height'''
+			}
+
+			It "Validate Height Pattern Non-Number" {
+				{ $_ = '' | Invoke-Fzf -Height 'adf1000' } | 
+				Should -Throw 'Cannot validate argument on parameter ''Height'''
+			}
+
+			It "Validate Height Pattern Negative" {
+				{ $_ = '' | Invoke-Fzf -Height '-1' } | 
+				Should -Throw 'Cannot validate argument on parameter ''Height'''
+			}
+
+			It "Validate MinHeight Pattern Non-Number" {
+				{ $_ = '' | Invoke-Fzf -MinHeight 'adf1' -Height 10 } | 
+				Should -Throw 'Cannot process argument transformation on parameter ''MinHeight'''
+			}
+
+			It "Validate MinHeight Pattern Negative" {
+				{ $_ = '' | Invoke-Fzf -MinHeight '-1' -Height 10 } | 
+				Should -Throw 'Cannot validate argument on parameter ''MinHeight'''
+			}
+
+		}
+	}
+}
+
 # CI seems to have problems on GitHub CI - timing issues?
 if ( $false ) {
  
