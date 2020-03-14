@@ -155,7 +155,7 @@ function Invoke-Fzf {
 		if (![string]::IsNullOrWhiteSpace($Expect)) 	    { $arguments += "--expect=""$Expect"" "}
 	 
 		if ($script:UseHeightOption -and [string]::IsNullOrWhiteSpace($Height)) {
-			$arguments += "--height=40%"
+			$arguments += "--height=40% "
 		}
 		
 		if ($Border -eq $true -and -not [string]::IsNullOrWhiteSpace($BorderStyle)) {
