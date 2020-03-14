@@ -109,9 +109,10 @@ SetPsFzfAlias "fh" Invoke-FuzzyHistory
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyKillProcess() {
-    $result = Get-Process | Where-Object { ![string]::IsNullOrEmpty($_.ProcessName) } | ForEach-Object { "{0}: {1}" -f $_.Id,$_.ProcessName } | Invoke-Fzf -Multi
+    $header = [System.Environment]::NewLine + $("{0,-8} PROCESS NAME" -f "ID") + [System.Environment]::NewLine
+    $result = Get-Process | Where-Object { ![string]::IsNullOrEmpty($_.ProcessName) } | ForEach-Object { "{0,-8} {1}" -f $_.Id,$_.ProcessName } | Invoke-Fzf -Multi -Header $header
     $result | ForEach-Object {
-        $id = $_ -replace "([0-9]+)(:)(.*)",'$1' 
+        $id = $_ -replace "([0-9]+)(.*)",'$1' 
         Stop-Process $id -Verbose
     }
 }
