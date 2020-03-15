@@ -24,7 +24,11 @@ function Expand-GitWithFzf($lastBlock) {
     if ($results.Count -gt 1) {
         $results -join ' '
     } else {
-        $results
+        if (-not $null -eq $results) {
+            $results
+        } else {
+            '' # output something to prevent default tab expansion
+        }
     }
 
     #HACK: workaround for fact that PSReadLine seems to clear screen 
