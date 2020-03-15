@@ -33,34 +33,37 @@ function Expand-GitWithFzf($lastBlock) {
 }
 
 function Expand-FileDirectoryPath($lastWord) {
-            # find dir and file pattern connected to the trigger:
-            $lastWord = $lastWord.Substring(0, $lastWord.Length - 2)
-            if ($lastWord.EndsWith('\')) {
-                $dir = $lastWord.Substring(0, $lastWord.Length - 1)
-                $file = $null    
-            } elseif (-not [string]::IsNullOrWhiteSpace($lastWord)) {
-                $dir = Split-Path $lastWord -Parent
-                $file = Split-Path $lastWord -Leaf    
-            }
-            if (-not [System.IO.Path]::IsPathRooted($dir)) {
-                $dir = Join-Path $PWD.Path $dir
-            }
-            $prevPath = $Pwd.Path
-            try {
-                if (-not [string]::IsNullOrEmpty($dir)) {
-                    Set-Location $dir
-                }
-                if (-not [string]::IsNullOrEmpty($file)) {
-                    Invoke-Fzf -Query $file
-                }
-                else {
-                    Invoke-Fzf
-                }
-            }
-            finally {
-                Set-Location $prevPath
-            }
+    # find dir and file pattern connected to the trigger:
+    $lastWord = $lastWord.Substring(0, $lastWord.Length - 2)
+    if ($lastWord.EndsWith('\')) {
+        $dir = $lastWord.Substring(0, $lastWord.Length - 1)
+        $file = $null    
+    } elseif (-not [string]::IsNullOrWhiteSpace($lastWord)) {
+        $dir = Split-Path $lastWord -Parent
+        $file = Split-Path $lastWord -Leaf    
+    }
+    if (-not [System.IO.Path]::IsPathRooted($dir)) {
+        $dir = Join-Path $PWD.Path $dir
+    }
+    $prevPath = $Pwd.Path
+    try {
+        if (-not [string]::IsNullOrEmpty($dir)) {
+            Set-Location $dir
+        }
+        if (-not [string]::IsNullOrEmpty($file)) {
+            Invoke-Fzf -Query $file
+        }
+        else {
+            Invoke-Fzf
+        }
+    }
+    finally {
+        Set-Location $prevPath
+    }
 
+    #HACK: workaround for fact that PSReadLine seems to clear screen 
+    # after keyboard shortcut action is executed:
+    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
 }
 
 function TabExpansion($line, $lastWord) {
