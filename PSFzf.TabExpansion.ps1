@@ -2,8 +2,34 @@ if (Test-Path Function:\TabExpansion) {
     Rename-Item Function:\TabExpansion TabExpansionBackupPSFzf
 }
 
+# borrowed from https://github.com/dahlbyk/posh-git/blob/f69efd9229029519adb32e37a464b7e1533a372c/src/GitTabExpansion.ps1#L81
+filter quoteStringWithSpecialChars {
+    if ($_ -and ($_ -match '\s+|#|@|\$|;|,|''|\{|\}|\(|\)')) {
+        $str = $_ -replace "'", "''"
+        "'$str'"
+    }
+    else {
+        $_
+    }
+}
 function Expand-GitWithFzf($lastBlock) {
-    Expand-GitCommand $lastBlock | Invoke-Fzf 
+    $gitResults = Expand-GitCommand $lastBlock
+    # if no results, invoke filesystem completion:
+    if ($null -eq $gitResults) {
+        $results = Invoke-Fzf -Multi | quoteStringWithSpecialChars
+    } else {
+        $results = $gitResults | Invoke-Fzf -Multi | quoteStringWithSpecialChars
+    }
+
+    if ($results.Count -gt 1) {
+        $results -join ' '
+    } else {
+        $results
+    }
+
+    #HACK: workaround for fact that PSReadLine seems to clear screen 
+    # after keyboard shortcut action is executed:
+    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
 }
 
 function Expand-FileDirectoryPath($lastWord) {
