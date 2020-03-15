@@ -12,12 +12,11 @@ function Expand-FileDirectoryPath($lastWord) {
             if ($lastWord.EndsWith('\')) {
                 $dir = $lastWord.Substring(0, $lastWord.Length - 1)
                 $file = $null    
-            }
-            else {
+            } elseif (-not [string]::IsNullOrWhiteSpace($lastWord)) {
                 $dir = Split-Path $lastWord -Parent
                 $file = Split-Path $lastWord -Leaf    
             }
-            if (-not [System.IO.Path]::IsRooted($dir)) {
+            if (-not [System.IO.Path]::IsPathRooted($dir)) {
                 $dir = Join-Path $PWD.Path $dir
             }
             $prevPath = $Pwd.Path
