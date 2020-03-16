@@ -3,7 +3,7 @@ if (Test-Path Function:\TabExpansion) {
 }
 
 # borrowed from https://github.com/dahlbyk/posh-git/blob/f69efd9229029519adb32e37a464b7e1533a372c/src/GitTabExpansion.ps1#L81
-filter quoteStringWithSpecialChars {
+filter script:quoteStringWithSpecialChars {
     if ($_ -and ($_ -match '\s+|#|@|\$|;|,|''|\{|\}|\(|\)')) {
         $str = $_ -replace "'", "''"
         "'$str'"
@@ -12,13 +12,20 @@ filter quoteStringWithSpecialChars {
         $_
     }
 }
+
+# taken from https://github.com/dahlbyk/posh-git/blob/2ad946347e7342199fd4bb1b42738833f68721cd/src/GitUtils.ps1#L407
+function script:Get-AliasPattern($cmd) {
+    $aliases = @($cmd) + @(Get-Alias | Where-Object { $_.Definition -eq $cmd } | Select-Object -Exp Name)
+   "($($aliases -join '|'))"
+}
+
 function Expand-GitWithFzf($lastBlock) {
     $gitResults = Expand-GitCommand $lastBlock
     # if no results, invoke filesystem completion:
     if ($null -eq $gitResults) {
-        $results = Invoke-Fzf -Multi | quoteStringWithSpecialChars
+        $results = Invoke-Fzf -Multi | script:quoteStringWithSpecialChars
     } else {
-        $results = $gitResults | Invoke-Fzf -Multi | quoteStringWithSpecialChars
+        $results = $gitResults | Invoke-Fzf -Multi | script:quoteStringWithSpecialChars
     }
 
     if ($results.Count -gt 1) {
@@ -84,10 +91,10 @@ function TabExpansion($line, $lastWord) {
             $lastBlock = $lastBlock.Substring(0, $lastBlock.Length - 2)
             switch -regex ($lastBlock) {
                 # Execute git tab completion for all git-related commands
-                "^$(Get-AliasPattern git) (.*)" { Expand-GitWithFzf $lastBlock }
-                "^$(Get-AliasPattern tgit) (.*)" { Expand-GitWithFzf $lastBlock }
-                "^$(Get-AliasPattern gitk) (.*)" { Expand-GitWithFzf $lastBlock }
-                "^$(Get-AliasPattern Remove-GitBranch) (.*)" { Expand-GitWithFzf $lastBlock }
+                "^$(script:Get-AliasPattern git) (.*)" { Expand-GitWithFzf $lastBlock }
+                "^$(script:Get-AliasPattern tgit) (.*)" { Expand-GitWithFzf $lastBlock }
+                "^$(script:Get-AliasPattern gitk) (.*)" { Expand-GitWithFzf $lastBlock }
+                "^$(script:Get-AliasPattern Remove-GitBranch) (.*)" { Expand-GitWithFzf $lastBlock }
     
                 default { Expand-FileDirectoryPath $lastWord }
             }
