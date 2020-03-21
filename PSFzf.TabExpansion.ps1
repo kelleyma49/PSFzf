@@ -1,7 +1,3 @@
-if (Test-Path Function:\TabExpansion) {
-    Rename-Item Function:\TabExpansion TabExpansionBackupPSFzf
-}
-
 # borrowed from https://github.com/dahlbyk/posh-git/blob/f69efd9229029519adb32e37a464b7e1533a372c/src/GitTabExpansion.ps1#L81
 filter script:quoteStringWithSpecialChars {
     if ($_ -and ($_ -match '\s+|#|@|\$|;|,|''|\{|\}|\(|\)')) {
@@ -77,9 +73,39 @@ function Expand-FileDirectoryPath($lastWord) {
     [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
 }
 
-function TabExpansion($line, $lastWord) {
-    $lastBlock = [regex]::Split($line, '[|;]')[-1].TrimStart()
+$script:TabExpansionEnabled = $false
+function SetTabExpansion($enable)
+{
+    if ($enable) {
+        if (-not $script:TabExpansionEnabled) {
+                $script:TabExpansionEnabled = $true
 
+                Microsoft.PowerShell.Core\Register-ArgumentCompleter -CommandName git,tgit,gitk -Native -ScriptBlock {
+                    param($wordToComplete, $commandAst, $cursorPosition)
+                
+                    # The PowerShell completion has a habit of stripping the trailing space when completing:
+                    # git checkout <tab>
+                    # The Expand-GitCommand expects this trailing space, so pad with a space if necessary.
+                    $padLength = $cursorPosition - $commandAst.Extent.StartOffset
+                    $textToComplete = $commandAst.ToString().PadRight($padLength, ' ').Substring(0, $padLength)
+                
+                    #WriteTabExpLog "Expand: command: '$($commandAst.Extent.Text)', padded: '$textToComplete', padlen: $padLength"
+                    Expand-GitCommandPsFzf $textToComplete
+                }
+                
+        }
+    } else {
+        if ($script:TabExpansionEnabled) {
+            $script:TabExpansionEnabled = $false
+            Rename-Item Function:\Expand-GitCommand Expand-GitCommandPsFzf
+            Rename-Item Function:\Expand-GitCommandBackupPSFzf Expand-GitCommand
+        }
+    }   
+}
+
+
+
+function Expand-GitCommandPsFzf($lastWord) {
     if ([string]::IsNullOrWhiteSpace($env:FZF_COMPLETION_TRIGGER)) {
         $completionTrigger = '**'
     }
@@ -87,25 +113,9 @@ function TabExpansion($line, $lastWord) {
         $completionTrigger = $env:FZF_COMPLETION_TRIGGER
     }
     if ($lastWord.EndsWith($completionTrigger)) {
-        if (Get-Command 'Expand-GitCommand' -ErrorAction SilentlyContinue) {
-            $lastBlock = $lastBlock.Substring(0, $lastBlock.Length - 2)
-            switch -regex ($lastBlock) {
-                # Execute git tab completion for all git-related commands
-                "^$(script:Get-AliasPattern git) (.*)" { Expand-GitWithFzf $lastBlock }
-                "^$(script:Get-AliasPattern tgit) (.*)" { Expand-GitWithFzf $lastBlock }
-                "^$(script:Get-AliasPattern gitk) (.*)" { Expand-GitWithFzf $lastBlock }
-                "^$(script:Get-AliasPattern Remove-GitBranch) (.*)" { Expand-GitWithFzf $lastBlock }
-    
-                default { Expand-FileDirectoryPath $lastWord }
-            }
-        } else {
-            Expand-FileDirectoryPath $lastWord
-        }
-    }
-    else {
-        # Fall back on existing tab expansion
-        if (Test-Path Function:\TabExpansionBackupPSFzf) {
-            TabExpansionBackupPSFzf $line $lastWord
-        }
+            $lastWord = $lastWord.Substring(0, $lastWord.Length - $completionTrigger.Length)
+            Expand-GitWithFzf $lastWord
+    } else {
+        Expand-GitCommand $lastWord
     }
 }

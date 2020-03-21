@@ -36,6 +36,14 @@ $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
 	RemovePsFzfAliases
 }
 
+function Set-PsFzfOption{
+	param(
+		[switch]
+		$TabExpansion
+	)
+	SetTabExpansion $TabExpansion
+}
+
 function Invoke-Fzf {
 	param( 
             # Search
@@ -609,6 +617,9 @@ catch
 }
 
 
-@('PSFzf.Functions.ps1') | ForEach-Object {  Join-Path $PSScriptRoot $_ } | ForEach-Object {
-	. $_
+@('PSFzf.Functions.ps1', 'PSFzf.TabExpansion.ps1') | 
+	ForEach-Object {  
+		Join-Path $PSScriptRoot $_ 
+	} | ForEach-Object {
+		. $_
 }
