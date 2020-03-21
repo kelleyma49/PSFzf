@@ -66,7 +66,18 @@ RequiredAssemblies = @('PSFzf.dll')
 # NestedModules = @()
 
 # Functions to export from this module
-FunctionsToExport = @('Invoke-Fzf','Invoke-FuzzyEdit','Invoke-FuzzyFasd','Invoke-FuzzyZLocation','Invoke-FuzzyGitStatus','Invoke-FuzzyHistory','Invoke-FuzzyKillProcess','Invoke-FuzzySetLocation','Set-LocationFuzzyEverything')
+FunctionsToExport = @(
+    'Invoke-Fzf',
+    'Invoke-FuzzyEdit',
+    'Invoke-FuzzyFasd',
+    'Invoke-FuzzyZLocation',
+    'Invoke-FuzzyGitStatus',
+    'Invoke-FuzzyHistory',
+    'Invoke-FuzzyKillProcess',
+    'Invoke-FuzzySetLocation',
+    'Set-LocationFuzzyEverything',
+    'Set-PsFzfOption'
+)
 
 # Cmdlets to export from this module
 CmdletsToExport = '*'
