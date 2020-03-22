@@ -116,6 +116,21 @@ function CheckFzfTrigger {
         $wordToComplete
     }
 }
+
+
+function GetServiceSelection() {
+    param(
+        [scriptblock]
+        $ResultAction
+    )
+    $header = [System.Environment]::NewLine + $("{0,-24} | NAME" -f "DISPLAYNAME") + [System.Environment]::NewLine
+    $result = Get-Service | Where-Object { ![string]::IsNullOrEmpty($_.Name) } | ForEach-Object { 
+        "{0,-24} | {1}" -f $_.DisplayName.Substring(0,[System.Math]::Min(24,$_.DisplayName.Length)),$_.Name } | Invoke-Fzf -Multi -Header $header
+    $result | ForEach-Object {
+        &$ResultAction $_
+    }
+}
+
 function RegisterBuiltinCompleters {
     $processIdOrNameScriptBlock = {
         param($commandName, $parameterName, $wordToComplete, $commandAst, $cursorPosition,$action)
@@ -146,6 +161,37 @@ function RegisterBuiltinCompleters {
     'Get-Process','Stop-Process' | ForEach-Object {
         Register-ArgumentCompleter -CommandName $_ -ParameterName "Name" -ScriptBlock $processIdOrNameScriptBlock
         Register-ArgumentCompleter -CommandName $_ -ParameterName "Id" -ScriptBlock $processIdOrNameScriptBlock            
+    }
+
+    $serviceNameScriptBlock = {
+        param($commandName, $parameterName, $wordToComplete, $commandAst, $cursorPosition,$action)
+        $wordToComplete = CheckFzfTrigger $commandName $parameterName $wordToComplete $commandAst $cursorPosition
+        if ($null -ne $wordToComplete)
+        {
+            if ($parameterName -eq 'Name') {
+                $group = '$2'
+            } elseif ($parameterName -eq 'DisplayName') {
+                $group = '$1'
+            }
+
+            $script:resultArr = @()
+            GetServiceSelection -ResultAction {
+                param($result) 
+                $script:resultArr += $result -replace "(.*)\|(.*)",$group
+            }
+
+            $script:resultArr -join ', '
+            #HACK: workaround for fact that PSReadLine seems to clear screen 
+            # after keyboard shortcut action is executed:
+            [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+        } else {
+            # don't return anything - let normal tab completion work
+        }
+    }
+
+    'Get-Service','Start-Service','Stop-Service' | ForEach-Object {
+        Register-ArgumentCompleter -CommandName $_ -ParameterName "Name" -ScriptBlock $serviceNameScriptBlock
+        Register-ArgumentCompleter -CommandName $_ -ParameterName "DisplayName" -ScriptBlock $serviceNameScriptBlock            
     }
 }
 
