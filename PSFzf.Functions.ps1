@@ -108,11 +108,22 @@ function Invoke-FuzzyHistory() {
 SetPsFzfAlias "fh" Invoke-FuzzyHistory
 
 #.ExternalHelp PSFzf.psm1-help.xml
-function Invoke-FuzzyKillProcess() {
+
+function GetProcessSelection() {
+    param(
+        [scriptblock]
+        $ResultAction
+    )
     $header = [System.Environment]::NewLine + $("{0,-8} PROCESS NAME" -f "ID") + [System.Environment]::NewLine
     $result = Get-Process | Where-Object { ![string]::IsNullOrEmpty($_.ProcessName) } | ForEach-Object { "{0,-8} {1}" -f $_.Id,$_.ProcessName } | Invoke-Fzf -Multi -Header $header
     $result | ForEach-Object {
-        $id = $_ -replace "([0-9]+)(.*)",'$1' 
+        &$ResultAction $_
+    }
+}
+function Invoke-FuzzyKillProcess() {
+    GetProcessSelection -ResultAction {
+        param($result) 
+        $id = $result -replace "([0-9]+)(.*)",'$1' 
         Stop-Process $id -Verbose
     }
 }

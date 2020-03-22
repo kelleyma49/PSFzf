@@ -80,6 +80,8 @@ function SetTabExpansion($enable)
         if (-not $script:TabExpansionEnabled) {
                 $script:TabExpansionEnabled = $true
 
+                RegisterBuiltinCompleters
+
                 Register-ArgumentCompleter -CommandName git,tgit,gitk -Native -ScriptBlock {
                     param($wordToComplete, $commandAst, $cursorPosition)
                 
@@ -101,6 +103,51 @@ function SetTabExpansion($enable)
     }   
 }
 
+function CheckFzfTrigger {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $cursorPosition,$action)
+    if ([string]::IsNullOrWhiteSpace($env:FZF_COMPLETION_TRIGGER)) {
+        $completionTrigger = '**'
+    }
+    else {
+        $completionTrigger = $env:FZF_COMPLETION_TRIGGER
+    }
+    if ($wordToComplete.EndsWith($completionTrigger)) {
+        $wordToComplete = $wordToComplete.Substring(0, $wordToComplete.Length - $completionTrigger.Length)
+        $wordToComplete
+    }
+}
+function RegisterBuiltinCompleters {
+    $processIdOrNameScriptBlock = {
+        param($commandName, $parameterName, $wordToComplete, $commandAst, $cursorPosition,$action)
+        $wordToComplete = CheckFzfTrigger $commandName $parameterName $wordToComplete $commandAst $cursorPosition
+        if ($null -ne $wordToComplete)
+        {
+            if ($parameterName -eq 'Name') {
+                $group = '$2'
+            } elseif ($parameterName -eq 'Id') {
+                $group = '$1'
+            }
+
+            $script:resultArr = @()
+            GetProcessSelection -ResultAction {
+                param($result) 
+                $script:resultArr += $result -replace "([0-9]+)(.*)",$group
+            }
+
+            $script:resultArr -join ', '
+            #HACK: workaround for fact that PSReadLine seems to clear screen 
+            # after keyboard shortcut action is executed:
+            [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+        } else {
+            # don't return anything - let normal tab completion work
+        }
+    }
+
+    'Get-Process','Stop-Process' | ForEach-Object {
+        Register-ArgumentCompleter -CommandName $_ -ParameterName "Name" -ScriptBlock $processIdOrNameScriptBlock
+        Register-ArgumentCompleter -CommandName $_ -ParameterName "Id" -ScriptBlock $processIdOrNameScriptBlock            
+    }
+}
 
 
 function Expand-GitCommandPsFzf($lastWord) {
