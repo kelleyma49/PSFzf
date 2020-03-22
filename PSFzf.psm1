@@ -30,8 +30,8 @@ $script:FzfLocation = $null
 $script:PSReadlineHandlerChords = @()
 $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
 {
-	$script:PSReadlineHandlerChords | ForEach-Object {
-			Remove-PSReadlineKeyHandler $_
+	$PsReadlineShortcuts.Values | Where-Object Chord | ForEach-Object { 
+		Remove-PSReadlineKeyHandler $_.Chord
 	}
 	RemovePsFzfAliases
 }
@@ -39,9 +39,34 @@ $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
 function Set-PsFzfOption{
 	param(
 		[switch]
-		$TabExpansion
+		$TabExpansion,
+		[string]
+		$PSReadlineChordProvider,
+		[string]
+		$PSReadlineChordReverseHistory,
+		[string]
+		$PSReadlineChordSetLocation,
+		[string]
+		$PSReadlineChordReverseHistoryArgs
 	)
-	SetTabExpansion $TabExpansion
+	if ($PSBoundParameters.ContainsKey('TabExpansion')) {
+		SetTabExpansion $TabExpansion
+	}
+
+	$PsReadlineShortcuts.GetEnumerator() | ForEach-Object {
+		$key = $_.key
+		if ($PSBoundParameters.ContainsKey($_.key)) {
+			$info = $_.value
+			$newChord = $PSBoundParameters[$_.key]
+			$result = SetPsReadlineShortcut $newChord -Override $info.BriefDesc $info.Desc $info.ScriptBlock
+			if ($result) {
+				if (($null -ne $info.Chord) -and ($info.Chord.ToLower() -ne $newChord.ToLower())) {
+					Remove-PSReadLineKeyHandler $info.Chord
+				}
+				$info.Chord = $newChord
+			}
+		}	
+	}
 }
 
 function Invoke-Fzf {
@@ -552,13 +577,13 @@ function Invoke-FzfPsReadlineHandlerSetLocation {
 function SetPsReadlineShortcut($Chord,[switch]$Override,$BriefDesc,$Desc,[scriptblock]$scriptBlock)
 {
 	if ([string]::IsNullOrEmpty($Chord)) {
-		return
+		return $false
 	}
 	if ((Get-PSReadlineKeyHandler -Bound | Where-Object {$_.Key.ToLower() -eq $Chord}) -and -not $Override) {
-		Write-Warning ("PSReadline chord {0} already in use - keyboard handler not installed.  To bind your own keyboard chord, use the -ArgumentList parameter when you call Import-Module." -f $Chord)
+		return $false
 	} else {
-		$script:PSReadlineHandlerChords += $Chord
 		Set-PSReadlineKeyHandler -Key $Chord -Description $Desc -BriefDescription $BriefDesc -ScriptBlock $scriptBlock
+		return $true
 	} 
 }
 
@@ -592,11 +617,38 @@ function FindFzf()
         throw 'Failed to find fzf binary in PATH.  You can download a binary from this page: https://github.com/junegunn/fzf-bin/releases' 
     }
 }
-if (Get-Module -ListAvailable -Name PSReadline) { 
-	SetPsReadlineShortcut "$PSReadlineChordProvider" -Override:$PSBoundParameters.ContainsKey('PSReadlineChordProvider') 'Fzf Provider Select' 'Run fzf for current provider based on current token' { Invoke-FzfPsReadlineHandlerProvider }
-	SetPsReadlineShortcut "$PSReadlineChordReverseHistory" -Override:$PSBoundParameters.ContainsKey('PSReadlineChordReverseHistory') 'Fzf Reverse History Select' 'Run fzf to search through PSReadline history' { Invoke-FzfPsReadlineHandlerHistory }
-	SetPsReadlineShortcut "$PSReadlineChordSetLocation" -Override:$PSBoundParameters.ContainsKey('PSReadlineChordSetLocation') 'Fzf Set Location' 'Run fzf to select directory to set current location' { Invoke-FzfPsReadlineHandlerSetLocation }
-	SetPsReadlineShortcut "$PSReadlineChordReverseHistoryArgs" -Override:$PSBoundParameters.ContainsKey('PSReadlineChordReverseHistoryArgs') 'Fzf Reverse History Arg Select' 'Run fzf to search through command line arguments in PSReadline history' { Invoke-FzfPsReadlineHandlerHistoryArgs }
+
+$PsReadlineShortcuts = @{
+	PSReadlineChordProvider = [PSCustomObject]@{
+		'Chord' = "$PSReadlineChordProvider" 
+		'BriefDesc' = 'Fzf Provider Select' 
+		'Desc' = 'Run fzf for current provider based on current token' 
+		'ScriptBlock' = { Invoke-FzfPsReadlineHandlerProvider } };
+	PSReadlineChordReverseHistory = [PsCustomObject]@{
+		'Chord' = "$PSReadlineChordReverseHistory" 
+		'BriefDesc' = 'Fzf Reverse History Select' 
+		'Desc' = 'Run fzf to search through PSReadline history' 
+		'ScriptBlock' = { Invoke-FzfPsReadlineHandlerHistory } };
+	PSReadlineChordSetLocation = @{
+		'Chord' = "$PSReadlineChordSetLocation"
+		'BriefDesc' = 'Fzf Set Location'
+		'Desc' = 'Run fzf to select directory to set current location' 
+		'ScriptBlock' = { Invoke-FzfPsReadlineHandlerSetLocation } };
+	PSReadlineChordReverseHistoryArgs = @{
+		'Chord' = "$PSReadlineChordReverseHistoryArgs"
+		'BriefDesc' = 'Fzf Reverse History Arg Select'
+		'Desc' = 'Run fzf to search through command line arguments in PSReadline history' 
+		'ScriptBlock' = { Invoke-FzfPsReadlineHandlerHistoryArgs } };	
+}
+if (Get-Module -ListAvailable -Name PSReadline) {
+	$PsReadlineShortcuts.GetEnumerator() | ForEach-Object {
+		$info = $_.Value
+		$result = SetPsReadlineShortcut $info.Chord -Override:$PSBoundParameters.ContainsKey($_.Key) $info.BriefDesc $info.Desc $info.ScriptBlock
+		# store that the chord is not activated:
+		if (-not $result) {
+			$info.Chord = $null
+		}
+	} 
 } else {
 	Write-Warning "PSReadline module not found - keyboard handlers not installed" 
 }

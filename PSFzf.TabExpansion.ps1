@@ -80,7 +80,7 @@ function SetTabExpansion($enable)
         if (-not $script:TabExpansionEnabled) {
                 $script:TabExpansionEnabled = $true
 
-                Microsoft.PowerShell.Core\Register-ArgumentCompleter -CommandName git,tgit,gitk -Native -ScriptBlock {
+                Register-ArgumentCompleter -CommandName git,tgit,gitk -Native -ScriptBlock {
                     param($wordToComplete, $commandAst, $cursorPosition)
                 
                     # The PowerShell completion has a habit of stripping the trailing space when completing:
@@ -97,8 +97,6 @@ function SetTabExpansion($enable)
     } else {
         if ($script:TabExpansionEnabled) {
             $script:TabExpansionEnabled = $false
-            Rename-Item Function:\Expand-GitCommand Expand-GitCommandPsFzf
-            Rename-Item Function:\Expand-GitCommandBackupPSFzf Expand-GitCommand
         }
     }   
 }
