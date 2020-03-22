@@ -54,7 +54,6 @@ function Set-PsFzfOption{
 	}
 
 	$PsReadlineShortcuts.GetEnumerator() | ForEach-Object {
-		$key = $_.key
 		if ($PSBoundParameters.ContainsKey($_.key)) {
 			$info = $_.value
 			$newChord = $PSBoundParameters[$_.key]
