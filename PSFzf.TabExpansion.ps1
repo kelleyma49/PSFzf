@@ -146,7 +146,7 @@ function RegisterBuiltinCompleters {
             $script:resultArr = @()
             GetProcessSelection -ResultAction {
                 param($result) 
-                $script:resultArr += $result -replace "([0-9]+)(.*)",$group
+                $script:resultArr += $result -replace "([0-9]+)\s*(.*)",$group
             }
 
             $script:resultArr -join ', '
@@ -177,7 +177,7 @@ function RegisterBuiltinCompleters {
             $script:resultArr = @()
             GetServiceSelection -ResultAction {
                 param($result) 
-                $script:resultArr += $result -replace "(.*)\|(.*)",$group
+                $script:resultArr += $result -replace "(.*)\s*\|\s* (.*)",$group
             }
 
             $script:resultArr -join ', '
