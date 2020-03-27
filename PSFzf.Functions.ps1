@@ -114,7 +114,7 @@ function GetProcessSelection() {
         [scriptblock]
         $ResultAction
     )
-    $header = [System.Environment]::NewLine + $("{0,-8} PROCESS NAME" -f "ID") + [System.Environment]::NewLine
+    $header = "`n" + $("{0,-8} PROCESS NAME" -f "ID") + "`n"
     $result = Get-Process | Where-Object { ![string]::IsNullOrEmpty($_.ProcessName) } | ForEach-Object { "{0,-8} {1}" -f $_.Id,$_.ProcessName } | Invoke-Fzf -Multi -Header $header
     $result | ForEach-Object {
         &$ResultAction $_
@@ -198,8 +198,15 @@ if (Get-Command git -ErrorAction Ignore) {
     function Invoke-FuzzyGitStatus() {
         $result = @()
         try {
+            if ($RunningInWindowsTerminal) {
+                $header = "`n`e[7mCTRL+A`e[0m Select All`t`e[7mCTRL+D`e[0m Deselect All`t`e[7mCTRL+T`e[0m Toggle All"
+            } else {
+                $header = "`nCTRL+A-Select All`tCTRL+D-Deselect All`tCTRL+T-Toggle All"
+            }
             $gitRoot = git rev-parse --show-toplevel
-            git status --porcelain | Invoke-Fzf -Multi -Bind 'ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all' | ForEach-Object { $result += Join-Path $gitRoot $('{0}' -f $_.Substring('?? '.Length)) }
+            git status --porcelain | 
+            Invoke-Fzf -Multi -Bind 'ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all' -Header $header | `
+                ForEach-Object { $result += Join-Path $gitRoot $('{0}' -f $_.Substring('?? '.Length)) }
         } catch {
             # do nothing
         }

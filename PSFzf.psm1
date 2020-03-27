@@ -26,6 +26,7 @@ function Get-FileSystemCmd
 	}
 }
 
+$RunningInWindowsTerminal = [bool]($env:WT_Session)
 $script:FzfLocation = $null
 $script:PSReadlineHandlerChords = @()
 $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
@@ -117,6 +118,7 @@ function Invoke-Fzf {
 			[int]$HeaderLines = -1,
 
 			# Display
+			[switch]$Ansi,
 			[int]$Tabstop = 8,
 			[switch]$NoBold,
 
@@ -174,6 +176,7 @@ function Invoke-Fzf {
 		if (![string]::IsNullOrWhiteSpace($Marker)) 		{ $arguments += "--marker='$Marker' "}
         if (![string]::IsNullOrWhiteSpace($Header)) 		{ $arguments += "--header=""$Header"" "}
 		if ($HeaderLines -ge 0) 		               		{ $arguments += "--header-lines=$HeaderLines "}
+		if ($Ansi)											{ $arguments += '--ansi '}
 		if ($Tabstop -ge 0)									{ $arguments += "--tabstop=$Tabstop "}
 		if ($NoBold)										{ $arguments += '--no-bold '}
 		if ($History) 										{ $arguments += "--history='$History' "}
@@ -660,7 +663,7 @@ try
 	$script:UseHeightOption = $fzfVersion.length -eq 3 -and `
 							  ([int]$fzfVersion[0] -gt 0 -or `
 							  [int]$fzfVersion[1] -ge 21) -and `
-							  [bool]($env:WT_Session) # running in Windows Terminal? 	
+							  $RunningInWindowsTerminal 	
 }
 catch 
 {

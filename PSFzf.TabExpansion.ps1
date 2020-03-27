@@ -123,9 +123,9 @@ function GetServiceSelection() {
         [scriptblock]
         $ResultAction
     )
-    $header = [System.Environment]::NewLine + $("{0,-24} | NAME" -f "DISPLAYNAME") + [System.Environment]::NewLine
+    $header = [System.Environment]::NewLine + $("{0,-24} NAME" -f "DISPLAYNAME") + [System.Environment]::NewLine
     $result = Get-Service | Where-Object { ![string]::IsNullOrEmpty($_.Name) } | ForEach-Object { 
-        "{0,-24} | {1}" -f $_.DisplayName.Substring(0,[System.Math]::Min(24,$_.DisplayName.Length)),$_.Name } | Invoke-Fzf -Multi -Header $header
+        "{0,-24} {1}" -f $_.DisplayName.Substring(0,[System.Math]::Min(24,$_.DisplayName.Length)),$_.Name } | Invoke-Fzf -Multi -Header $header
     $result | ForEach-Object {
         &$ResultAction $_
     }
@@ -177,7 +177,7 @@ function RegisterBuiltinCompleters {
             $script:resultArr = @()
             GetServiceSelection -ResultAction {
                 param($result) 
-                $script:resultArr += $result -replace "(.*)\s*\|\s* (.*)",$group
+                $script:resultArr += $result.Substring(24+1)
             }
 
             $script:resultArr -join ', '
