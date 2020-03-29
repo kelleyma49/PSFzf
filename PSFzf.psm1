@@ -35,6 +35,8 @@ $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
 		Remove-PSReadlineKeyHandler $_.Chord
 	}
 	RemovePsFzfAliases
+
+	RemoveGitKeyBindings
 }
 
 function Set-PsFzfOption{
@@ -48,10 +50,16 @@ function Set-PsFzfOption{
 		[string]
 		$PSReadlineChordSetLocation,
 		[string]
-		$PSReadlineChordReverseHistoryArgs
+		$PSReadlineChordReverseHistoryArgs,
+		[switch]
+		$GitKeyBindings
 	)
 	if ($PSBoundParameters.ContainsKey('TabExpansion')) {
 		SetTabExpansion $TabExpansion
+	}
+
+	if ($PSBoundParameters.ContainsKey('GitKeyBindings')) {
+		SetGitKeyBindings $GitKeyBindings
 	}
 
 	$PsReadlineShortcuts.GetEnumerator() | ForEach-Object {
@@ -671,7 +679,7 @@ catch
 }
 
 
-@('PSFzf.Functions.ps1', 'PSFzf.TabExpansion.ps1') | 
+@('PSFzf.Functions.ps1','PSFzf.Git.ps1', 'PSFzf.TabExpansion.ps1') | 
 	ForEach-Object {  
 		Join-Path $PSScriptRoot $_ 
 	} | ForEach-Object {
