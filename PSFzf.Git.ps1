@@ -2,6 +2,8 @@
 $script:GitKeyHandlers = @()
 
 $script:gitPath = $null
+$script:gitPathLong = $null
+
 function SetGitKeyBindings($enable)
 {
     if ($IsLinux -or $IsMacOS) {
@@ -17,10 +19,10 @@ function SetGitKeyBindings($enable)
         if ($null -eq $gitPath) {
             $gitInfo = Get-Command git.exe -ErrorAction SilentlyContinue
             if ($null -ne $gitInfo) {
-                $script:gitPath = Split-Path (Split-Path $gitInfo.Source -Parent) -Parent  
+                $script:gitPathLong = Split-Path (Split-Path $gitInfo.Source -Parent) -Parent  
 
                 $a = New-Object -ComObject Scripting.FileSystemObject 
-                $f = $a.GetFolder($script:gitPath) 
+                $f = $a.GetFolder($script:gitPathLong) 
                 $script:gitPath = $f.ShortPath
             } else {
                 Write-Error "Failed to register git key bindings - git executable not found"
@@ -29,7 +31,8 @@ function SetGitKeyBindings($enable)
         }
         if (Get-Command Set-PSReadLineKeyHandler -ErrorAction SilentlyContinue) {
             @('ctrl+g,ctrl+f','Select Git Files', {Invoke-PsFzfGitFiles}), `
-            @('ctrl+g,ctrl+s','Select Git Hashes', {Invoke-PsFzfGitHashes}) | ForEach-Object {
+            @('ctrl+g,ctrl+s','Select Git Hashes', {Invoke-PsFzfGitHashes}), `
+            @('ctrl+g,ctrl+b','Select Git Branches', {Invoke-PsFzfGitBranches}) | ForEach-Object {
                 $script:GitKeyHandlers += $_[0]
                 Set-PSReadLineKeyHandler -Chord $_[0] -Description $_[1] -ScriptBlock $_[2]
             }
@@ -106,3 +109,32 @@ function Invoke-PsFzfGitHashes() {
         [Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
     }
  }
+
+ function Invoke-PsFzfGitBranches() {
+    if (-not (IsInGitRepo)) {
+        return
+    }
+
+    $previewCmd = $(Join-Path $PsScriptRoot 'PsFzfGitBranches-Preview.bat') + " ${script:gitPath}" + ' {}'
+    $result = @()
+    git branch -a | & "${script:gitPathLong}\usr\bin\grep.exe" -v '/HEAD\s' | 
+        ForEach-Object { $_.Substring('* '.Length) } | Sort-Object | `
+                Invoke-Fzf -Ansi -Multi -PreviewWindow "right:70%" -Preview "$previewCmd" | ForEach-Object {
+                        $result += $_
+                }
+
+    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+    if ($result.Length -gt 0) {
+        $result = $result -join " "
+        [Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
+    }
+ }
+
+# gb() {
+#    is_in_git_repo || return
+#    git branch -a --color=always | grep -v '/HEAD\s' | sort |
+#    fzf-down --ansi --multi --tac --preview-window right:70% \
+#      --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" $(sed s/^..// <<< {} | cut -d" " -f1) | head -'$LINES |
+#    sed 's/^..//' | cut -d' ' -f1 |
+#    sed 's#^remotes/##'
+#  }
