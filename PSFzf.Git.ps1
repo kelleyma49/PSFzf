@@ -4,6 +4,14 @@ $script:GitKeyHandlers = @()
 $script:gitPath = $null
 function SetGitKeyBindings($enable)
 {
+    if ($IsLinux -or $IsMacOS) {
+        Write-Error "Failed to register git key bindings - git bindings aren't supported on non-Windows platforms"
+    }
+
+    if (-not $RunningInWindowsTerminal) {
+        Write-Error "Failed to register git key bindings - git bindings are only supported in Windows Terminal"      
+    }
+
     if ($enable)
     {
         if ($null -eq $gitPath) {
@@ -44,6 +52,17 @@ function IsInGitRepo()
     git rev-parse HEAD 2>&1 | Out-Null
     return $?
 }
+
+function Get-HeaderStrings() {
+    if ($RunningInWindowsTerminal) {
+        $header = "`n`e[7mCTRL+A`e[0m Select All`t`e[7mCTRL+D`e[0m Deselect All`t`e[7mCTRL+T`e[0m Toggle All"
+    } else {
+        $header = "`nCTRL+A-Select All`tCTRL+D-Deselect All`tCTRL+T-Toggle All"
+    }
+
+    $keyBinds = 'ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all'
+    return $Header, $keyBinds
+}
 function Invoke-PsFzfGitFiles() {
     if (-not (IsInGitRepo)) {
         return
@@ -51,9 +70,14 @@ function Invoke-PsFzfGitFiles() {
 
     $previewCmd = $(Join-Path $PsScriptRoot 'PsFzfGitFiles-Preview.bat') + " ${script:gitPath}" + ' {-1}'
     $result = @()
+
+    $headerStrings = Get-HeaderStrings
+
     git -c color.status=always status --short | `
         Invoke-Fzf -Border -Multi -Ansi `
-            -Preview "$previewCmd" | foreach-object { $result += $_.Substring('?? '.Length) } 
+            -Preview "$previewCmd" -Header $headerStrings[0] -Bind $headerStrings[1] | foreach-object { 
+                $result += $_.Substring('?? '.Length) 
+            } 
     [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
     if ($result.Length -gt 0) {
         $result = $result -join " "

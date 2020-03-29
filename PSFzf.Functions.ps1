@@ -95,7 +95,7 @@ if (Get-Command Get-Frecents -ErrorAction Ignore) {
         }
     }
     SetPsFzfAlias "ff" Invoke-FuzzyFasd
-}
+}   
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyHistory() {
@@ -198,15 +198,12 @@ if (Get-Command git -ErrorAction Ignore) {
     function Invoke-FuzzyGitStatus() {
         $result = @()
         try {
-            if ($RunningInWindowsTerminal) {
-                $header = "`n`e[7mCTRL+A`e[0m Select All`t`e[7mCTRL+D`e[0m Deselect All`t`e[7mCTRL+T`e[0m Toggle All"
-            } else {
-                $header = "`nCTRL+A-Select All`tCTRL+D-Deselect All`tCTRL+T-Toggle All"
-            }
+            $headerStrings = Get-HeaderStrings
             $gitRoot = git rev-parse --show-toplevel
             git status --porcelain | 
-            Invoke-Fzf -Multi -Bind 'ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all' -Header $header | `
-                ForEach-Object { $result += Join-Path $gitRoot $('{0}' -f $_.Substring('?? '.Length)) }
+            Invoke-Fzf -Multi -Bind $headerStrings[1] -Header $headerStrings[0] | ForEach-Object { 
+                $result += Join-Path $gitRoot $('{0}' -f $_.Substring('?? '.Length)) 
+            }
         } catch {
             # do nothing
         }
