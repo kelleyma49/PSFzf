@@ -49,13 +49,13 @@ Press <kbd>Alt+c</kbd> to start PSFzf to select a directory.  `Set-Location` wil
 Press <kbd>Alt+a</kbd> to start PSFzf to select command line arguments used in PSReadline history.  The picked argument will be inserted in the current line.  The line that would result from the selection is shown in the preview window.
 
 ## Tab Expansion
-PSFzf supports tab expansion with a small set of commands. After typing the default trigger command, which defaults to "`**`", and press <kbd>Tab</kbd>, PsFzf tab expansion will provide selectable list of options.
+PSFzf supports tab expansion for a small set of commands. After typing the default trigger command, which defaults to "`**`", and pressing <kbd>Tab</kbd>, PsFzf tab expansion will provide a selectable list of options.
 
 The following commands are supported:
 
 | Command | Notes |
 |---------|-------|
-| `git`   | Uses [`posh-git`](https://github.com/dahlbyk/posh-git) for providing tab completion options. Requires at least version 1.0.0 Beta 4.
+| `git`   | Uses [`posh-git`](https://github.com/dahlbyk/posh-git) to provide tab completion options. Requires at least version 1.0.0 Beta 4.
 | `Get-Service`, `Start-Service`, `Stop-Service` | Allows the user to select between the installed services.
 | `Get-Process`, `Start-Process` | Allows the user to select between running processes.
 
