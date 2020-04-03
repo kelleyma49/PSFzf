@@ -33,20 +33,13 @@ Multiple items can be selected.  If more than one is selected by the user, the r
 
 Press <kbd>Ctrl+r</kbd> to start PSFzf to select a command in the command history saved by PSReadline.  PSFzf will insert the command into the current line, but it will not execute the command.
 
-PSFzf does not override <kbd>Ctrl+r</kbd> by default.  To confirm that you want to override PSReadline's chord binding, you have two options.
-
-The first option is to remove the handler from PSReadline.  For example:
+PSFzf does not override <kbd>Ctrl+r</kbd> by default.  To confirm that you want to override PSReadline's chord binding, use the `Set-PsFzfOption` command:
 
 ```powershell
-Remove-PSReadlineKeyHandler 'Ctrl+r'
-Import-Module PSFzf
+# replace 'Ctrl+t' and 'Ctrl+r' with your preferred bindings:
+Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
 ```
 
-The other option is to pass in the chord when you import the module.  For example:
-
-```powershell
-Import-Module PSFzf -ArgumentList 'Ctrl+t','Ctrl+r' # or replace these strings with your preferred bindings
-``` 
 ### Set-Location Based on Selected Directory (default chord: <kbd>Alt+c</kbd>)
 
 Press <kbd>Alt+c</kbd> to start PSFzf to select a directory.  `Set-Location` will be called with the selected directory.
