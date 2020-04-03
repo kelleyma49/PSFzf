@@ -4,7 +4,8 @@ Write-Host "Triggered from ${env:GITHUB_REF}"
 $psdir = $env:GITHUB_WORKSPACE
 $installdir = Join-Path $psdir 'PSFzf'
 new-item $installdir -ItemType Directory -verbose
-copy-item $(Join-Path $psdir '*.bat') $installdir -verbose
+new-item $(Join-Path $installdir 'bat') -ItemType Directory -verbose
+copy-item $(Join-Path $psdir 'bat' '*.bat') $(Join-Path $installdir 'bat') -verbose
 copy-item $(Join-Path $psdir '*.ps*') $installdir -verbose
 copy-item $(Join-Path $psdir 'PSFzf.dll') $installdir -verbose
 

@@ -71,7 +71,7 @@ function Invoke-PsFzfGitFiles() {
         return
     }
 
-    $previewCmd = $(Join-Path $PsScriptRoot 'PsFzfGitFiles-Preview.bat') + " ${script:gitPath}" + ' {-1}'
+    $previewCmd = $(Join-Path $PsScriptRoot 'bat' 'PsFzfGitFiles-Preview.bat') + " ${script:gitPath}" + ' {-1}'
     $result = @()
 
     $headerStrings = Get-HeaderStrings
@@ -92,7 +92,7 @@ function Invoke-PsFzfGitHashes() {
         return
     }
 
-    $previewCmd = $(Join-Path $PsScriptRoot 'PsFzfGitHashes-Preview.bat') + " ${script:gitPath}" + ' {}'
+    $previewCmd = $(Join-Path $PsScriptRoot 'bat' 'PsFzfGitHashes-Preview.bat') + " ${script:gitPath}" + ' {}'
     $result = @()
     git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph --color=always | `
         Invoke-Fzf -Ansi -NoSort -ReverseInput -Multi -Bind ctrl-s:toggle-sort `
@@ -115,7 +115,7 @@ function Invoke-PsFzfGitHashes() {
         return
     }
 
-    $previewCmd = $(Join-Path $PsScriptRoot 'PsFzfGitBranches-Preview.bat') + " ${script:gitPath}" + ' {}'
+    $previewCmd = $(Join-Path $PsScriptRoot 'bat' 'PsFzfGitBranches-Preview.bat') + " ${script:gitPath}" + ' {}'
     $result = @()
     git branch -a | & "${script:gitPathLong}\usr\bin\grep.exe" -v '/HEAD\s' | 
         ForEach-Object { $_.Substring('* '.Length) } | Sort-Object | `
