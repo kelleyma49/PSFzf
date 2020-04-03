@@ -33,7 +33,7 @@ Multiple items can be selected.  If more than one is selected by the user, the r
 
 Press <kbd>Ctrl+r</kbd> to start PSFzf to select a command in the command history saved by PSReadline.  PSFzf will insert the command into the current line, but it will not execute the command.
 
-PSFzf does not override <kbd>Ctrl+r</kbd> by default.  To confirm that you want to override PSReadline's chord binding, use the `Set-PsFzfOption` command:
+PSFzf does not override <kbd>Ctrl+r</kbd> by default.  To confirm that you want to override PSReadline's chord binding, use the [`Set-PsFzfOption`](docs/Invoke-Fzf.md) command:
 
 ```powershell
 # replace 'Ctrl+t' and 'Ctrl+r' with your preferred bindings:
