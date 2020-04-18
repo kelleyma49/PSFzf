@@ -1,2 +1,2 @@
 @echo off
-git diff --color=always %2 | "%~1\usr\bin\head.exe" -500
+git diff %3 %2 | "%~1\usr\bin\head.exe" -500

@@ -52,6 +52,15 @@ function IsInGitRepo()
     return $?
 }
 
+function Get-ColorAlways()
+{
+    if ($RunningInWindowsTerminal) {
+        ' --color=always'
+    } else {
+        ''
+    }
+}
+
 function Get-HeaderStrings() {
     if ($RunningInWindowsTerminal) {
         $header = "`n`e[7mCTRL+A`e[0m Select All`t`e[7mCTRL+D`e[0m Deselect All`t`e[7mCTRL+T`e[0m Toggle All"
@@ -67,7 +76,7 @@ function Invoke-PsFzfGitFiles() {
         return
     }
 
-    $previewCmd = $(Join-Path $PsScriptRoot 'bat/PsFzfGitFiles-Preview.bat') + " ${script:gitPath}" + ' {-1}'
+    $previewCmd = $(Join-Path $PsScriptRoot 'bat/PsFzfGitFiles-Preview.bat') + " ${script:gitPath}" + ' {-1}' + $(Get-ColorAlways)
     $result = @()
 
     $headerStrings = Get-HeaderStrings
@@ -88,7 +97,7 @@ function Invoke-PsFzfGitHashes() {
         return
     }
 
-    $previewCmd = $(Join-Path $PsScriptRoot 'bat/PsFzfGitHashes-Preview.bat') + " ${script:gitPath}" + ' {}'
+    $previewCmd = $(Join-Path $PsScriptRoot 'bat/PsFzfGitHashes-Preview.bat') + " ${script:gitPath}" + ' {}' + $(Get-ColorAlways)
     $result = @()
     git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph | `
         Invoke-Fzf -Ansi -NoSort -ReverseInput -Multi -Bind ctrl-s:toggle-sort `
@@ -111,7 +120,7 @@ function Invoke-PsFzfGitHashes() {
         return
     }
 
-    $previewCmd = $(Join-Path $PsScriptRoot 'bat/PsFzfGitBranches-Preview.bat') + " ${script:gitPath}" + ' {}'
+    $previewCmd = $(Join-Path $PsScriptRoot 'bat/PsFzfGitBranches-Preview.bat') + " ${script:gitPath}" + ' {}' + $(Get-ColorAlways)
     $result = @()
     git branch -a | & "${script:gitPathLong}\usr\bin\grep.exe" -v '/HEAD\s' | 
         ForEach-Object { $_.Substring('* '.Length) } | Sort-Object | `
