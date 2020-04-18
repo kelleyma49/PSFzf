@@ -29,7 +29,6 @@ Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory
 
 ### CommonParameters
 This cmdlet does not support common parameters.
-## INPUTS
 
 ### -PSReadlineChordProvider
 PSReadline keyboard chord shortcut to trigger file and directory selection
@@ -73,6 +72,9 @@ Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
+
+## INPUTS
+### None
 
 ## OUTPUTS
 
