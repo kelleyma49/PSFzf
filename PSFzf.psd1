@@ -67,6 +67,7 @@ RequiredAssemblies = @('PSFzf.dll')
 
 # Functions to export from this module
 FunctionsToExport = @(
+    'Enable-PsFzfAliases',
     'Invoke-PsFzfGitFiles',
     'Invoke-PsFzfGitHashes',
     'Invoke-Fzf',

@@ -1,8 +1,8 @@
 param(
 	[parameter(Position=0,Mandatory=$false)][string]$PSReadlineChordProvider = 'Ctrl+t',
 	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordReverseHistory = 'Ctrl+r',
-	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordSetLocation = 'Alt+c',
-	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordReverseHistoryArgs = 'Alt+a')
+	[parameter(Position=2,Mandatory=$false)][string]$PSReadlineChordSetLocation = 'Alt+c',
+	[parameter(Position=3,Mandatory=$false)][string]$PSReadlineChordReverseHistoryArgs = 'Alt+a')
 
 $script:IsWindows = ($PSVersionTable.PSVersion.Major -le 5) -or $IsWindows
 if ($script:IsWindows) {	
@@ -52,7 +52,23 @@ function Set-PsFzfOption{
 		[string]
 		$PSReadlineChordReverseHistoryArgs,
 		[switch]
-		$GitKeyBindings
+		$GitKeyBindings,
+		[switch]
+		$EnableAliasFuzzyEdit,
+		[switch]
+		$EnableAliasFuzzyFasd,
+		[switch]
+		$EnableAliasFuzzyHistory,
+		[switch]
+		$EnableAliasFuzzyKillProcess,
+		[switch]
+		$EnableAliasFuzzySetLocation,
+		[switch]
+		$EnableAliasFuzzySetEverything,
+		[switch]
+		$EnableAliasFuzzyZLocation,
+		[switch]
+		$EnableAliasFuzzyGitStatus
 	)
 	if ($PSBoundParameters.ContainsKey('TabExpansion')) {
 		SetTabExpansion $TabExpansion
@@ -74,6 +90,19 @@ function Set-PsFzfOption{
 				$info.Chord = $newChord
 			}
 		}	
+	}
+
+	if ($EnableAliasFuzzyEdit) 			{ SetPsFzfAlias "fe"      Invoke-FuzzyEdit}
+	if ($EnableAliasFuzzyFasd) 			{ SetPsFzfAlias "ff"      Invoke-FuzzyFasd}
+	if ($EnableAliasFuzzyHistory) 		{ SetPsFzfAlias "fh"      Invoke-FuzzyHistory }
+	if ($EnableAliasFuzzyKillProcess) 	{ SetPsFzfAlias "fkill"   Invoke-FuzzyKillProcess }
+	if ($EnableAliasFuzzySetLocation) 	{ SetPsFzfAlias "fd"      Invoke-FuzzySetLocation }
+	if ($EnableAliasFuzzyZLocation) 	{ SetPsFzfAlias "fz"      Invoke-FuzzyZLocation }
+	if ($EnableAliasFuzzyGitStatus) 	{ SetPsFzfAlias "fgs"     Invoke-FuzzyGitStatus }
+	if ($EnableAliasFuzzySetEverything) {
+        if (${function:Set-LocationFuzzyEverything}) {
+            SetPsFzfAlias "cde" Set-LocationFuzzyEverything 
+        }
 	}
 }
 

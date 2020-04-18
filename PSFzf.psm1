@@ -4,8 +4,8 @@
 param(
 	[parameter(Position=0,Mandatory=$false)][string]$PSReadlineChordProvider = 'Ctrl+t',
 	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordReverseHistory = 'Ctrl+r',
-	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordSetLocation = 'Alt+c',
-	[parameter(Position=1,Mandatory=$false)][string]$PSReadlineChordReverseHistoryArgs = 'Alt+a')
+	[parameter(Position=2,Mandatory=$false)][string]$PSReadlineChordSetLocation = 'Alt+c',
+	[parameter(Position=3,Mandatory=$false)][string]$PSReadlineChordReverseHistoryArgs = 'Alt+a')
 
 $script:IsWindows = ($PSVersionTable.PSVersion.Major -le 5) -or $IsWindows
 if ($script:IsWindows) {	
@@ -55,7 +55,23 @@ function Set-PsFzfOption{
 		[string]
 		$PSReadlineChordReverseHistoryArgs,
 		[switch]
-		$GitKeyBindings
+		$GitKeyBindings,
+		[switch]
+		$EnableAliasFuzzyEdit,
+		[switch]
+		$EnableAliasFuzzyFasd,
+		[switch]
+		$EnableAliasFuzzyHistory,
+		[switch]
+		$EnableAliasFuzzyKillProcess,
+		[switch]
+		$EnableAliasFuzzySetLocation,
+		[switch]
+		$EnableAliasFuzzySetEverything,
+		[switch]
+		$EnableAliasFuzzyZLocation,
+		[switch]
+		$EnableAliasFuzzyGitStatus
 	)
 	if ($PSBoundParameters.ContainsKey('TabExpansion')) {
 		SetTabExpansion $TabExpansion
@@ -77,6 +93,19 @@ function Set-PsFzfOption{
 				$info.Chord = $newChord
 			}
 		}	
+	}
+
+	if ($EnableAliasFuzzyEdit) 			{ SetPsFzfAlias "fe"      Invoke-FuzzyEdit}
+	if ($EnableAliasFuzzyFasd) 			{ SetPsFzfAlias "ff"      Invoke-FuzzyFasd}
+	if ($EnableAliasFuzzyHistory) 		{ SetPsFzfAlias "fh"      Invoke-FuzzyHistory }
+	if ($EnableAliasFuzzyKillProcess) 	{ SetPsFzfAlias "fkill"   Invoke-FuzzyKillProcess }
+	if ($EnableAliasFuzzySetLocation) 	{ SetPsFzfAlias "fd"      Invoke-FuzzySetLocation }
+	if ($EnableAliasFuzzyZLocation) 	{ SetPsFzfAlias "fz"      Invoke-FuzzyZLocation }
+	if ($EnableAliasFuzzyGitStatus) 	{ SetPsFzfAlias "fgs"     Invoke-FuzzyGitStatus }
+	if ($EnableAliasFuzzySetEverything) {
+        if (${function:Set-LocationFuzzyEverything}) {
+            SetPsFzfAlias "cde" Set-LocationFuzzyEverything 
+        }
 	}
 }
 
@@ -684,7 +713,14 @@ catch
 #.ExternalHelp PSFzf.psm1-help.xml
 
 $addedAliases = @()
+
 function script:SetPsFzfAlias {
+    param($Name,$Function)
+
+    New-Alias -Name $Name -Scope Global -Value $Function -ErrorAction Ignore
+    $addedAliases += $Name
+}
+function script:SetPsFzfAliasCheck {
     param($Name,$Function)
 
     # prevent Get-Command from loading PSFzf
@@ -692,8 +728,7 @@ function script:SetPsFzfAlias {
     $PSModuleAutoLoadingPreference='None'
 
     if (-not (Get-Command -Name $Name -ErrorAction Ignore)) {
-        New-Alias -Name $Name -Scope Global -Value $Function -ErrorAction Ignore
-        $addedAliases += $Name
+        SetPsFzfAlias $Name $Function
     }    
 
     # restore module auto loading
@@ -746,39 +781,25 @@ function Invoke-FuzzyEdit()
     }
 }
 
-SetPsFzfAlias "fe" Invoke-FuzzyEdit
 
-if (Get-Command Get-Frecents -ErrorAction Ignore) {
     #.ExternalHelp PSFzf.psm1-help.xml
-    function Invoke-FuzzyFasd() {
-        $result = $null
-        try {
+function Invoke-FuzzyFasd() {
+    $result = $null
+    try {
+        if (Get-Command Get-Frecents -ErrorAction Ignore) {
             Get-Frecents | ForEach-Object { $_.FullPath } | Invoke-Fzf -ReverseInput -NoSort | ForEach-Object { $result = $_ }
-        } catch {
-            
-        }
-        if ($null -ne $result) {
-            # use cd in case it's aliased to something else:
-            cd $result
-        }
-    }
-    SetPsFzfAlias "ff" Invoke-FuzzyFasd
-} elseif (Get-Command fasd -ErrorAction Ignore) {
-    #.ExternalHelp PSFzf.psm1-help.xml
-    function Invoke-FuzzyFasd() {
-        $result = $null
-        try {
+        } elseif (Get-Command fasd -ErrorAction Ignore) {
             fasd -l | Invoke-Fzf -ReverseInput -NoSort | ForEach-Object { $result = $_ }
-        } catch {
-            
-        }
-        if ($null -ne $result) {
-            # use cd in case it's aliased to something else:
-            cd $result
-        }
+        } 
+    } catch {
+        
     }
-    SetPsFzfAlias "ff" Invoke-FuzzyFasd
-}   
+    if ($null -ne $result) {
+        # use cd in case it's aliased to something else:
+        cd $result
+    }
+}
+
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyHistory() {
@@ -788,7 +809,6 @@ function Invoke-FuzzyHistory() {
         Invoke-Expression "$result" -Verbose
     }
 }
-SetPsFzfAlias "fh" Invoke-FuzzyHistory
 
 #.ExternalHelp PSFzf.psm1-help.xml
 
@@ -810,7 +830,6 @@ function Invoke-FuzzyKillProcess() {
         Stop-Process $id -Verbose
     }
 }
-SetPsFzfAlias "fkill" Invoke-FuzzyKillProcess
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzySetLocation() {
@@ -832,9 +851,8 @@ function Invoke-FuzzySetLocation() {
         Set-Location $result
     } 
 }
-SetPsFzfAlias "fd" Invoke-FuzzySetLocation
 
-if (Get-Command Search-Everything -ErrorAction Ignore) {
+if ((-not $IsLinux) -and (-not $IsMacOS)) {
     #.ExternalHelp PSFzf.psm1-help.xml
     function Set-LocationFuzzyEverything() {
         param($Directory=$null)
@@ -855,46 +873,56 @@ if (Get-Command Search-Everything -ErrorAction Ignore) {
             cd $result
         }
     }
-    SetPsFzfAlias "cde" Set-LocationFuzzyEverything 
 }
 
-if (Get-Command Get-ZLocation -ErrorAction Ignore) {
-    #.ExternalHelp PSFzf.psm1-help.xml
-    function Invoke-FuzzyZLocation() {
-        $result = $null
-        try {
-            (Get-ZLocation).GetEnumerator() | Sort-Object { $_.Value } -Descending | ForEach-Object{ $_.Key } | Invoke-Fzf -NoSort | ForEach-Object { $result = $_ }
-        } catch {
-            
-        }
-        if ($null -ne $result) {
-            # use cd in case it's aliased to something else:
-            cd $result
-        }
+#.ExternalHelp PSFzf.psm1-help.xml
+function Invoke-FuzzyZLocation() {
+    $result = $null
+    try {
+        (Get-ZLocation).GetEnumerator() | Sort-Object { $_.Value } -Descending | ForEach-Object{ $_.Key } | Invoke-Fzf -NoSort | ForEach-Object { $result = $_ }
+    } catch {
+        
     }
-    
-    SetPsFzfAlias "fz" Invoke-FuzzyZLocation
-} 
+    if ($null -ne $result) {
+        # use cd in case it's aliased to something else:
+        cd $result
+    }
+}
 
-if (Get-Command git -ErrorAction Ignore) {
-    #.ExternalHelp PSFzf.psm1-help.xml
-    function Invoke-FuzzyGitStatus() {
-        $result = @()
-        try {
-            $headerStrings = Get-HeaderStrings
-            $gitRoot = git rev-parse --show-toplevel
-            git status --porcelain | 
-            Invoke-Fzf -Multi -Bind $headerStrings[1] -Header $headerStrings[0] | ForEach-Object { 
-                $result += Join-Path $gitRoot $('{0}' -f $_.Substring('?? '.Length)) 
-            }
-        } catch {
-            # do nothing
+
+#.ExternalHelp PSFzf.psm1-help.xml
+function Invoke-FuzzyGitStatus() {
+    $result = @()
+    try {
+        $headerStrings = Get-HeaderStrings
+        $gitRoot = git rev-parse --show-toplevel
+        git status --porcelain | 
+        Invoke-Fzf -Multi -Bind $headerStrings[1] -Header $headerStrings[0] | ForEach-Object { 
+            $result += Join-Path $gitRoot $('{0}' -f $_.Substring('?? '.Length)) 
         }
-        if ($null -ne $result) {
-            $result
-        }
+    } catch {
+        # do nothing
     }
-    SetPsFzfAlias "fgs" Invoke-FuzzyGitStatus
+    if ($null -ne $result) {
+        $result
+    }
+}
+
+function Enable-PsFzfAliases()
+{
+    # set aliases:
+    if (-not $DisableAliases) {
+        SetPsFzfAliasCheck "fe"      Invoke-FuzzyEdit
+        SetPsFzfAliasCheck "fh"      Invoke-FuzzyHistory
+        SetPsFzfAliasCheck "ff"      Invoke-FuzzyFasd
+        SetPsFzfAliasCheck "fkill"   Invoke-FuzzyKillProcess
+        SetPsFzfAliasCheck "fd"      Invoke-FuzzySetLocation
+        if (${function:Set-LocationFuzzyEverything}) {
+            SetPsFzfAliasCheck "cde" Set-LocationFuzzyEverything 
+        }
+        SetPsFzfAliasCheck "fz"      Invoke-FuzzyZLocation
+        SetPsFzfAliasCheck "fgs"     Invoke-FuzzyGitStatus
+    }     
 }
 # PSFzf.Git.ps1
 
