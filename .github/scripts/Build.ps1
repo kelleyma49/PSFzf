@@ -7,3 +7,5 @@ if ($null -eq $dllPaths) {
     throw 'Unable to find PSFzf.dll'
 }
 Copy-Item $dllPaths[0].FullName . -Force -Verbose
+
+& (Join-Path $PSScriptRoot 'helpers' 'Join-ModuleFiles.ps1')  
