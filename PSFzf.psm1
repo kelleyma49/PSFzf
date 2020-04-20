@@ -243,6 +243,7 @@ function Invoke-Fzf {
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo.FileName = $script:FzfLocation
 		$process.StartInfo.Arguments = $arguments
+        $process.StartInfo.StandardOutputEncoding = [System.Text.Encoding]::UTF8
         $process.StartInfo.RedirectStandardInput = $true
         $process.StartInfo.RedirectStandardOutput = $true
 		$process.StartInfo.UseShellExecute = $false
@@ -299,6 +300,8 @@ function Invoke-Fzf {
 	Process {
 		$brokePipeline = $false
         $hasInput = $PSBoundParameters.ContainsKey('Input')
+        $utf8Encoding = New-Object System.Text.UTF8Encoding -ArgumentList $false
+        $utf8Stream = New-Object System.IO.StreamWriter -ArgumentList $process.StandardInput.BaseStream, $utf8Encoding
         
         try {
 			# handle no piped input:
@@ -307,7 +310,7 @@ function Invoke-Fzf {
                 if ($PWD.Provider.Name -eq 'FileSystem') {
 					$cmd = $script:ShellCmd -f ($fileSystemCmd -f $PWD.Path)
 					Invoke-Expression $cmd | ForEach-Object { 
-                        $process.StandardInput.WriteLine($_) 
+                        $utf8Stream.WriteLine($_)
                         if ($processHasExited.flag) {
                             throw "breaking inner pipeline"
                         }
@@ -329,7 +332,7 @@ function Invoke-Fzf {
                             }
                         }
                         if (![System.String]::IsNullOrWhiteSpace($str)) {
-                            $process.StandardInput.WriteLine($str) 
+                            $utf8Stream.WriteLine($str)
                         }
 
                         if ($processHasExited.flag) {
@@ -353,14 +356,14 @@ function Invoke-Fzf {
                         }
                     }
                     if (![System.String]::IsNullOrWhiteSpace($str)) {
-                        $process.StandardInput.WriteLine($str) 
+                        $utf8Stream.WriteLine($str)
                     }
                     if ($processHasExited.flag) {
                         throw "breaking inner pipeline"
 					}
 				}
 			}
-			$process.StandardInput.Flush()
+			$utf8Stream.Flush()
 		} catch {
 			# do nothing
 			$brokePipeline = $true
