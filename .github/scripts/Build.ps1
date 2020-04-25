@@ -7,3 +7,6 @@ if ($null -eq $dllPaths) {
     throw 'Unable to find PSFzf.dll'
 }
 Copy-Item $dllPaths[0].FullName . -Force -Verbose
+
+# construct the module file:
+./helpers/Join-ModuleFiles.ps1
