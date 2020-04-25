@@ -10,3 +10,4 @@ Get-ChildItem (Join-Path $PSScriptRoot '..' 'PSFzf.*.ps1') | ForEach-Object {
         Get-Content -Path $_ | Add-Content -Path $scriptPath
     }
 }
+Write-Host "Created $scriptPath"
