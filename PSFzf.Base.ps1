@@ -257,9 +257,9 @@ function Invoke-Fzf {
         }
 		$stdOutEventId = "PsFzfStdOutEh-" + [System.Guid]::NewGuid()
         $stdOutEvent = Register-ObjectEvent -InputObject $process `
-        -Action $scriptBlockRecv -EventName 'OutputDataReceived' `
-		-SourceIdentifier $stdOutEventId `
-        -MessageData $stdOutStr
+    		-Action $scriptBlockRecv -EventName 'OutputDataReceived' `
+			-SourceIdentifier $stdOutEventId `
+        	-MessageData $stdOutStr
 
         $processHasExited = new-object psobject -property @{flag = $false}
         # register on exit:
@@ -268,17 +268,23 @@ function Invoke-Fzf {
         }
         $exitedEventId = "PsFzfExitedEh-" + [System.Guid]::NewGuid()
         $exitedEvent = Register-ObjectEvent -InputObject $process `
-        -Action $scriptBlockExited -EventName 'Exited' `
-		-SourceIdentifier $exitedEventId `
-        -MessageData $processHasExited
+        	-Action $scriptBlockExited -EventName 'Exited' `
+			-SourceIdentifier $exitedEventId `
+        	-MessageData $processHasExited
 
         $process.Start() | Out-Null
         $process.BeginOutputReadLine() | Out-Null
+
+		$utf8Encoding = New-Object System.Text.UTF8Encoding -ArgumentList $false
+        $utf8Stream = New-Object System.IO.StreamWriter -ArgumentList $process.StandardInput.BaseStream, $utf8Encoding
 
 		$cleanup = [scriptblock] {
 			try {
            		$process.StandardInput.Close() | Out-Null
 				$process.WaitForExit()
+
+				$utf8Stream.Close()
+				$utf8Stream = $null
 			} catch {
 				# do nothing
 			}
@@ -297,8 +303,6 @@ function Invoke-Fzf {
 	Process {
 		$brokePipeline = $false
         $hasInput = $PSBoundParameters.ContainsKey('Input')
-        $utf8Encoding = New-Object System.Text.UTF8Encoding -ArgumentList $false
-        $utf8Stream = New-Object System.IO.StreamWriter -ArgumentList $process.StandardInput.BaseStream, $utf8Encoding
         
         try {
 			# handle no piped input:
