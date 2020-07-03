@@ -16,13 +16,26 @@ dir /s/b "{0}"
 find {0} -path '*/\.*' -prune -o -type f -print -o -type l -print 2> /dev/null
 "@
 }
+$script:DefaultFileSystemRgCmd = "rg --% --files --no-messages --color=never {0}"
+$script:UseRipgrep = $false
 
 function Get-FileSystemCmd
 {
+	param($dir)
 	if ([string]::IsNullOrWhiteSpace($env:FZF_DEFAULT_COMMAND)) {
-		$script:DefaultFileSystemCmd
+		if ($script:UseRipgrep) {
+			# need to quote if there's spaces in the path name:
+			if ($dir.Contains(' ')) {
+				$strDir = """$dir""" 
+			} else {
+				$strDir = $dir
+			}
+			$script:DefaultFileSystemRgCmd -f $strDir
+		} else {
+			$script:ShellCmd -f ($script:DefaultFileSystemCmd -f $dir)
+		}
 	} else {
-		$env:FZF_DEFAULT_COMMAND
+		$script:ShellCmd -f ($env:FZF_DEFAULT_COMMAND -f $dir)
 	}
 }
 
@@ -68,7 +81,9 @@ function Set-PsFzfOption{
 		[switch]
 		$EnableAliasFuzzyZLocation,
 		[switch]
-		$EnableAliasFuzzyGitStatus
+		$EnableAliasFuzzyGitStatus,
+		[switch]
+		$EnableRipgrep
 	)
 	if ($PSBoundParameters.ContainsKey('TabExpansion')) {
 		SetTabExpansion $TabExpansion
@@ -103,6 +118,9 @@ function Set-PsFzfOption{
         if (${function:Set-LocationFuzzyEverything}) {
             SetPsFzfAlias "cde" Set-LocationFuzzyEverything 
         }
+	}
+	if ($PSBoundParameters.ContainsKey('EnableRipgrep')) {
+		$script:UseRipgrep = $EnableRipgrep
 	}
 }
 
@@ -234,8 +252,6 @@ function Invoke-Fzf {
 			throw '-Border and -BorderStyle are mutally exclusive'
 		}
 
-		$fileSystemCmd = Get-FileSystemCmd
-		  
 		# prepare to start process:
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo.FileName = $script:FzfLocation
@@ -309,8 +325,7 @@ function Invoke-Fzf {
 			if (!$hasInput) {
                 # optimization for filesystem provider:
                 if ($PWD.Provider.Name -eq 'FileSystem') {
-					$cmd = $script:ShellCmd -f ($fileSystemCmd -f $PWD.Path)
-					Invoke-Expression $cmd | ForEach-Object { 
+					Invoke-Expression (Get-FileSystemCmd $PWD.Path) | ForEach-Object { 
                         $utf8Stream.WriteLine($_)
                         if ($processHasExited.flag) {
                             throw "breaking inner pipeline"
@@ -453,8 +468,6 @@ function Invoke-FzfPsReadlineHandlerProvider {
 		$currentPath = $PWD
 	}
 
-	$fileSystemCmd = Get-FileSystemCmd
-
     $result = @()
     try 
     {
@@ -472,7 +485,7 @@ function Invoke-FzfPsReadlineHandlerProvider {
 				switch ($providerName) {
 					# Get-ChildItem is way too slow - we optimize for the FileSystem provider by 
 					# using batch commands:
-					'FileSystem'    { Invoke-Expression ($script:ShellCmd -f ($fileSystemCmd -f $resolvedPath.ProviderPath)) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
+					'FileSystem'    { Invoke-Expression (Get-FileSystemCmd $resolvedPath.ProviderPath) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
 					'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object Name -ExpandProperty Name | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
 					$null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object FullName -ExpandProperty FullName | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
 					Default         {}
