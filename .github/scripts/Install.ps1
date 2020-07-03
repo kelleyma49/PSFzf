@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 
 # Force bootstrap of the Nuget PackageManagement Provider; Reference: http://www.powershellgallery.com/GettingStarted?section=Get%20Started 
 Get-PackageProvider -Name NuGet -Force -Verbose
-$modules = 'Pester', 'platyPS'
+$modules = @('Pester', '4.10.1'), @('platyPS', $null)
 
 # get fzf:
 if ($IsLinux -or $IsMacOS) {
@@ -16,6 +16,12 @@ if ($IsLinux -or $IsMacOS) {
 }
 
 $modules | ForEach-Object { 
-  Install-Module -Name $_ -Scope CurrentUser -Force -Verbose 
-  Import-Module -Name $_ -Verbose
+  $module = $_[0]
+  $version = $_[1]
+  if ($null -ne $version) {
+    Install-Module -Name $module -Scope CurrentUser -RequiredVersion $version -Force -Verbose
+  } else {
+    Install-Module -Name $module -Scope CurrentUser -Force -Verbose 
+  }
+  Import-Module -Name $module -Verbose
 }
