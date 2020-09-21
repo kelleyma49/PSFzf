@@ -12,13 +12,13 @@ PSFzf is a PowerShell module that wraps [fzf](https://github.com/junegunn/fzf), 
 To change to a user selected directory:
 
 ```powershell
-Get-ChildItem . -Recurse | ? { $_.PSIsContainer } | Invoke-Fzf | Set-Location
+Get-ChildItem . -Recurse -Attribute Directory | Invoke-Fzf | Set-Location
 ```
 
 To edit a file:
 
 ```powershell
-Get-ChildItem . -Recurse | ? { -not $_.PSIsContainer } | Invoke-Fzf | % { notepad $_ }
+Get-ChildItem . -Recurse -Attribute Archive | Invoke-Fzf | % { notepad $_ }
 ```
 
 For day-to-day usage, see the [helper functions included with this module](https://github.com/kelleyma49/PSFzf#helper-functions).
