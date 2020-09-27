@@ -142,7 +142,7 @@ function Invoke-Fzf {
 			[switch]$Phony,
 		  	[ValidateSet('length','begin','end','index')]
 		  	[string]
-		  	$Tiebreak = 'length',
+		  	$Tiebreak = $null,
 
             # Interface
 			[Alias('m')]
@@ -160,12 +160,12 @@ function Invoke-Fzf {
 			[ValidateRange(1,[int]::MaxValue)]
 			[int]$MinHeight,
 			[ValidateSet('default','reverse','reverse-list')]
-			[string]$Layout = 'default',
+			[string]$Layout = $null,
 			[switch]$Border,
 			[ValidateSet('rounded','sharp','horizontal')]
 			[string]$BorderStyle,
 			[ValidateSet('default','inline','hidden')]
-			[string]$Info = 'default',
+			[string]$Info = $null,
 			[string]$Prompt,
 			[string]$Pointer,
 			[string]$Marker,
@@ -203,48 +203,49 @@ function Invoke-Fzf {
 	Begin {
 		# process parameters: 
 		$arguments = ''
-		if ($Extended) 										{ $arguments += '--extended '}
-		if ($Exact) 			        					{ $arguments += '--exact '}
-		if ($CaseInsensitive) 								{ $arguments += '-i '}
-		if ($CaseSensitive) 								{ $arguments += '+i '}
-		if (![string]::IsNullOrWhiteSpace($Delimiter)) 		{ $arguments += "--delimiter=$Delimiter "}
-		if ($NoSort) 										{ $arguments += '--no-sort '}
-		if ($ReverseInput) 									{ $arguments += '--tac '}
-		if ($Phony)											{ $arguments += '--phony '}
-		if (![string]::IsNullOrWhiteSpace($Tiebreak))		{ $arguments += "--tiebreak=$Tiebreak "}
-		if ($Multi) 										{ $arguments += '--multi '}
-		if ($NoMouse)					 					{ $arguments += '--no-mouse '}
-        if (![string]::IsNullOrWhiteSpace($Bind))		    { $arguments += "--bind=$Bind "}
-		if ($Reverse)					 					{ $arguments += '--reverse '}
-		if ($Cycle)						 					{ $arguments += '--cycle '}
-		if ($KeepRight)						 				{ $arguments += '--keep-right '}
-		if ($NoHScroll) 									{ $arguments += '--no-hscroll '}
-		if ($FilepathWord)									{ $arguments += '--filepath-word '}
-		if (![string]::IsNullOrWhiteSpace($Height))			{ $arguments += "--height=$height "}
-		if ($MinHeight -ge 0)								{ $arguments += "--min-height=$MinHeight "}
-		if (![string]::IsNullOrWhiteSpace($Layout))			{ $arguments += "--layout=$Layout "}
-		if ($Border)										{ $arguments += '--border '}
-		if (![string]::IsNullOrWhiteSpace($BorderStyle))	{ $arguments += "--border=$BorderStyle "}
-		if (![string]::IsNullOrWhiteSpace($Info)) 			{ $arguments += "--info=$Info "}
-		if (![string]::IsNullOrWhiteSpace($Prompt)) 		{ $arguments += "--prompt='$Prompt' "}
-		if (![string]::IsNullOrWhiteSpace($Pointer)) 		{ $arguments += "--pointer='$Pointer' "}
-		if (![string]::IsNullOrWhiteSpace($Marker)) 		{ $arguments += "--marker='$Marker' "}
-        if (![string]::IsNullOrWhiteSpace($Header)) 		{ $arguments += "--header=""$Header"" "}
-		if ($HeaderLines -ge 0) 		               		{ $arguments += "--header-lines=$HeaderLines "}
-		if ($Ansi)											{ $arguments += '--ansi '}
-		if ($Tabstop -ge 0)									{ $arguments += "--tabstop=$Tabstop "}
-		if ($NoBold)										{ $arguments += '--no-bold '}
-		if ($History) 										{ $arguments += "--history='$History' "}
-		if ($HistorySize -ge 1)								{ $arguments += "--history-size=$HistorySize "}
-        if (![string]::IsNullOrWhiteSpace($Preview)) 	    { $arguments += "--preview=""$Preview"" "}
-        if (![string]::IsNullOrWhiteSpace($PreviewWindow)) 	{ $arguments += "--preview-window=""$PreviewWindow"" "}
-		if (![string]::IsNullOrWhiteSpace($Query))			{ $arguments += "--query=$Query "}
-		if ($Select1)										{ $arguments += '--select-1 '}
-		if ($Exit0)											{ $arguments += '--exit-0 '}
-		if (![string]::IsNullOrEmpty($Filter))				{ $arguments += "--filter=$Filter " }
-		if (![string]::IsNullOrWhiteSpace($Expect)) 	    { $arguments += "--expect=""$Expect"" "}
+		if ($PSBoundParameters.ContainsKey('Extended') -and $Extended) 											{ $arguments += '--extended '}
+		if ($PSBoundParameters.ContainsKey('Exact') -and $Exact) 			        							{ $arguments += '--exact '}
+		if ($PSBoundParameters.ContainsKey('CaseInsensitive') -and $CaseInsensitive) 							{ $arguments += '-i '}
+		if ($PSBoundParameters.ContainsKey('CaseSensitive') -and $CaseSensitive) 								{ $arguments += '+i '}
+		if ($PSBoundParameters.ContainsKey('Delimiter') -and ![string]::IsNullOrWhiteSpace($Delimiter)) 		{ $arguments += "--delimiter=$Delimiter "}
+		if ($PSBoundParameters.ContainsKey('NoSort') -and $NoSort) 												{ $arguments += '--no-sort '}
+		if ($PSBoundParameters.ContainsKey('ReverseInput') -and $ReverseInput) 									{ $arguments += '--tac '}
+		if ($PSBoundParameters.ContainsKey('Phony') -and $Phony)												{ $arguments += '--phony '}
+		if ($PSBoundParameters.ContainsKey('Tiebreak') -and ![string]::IsNullOrWhiteSpace($Tiebreak))			{ $arguments += "--tiebreak=$Tiebreak "}
+		if ($PSBoundParameters.ContainsKey('Multi') -and $Multi) 												{ $arguments += '--multi '}
+		if ($PSBoundParameters.ContainsKey('NoMouse') -and $NoMouse)					 						{ $arguments += '--no-mouse '}
+        if ($PSBoundParameters.ContainsKey('Bind') -and ![string]::IsNullOrWhiteSpace($Bind))		    		{ $arguments += "--bind=$Bind "}
+		if ($PSBoundParameters.ContainsKey('Reverse') -and $Reverse)					 						{ $arguments += '--reverse '}
+		if ($PSBoundParameters.ContainsKey('Cycle') -and $Cycle)						 						{ $arguments += '--cycle '}
+		if ($PSBoundParameters.ContainsKey('KeepRight') -and $KeepRight)						 				{ $arguments += '--keep-right '}
+		if ($PSBoundParameters.ContainsKey('NoHScroll') -and $NoHScroll) 										{ $arguments += '--no-hscroll '}
+		if ($PSBoundParameters.ContainsKey('FilepathWord') -and $FilepathWord)									{ $arguments += '--filepath-word '}
+		if ($PSBoundParameters.ContainsKey('Height') -and ![string]::IsNullOrWhiteSpace($Height))				{ $arguments += "--height=$height "}
+		if ($PSBoundParameters.ContainsKey('MinHeight') -and $MinHeight -ge 0)									{ $arguments += "--min-height=$MinHeight "}
+		if ($PSBoundParameters.ContainsKey('Layout') -and ![string]::IsNullOrWhiteSpace($Layout))				{ $arguments += "--layout=$Layout "}
+		if ($PSBoundParameters.ContainsKey('Border') -and $Border)												{ $arguments += '--border '}
+		if ($PSBoundParameters.ContainsKey('BorderStyle') -and ![string]::IsNullOrWhiteSpace($BorderStyle))		{ $arguments += "--border=$BorderStyle "}
+		if ($PSBoundParameters.ContainsKey('Info') -and ![string]::IsNullOrWhiteSpace($Info)) 					{ $arguments += "--info=$Info "}
+		if ($PSBoundParameters.ContainsKey('Prompt') -and ![string]::IsNullOrWhiteSpace($Prompt)) 				{ $arguments += "--prompt='$Prompt' "}
+		if ($PSBoundParameters.ContainsKey('Pointer') -and ![string]::IsNullOrWhiteSpace($Pointer)) 			{ $arguments += "--pointer='$Pointer' "}
+		if ($PSBoundParameters.ContainsKey('Marker') -and ![string]::IsNullOrWhiteSpace($Marker)) 				{ $arguments += "--marker='$Marker' "}
+        if ($PSBoundParameters.ContainsKey('Header') -and ![string]::IsNullOrWhiteSpace($Header)) 				{ $arguments += "--header=""$Header"" "}
+		if ($PSBoundParameters.ContainsKey('HeaderLines') -and $HeaderLines -ge 0) 		               			{ $arguments += "--header-lines=$HeaderLines "}
+		if ($PSBoundParameters.ContainsKey('Ansi') -and $Ansi)													{ $arguments += '--ansi '}
+		if ($PSBoundParameters.ContainsKey('Tabstop') -and $Tabstop -ge 0)										{ $arguments += "--tabstop=$Tabstop "}
+		if ($PSBoundParameters.ContainsKey('NoBold') -and $NoBold)												{ $arguments += '--no-bold '}
+		if ($PSBoundParameters.ContainsKey('History') -and $History) 											{ $arguments += "--history='$History' "}
+		if ($PSBoundParameters.ContainsKey('HistorySize') -and $HistorySize -ge 1)								{ $arguments += "--history-size=$HistorySize "}
+        if ($PSBoundParameters.ContainsKey('Preview') -and ![string]::IsNullOrWhiteSpace($Preview)) 	    	{ $arguments += "--preview=""$Preview"" "}
+        if ($PSBoundParameters.ContainsKey('PreviewWindow') -and ![string]::IsNullOrWhiteSpace($PreviewWindow)) { $arguments += "--preview-window=""$PreviewWindow"" "}
+		if ($PSBoundParameters.ContainsKey('Query') -and ![string]::IsNullOrWhiteSpace($Query))					{ $arguments += "--query=$Query "}
+		if ($PSBoundParameters.ContainsKey('Select1') -and $Select1)											{ $arguments += '--select-1 '}
+		if ($PSBoundParameters.ContainsKey('Exit0') -and $Exit0)												{ $arguments += '--exit-0 '}
+		if ($PSBoundParameters.ContainsKey('Filter') -and ![string]::IsNullOrEmpty($Filter))					{ $arguments += "--filter=$Filter " }
+		if ($PSBoundParameters.ContainsKey('Expect') -and ![string]::IsNullOrWhiteSpace($Expect)) 	   			{ $arguments += "--expect=""$Expect"" "}
 	 
-		if ($script:UseHeightOption -and [string]::IsNullOrWhiteSpace($Height)) {
+		if ($script:UseHeightOption -and [string]::IsNullOrWhiteSpace($Height) -and `
+		  	([string]::IsNullOrWhiteSpace($env:FZF_DEFAULT_OPTS) -or (-not $env:FZF_DEFAULT_OPTS.Contains('--height')))) {
 			$arguments += "--height=40% "
 		}
 		
