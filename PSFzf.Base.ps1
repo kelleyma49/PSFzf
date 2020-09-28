@@ -472,6 +472,8 @@ function Invoke-FzfPsReadlineHandlerProvider {
     $result = @()
     try 
     {
+		$prevDefaultOpts = $env:FZF_DEFAULT_OPTS
+		$env:FZF_DEFAULT_OPTS = $env:FZF_DEFAULT_OPTS + ' ' + $env:FZF_CTRL_T_OPTS
         if (-not [System.String]::IsNullOrWhiteSpace($env:FZF_CTRL_T_COMMAND)) {
 			Invoke-Expression ($env:FZF_CTRL_T_COMMAND) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
 		} else {
@@ -497,7 +499,11 @@ function Invoke-FzfPsReadlineHandlerProvider {
     catch 
     {
         # catch custom exception
-    }
+	}
+	finally 
+	{
+		$env:FZF_DEFAULT_OPTS = $prevDefaultOpts
+	}
 	
 	#HACK: workaround for fact that PSReadLine seems to clear screen 
 	# after keyboard shortcut action is executed:
@@ -537,6 +543,9 @@ function Invoke-FzfPsReadlineHandlerHistory {
 	$result = $null
 	try
 	{
+		$prevDefaultOpts = $env:FZF_DEFAULT_OPTS
+		$env:FZF_DEFAULT_OPTS = $env:FZF_DEFAULT_OPTS + ' ' + $env:FZF_CTRL_R_OPTS 
+
 		$reader = New-Object PSFzf.IO.ReverseLineReader -ArgumentList $((Get-PSReadlineOption).HistorySavePath)
 
 		$fileHist = @{}
@@ -553,6 +562,7 @@ function Invoke-FzfPsReadlineHandlerHistory {
 	}
 	finally 
 	{
+		$env:FZF_DEFAULT_OPTS = $prevDefaultOpts
 		# ensure that stream is closed:
 		$reader.Dispose()
 	}
@@ -611,18 +621,24 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 }
 
 function Invoke-FzfPsReadlineHandlerSetLocation {
-    $result = $null
+	$result = $null
 	try 
     {
+		$prevDefaultOpts = $env:FZF_DEFAULT_OPTS
+		$env:FZF_DEFAULT_OPTS = $env:FZF_DEFAULT_OPTS + ' ' + $env:FZF_ALT_C_OPTS
 		if ($null -eq $env:FZF_ALT_C_COMMAND) {
 			Get-ChildItem . -Recurse -ErrorAction SilentlyContinue -Directory | Invoke-Fzf | ForEach-Object { $result = $_ }
 		} else {
-			Invoke-Expression ($env:FZF_ALT_C_COMMAND + ' ' + $env:FZF_ALT_C_OPTS) | Invoke-Fzf | ForEach-Object { $result = $_ }
+			Invoke-Expression ($env:FZF_ALT_C_COMMAND) | Invoke-Fzf | ForEach-Object { $result = $_ }
 		}
     } 
 	catch 
 	{
 		# catch custom exception
+	}
+	finally 
+	{
+		$env:FZF_DEFAULT_OPTS = $prevDefaultOpts
 	}
     if (-not [string]::IsNullOrEmpty($result)) {
         Set-Location $result
