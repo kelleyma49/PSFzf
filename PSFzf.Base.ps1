@@ -194,6 +194,7 @@ function Invoke-Fzf {
 			[switch]$Exit0,
 			[Alias('f')]
 			[string]$Filter,
+			[switch]$PrintQuery,
 			[string]$Expect,
 			
 		  	[Parameter(ValueFromPipeline=$True)]
@@ -242,6 +243,7 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('Select1') -and $Select1)											{ $arguments += '--select-1 '}
 		if ($PSBoundParameters.ContainsKey('Exit0') -and $Exit0)												{ $arguments += '--exit-0 '}
 		if ($PSBoundParameters.ContainsKey('Filter') -and ![string]::IsNullOrEmpty($Filter))					{ $arguments += "--filter=$Filter " }
+		if ($PSBoundParameters.ContainsKey('PrintQuery') -and $PrintQuery)										{ $arguments += '--print-query '}
 		if ($PSBoundParameters.ContainsKey('Expect') -and ![string]::IsNullOrWhiteSpace($Expect)) 	   			{ $arguments += "--expect=""$Expect"" "}
 	 
 		if ($script:UseHeightOption -and [string]::IsNullOrWhiteSpace($Height) -and `
