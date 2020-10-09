@@ -46,9 +46,19 @@ function Get-FileSystemCmd
 	}
 }
 
-$script:RunningInWindowsTerminal = [bool]($env:WT_Session)
+function FixCompletionResult($str) 
+{
+	if ($str.Contains(" ") -or $str.Contains("`t")) {
+		return "'{0}'" -f $str.Replace("`r`n","").Trim(@('''','"'))
+	} else {
+		return $str.Replace("`r`n","")
+	}
+}
+
 $script:FzfLocation = $null
 $script:PSReadlineHandlerChords = @()
+$script:TabContinuousTrigger = [IO.Path]::DirectorySeparatorChar.ToString()
+
 $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
 {
 	$PsReadlineShortcuts.Values | Where-Object Chord | ForEach-Object { 
@@ -128,6 +138,9 @@ function Set-PsFzfOption{
 	}
 	if ($PSBoundParameters.ContainsKey('EnableFd')) {
 		$script:UseFd = $EnableFd
+	}
+	if ($PSBoundParameters.ContainsKey('TabContinuousTrigger')) {
+		$script:TabContinuousTrigger = $TabContinuousTrigger
 	}
 }
 
@@ -311,8 +324,8 @@ function Invoke-Fzf {
 			try {
            		$process.StandardInput.Close() | Out-Null
 				$process.WaitForExit()
-
-				$utf8Stream.Close()
+				
+				# $utf8Stream.Close()
 				$utf8Stream = $null
 			} catch {
 				# do nothing
@@ -525,18 +538,10 @@ function Invoke-FzfPsReadlineHandlerProvider {
 		# quote strings if we need to:
 		if ($result -is [system.array]) {
 			for ($i = 0;$i -lt $result.Length;$i++) {
-				if ($result[$i].Contains(" ") -or $result[$i].Contains("`t")) {
-					$result[$i] = "'{0}'" -f $result[$i].Replace("`r`n","")
-				} else {
-                    $result[$i] = $result[$i].Replace("`r`n","")
-                }
+				$result[$i] = FixCompletionResult $result[$i]
 			}
 		} else {
-			if ($result.Contains(" ") -or $result.Contains("`t")) {
-					$result = "'{0}'" -f $result.Replace("`r`n","")
-			} else {
-                $result = $result.Replace("`r`n","")
-            }
+			$result = FixCompletionResult $result
 		}
 		
 		$str = $result -join ','
@@ -676,6 +681,105 @@ function SetPsReadlineShortcut($Chord,[switch]$Override,$BriefDesc,$Desc,[script
 }
 
 
+function Invoke-TabCompletion()
+{
+	$script:continueCompletion = $true
+	do 
+	{
+		$script:continueCompletion = Invoke-TabCompletionInner
+	}
+	while ($script:continueCompletion)
+}
+function Invoke-TabCompletionInner()
+{
+	$script:result = @()
+
+	[void] [System.Reflection.Assembly]::LoadWithPartialName("System.Management.Automation") 
+	$leftCursor = $null
+	$rightCursor = $null
+	$line = $null
+	$cursor = $null
+	[Microsoft.PowerShell.PSConsoleReadline]::GetBufferState([ref]$line, [ref]$cursor)
+	$currentPath = Find-CurrentPath $line $cursor ([ref]$leftCursor) ([ref]$rightCursor)
+	$addSpace = $null -ne $currentPath -and $currentPath.StartsWith(" ")
+
+	if ($cursor -lt 0 -or [string]::IsNullOrWhiteSpace($line)) { 
+		return $false
+	}
+	$completions = [System.Management.Automation.CommandCompletion]::CompleteInput($line, $cursor, @{})
+
+	$completionMatches = $completions.CompletionMatches 
+	if ($completionMatches.Count -le 0) {
+		return $false
+	}
+	$script:continueCompletion = $false
+
+	if ($completionMatches.Count -eq 1) {		
+		$script:result = $completionMatches[0].CompletionText
+	} elseif ($completionMatches.Count -gt 1) {
+		$helpers = New-Object PSFzf.IO.CompletionHelpers
+		$ambiguous = $false
+
+		$prefix = $helpers.GetUnambiguousPrefix($completionMatches,[ref]$ambiguous)
+		#if ($ambiguous) {
+		#	$prefix = ''
+		#}
+		
+		$script:result = @()
+		$script:checkCompletion = $true
+		$expectTrigger = $script:TabContinuousTrigger
+		# need to escape the key if it's a forward slash:
+		if ($expectTrigger -eq '\') {
+			$expectTrigger += $expectTrigger 
+		}
+		$completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf -Layout reverse -Expect $expectTrigger -Query $prefix | 
+		ForEach-Object {
+			if ($script:checkCompletion) {
+				$script:continueCompletion = $_ -eq $script:TabContinuousTrigger
+				if (-not $script:continueCompletion) {
+					$script:result += $_
+				}
+				$script:checkCompletion = $false
+			} else {
+				$script:result += $_
+			}
+		}
+
+		#HACK: workaround for fact that PSReadLine seems to clear screen 
+		# after keyboard shortcut action is executed:
+		[Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+	}	
+
+	$result = $script:result
+	if ($null -ne $result) {
+		# quote strings if we need to:
+		if ($result -is [system.array]) {
+			for ($i = 0;$i -lt $result.Length;$i++) {
+				$result[$i] = FixCompletionResult $result[$i]
+			}
+			$str = $result -join ','
+		} else {
+			$str = FixCompletionResult $result
+		}
+		
+		if ($addSpace) {
+			$str = ' ' + $str
+		}
+		if ($script:continueCompletion) {
+			$str = $str + $script:TabContinuousTrigger
+		}
+		$replaceLen = $rightCursor - $leftCursor
+		if ($rightCursor -eq 0 -and $leftCursor -eq 0) {
+			[Microsoft.PowerShell.PSConsoleReadLine]::Insert($str)
+		} else {
+			[Microsoft.PowerShell.PSConsoleReadLine]::Replace($leftCursor,$replaceLen+1,$str)
+		}
+		
+	}
+
+	return $script:continueCompletion
+}
+
 function FindFzf()
 {
 	if ($script:IsWindows) {
@@ -726,7 +830,12 @@ $PsReadlineShortcuts = @{
 		'Chord' = "$PSReadlineChordReverseHistoryArgs"
 		'BriefDesc' = 'Fzf Reverse History Arg Select'
 		'Desc' = 'Run fzf to search through command line arguments in PSReadline history' 
-		'ScriptBlock' = { Invoke-FzfPsReadlineHandlerHistoryArgs } };	
+		'ScriptBlock' = { Invoke-FzfPsReadlineHandlerHistoryArgs } };
+	PSReadlineChordTabCompletion = [PSCustomObject]@{
+		'Chord' = "Tab"
+		'BriefDesc' = 'crap'
+		'Desc' = 'crap'
+		'ScriptBlock' = { Invoke-TabCompletion } };	
 }
 if (Get-Module -ListAvailable -Name PSReadline) {
 	$PsReadlineShortcuts.GetEnumerator() | ForEach-Object {
