@@ -16,14 +16,21 @@ dir /s/b "{0}"
 find {0} -path '*/\.*' -prune -o -type f -print -o -type l -print 2> /dev/null
 "@
 }
-$script:DefaultFileSystemRgCmd = "rg --% --files --no-messages --color=never {0}"
-$script:UseRipgrep = $false
+
+$script:RunningInWindowsTerminal = [bool]($env:WT_Session)
+if ($script:RunningInWindowsTerminal) {
+	$script:DefaultFileSystemFdCmd = "fd.exe --color always . {0}"	
+} else {
+	$script:DefaultFileSystemFdCmd = "fd.exe . {0}"	
+}
+
+$script:UseFd = $false
 
 function Get-FileSystemCmd
 {
 	param($dir)
 	if ([string]::IsNullOrWhiteSpace($env:FZF_DEFAULT_COMMAND)) {
-		if ($script:UseRipgrep) {
+		if ($script:UseFd) {
 			# need to quote if there's spaces in the path name:
 			if ($dir.Contains(' ')) {
 				$strDir = """$dir""" 
@@ -83,7 +90,7 @@ function Set-PsFzfOption{
 		[switch]
 		$EnableAliasFuzzyGitStatus,
 		[switch]
-		$EnableRipgrep
+		$EnableFd
 	)
 	if ($PSBoundParameters.ContainsKey('TabExpansion')) {
 		SetTabExpansion $TabExpansion
@@ -119,8 +126,8 @@ function Set-PsFzfOption{
             SetPsFzfAlias "cde" Set-LocationFuzzyEverything 
         }
 	}
-	if ($PSBoundParameters.ContainsKey('EnableRipgrep')) {
-		$script:UseRipgrep = $EnableRipgrep
+	if ($PSBoundParameters.ContainsKey('EnableFd')) {
+		$script:UseFd = $EnableFd
 	}
 }
 
@@ -253,6 +260,9 @@ function Invoke-Fzf {
 		
 		if ($Border -eq $true -and -not [string]::IsNullOrWhiteSpace($BorderStyle)) {
 			throw '-Border and -BorderStyle are mutally exclusive'
+		}
+		if ($script:UseFd -and $script:RunningInWindowsTerminal -and -not $arguments.Contains('--ansi')) {
+			$arguments += "--ansi "
 		}
 
 		# prepare to start process:
