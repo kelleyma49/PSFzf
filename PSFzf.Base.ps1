@@ -37,7 +37,7 @@ function Get-FileSystemCmd
 			} else {
 				$strDir = $dir
 			}
-			$script:DefaultFileSystemRgCmd -f $strDir
+			$script:DefaultFileSystemFdCmd -f $strDir
 		} else {
 			$script:ShellCmd -f ($script:DefaultFileSystemCmd -f $dir)
 		}
