@@ -286,7 +286,9 @@ function Invoke-Fzf {
         $process.StartInfo.RedirectStandardInput = $true
         $process.StartInfo.RedirectStandardOutput = $true
 		$process.StartInfo.UseShellExecute = $false
-		$process.StartInfo.WorkingDirectory = $pwd.Path 
+		if ($pwd.Provider -eq 'FileSystem') {
+			$process.StartInfo.WorkingDirectory = $pwd.Path
+		}
         
         # Creating string builders to store stdout:
         $stdOutStr = New-Object -TypeName System.Text.StringBuilder
