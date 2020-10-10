@@ -762,9 +762,6 @@ function Invoke-TabCompletionInner()
 			$str = FixCompletionResult $result
 		}
 		
-		if ($addSpace) {
-			$str = ' ' + $str
-		}
 		if ($script:continueCompletion) {
 			if (Test-Path $str -PathType Container) {
 				$str += $script:TabContinuousTrigger
@@ -774,6 +771,11 @@ function Invoke-TabCompletionInner()
 				$script:continueCompletion = $false
 			}
 		}
+
+		if ($addSpace) {
+			$str = ' ' + $str
+		}
+
 		$replaceLen = $rightCursor - $leftCursor
 		if ($rightCursor -eq 0 -and $leftCursor -eq 0) {
 			[Microsoft.PowerShell.PSConsoleReadLine]::Insert($str)
