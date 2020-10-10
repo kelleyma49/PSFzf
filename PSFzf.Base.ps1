@@ -766,7 +766,13 @@ function Invoke-TabCompletionInner()
 			$str = ' ' + $str
 		}
 		if ($script:continueCompletion) {
-			$str = $str + $script:TabContinuousTrigger
+			if (Test-Path $str -PathType Container) {
+				$str += $script:TabContinuousTrigger
+			} else {
+				# no more paths to complete, so let's stop completion:
+				$str += ' ' 
+				$script:continueCompletion = $false
+			}
 		}
 		$replaceLen = $rightCursor - $leftCursor
 		if ($rightCursor -eq 0 -and $leftCursor -eq 0) {
