@@ -69,6 +69,14 @@ $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
 	RemoveGitKeyBindings
 }
 
+# if the quoted string ends with a '\', and we need to escape it for Windows:
+function script:PrepareArg($argStr) {
+	if (-not $argStr.EndsWith("\\") -and $argStr.EndsWith('\')) {
+		return $argStr + '\'
+	} else {
+		return $argStr
+	}
+}
 function Set-PsFzfOption{
 	param(
 		[switch]
@@ -259,7 +267,7 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('HistorySize') -and $HistorySize -ge 1)								{ $arguments += "--history-size=$HistorySize "}
         if ($PSBoundParameters.ContainsKey('Preview') -and ![string]::IsNullOrWhiteSpace($Preview)) 	    	{ $arguments += "--preview=""$Preview"" "}
         if ($PSBoundParameters.ContainsKey('PreviewWindow') -and ![string]::IsNullOrWhiteSpace($PreviewWindow)) { $arguments += "--preview-window=""$PreviewWindow"" "}
-		if ($PSBoundParameters.ContainsKey('Query') -and ![string]::IsNullOrWhiteSpace($Query))					{ $arguments += "--query=$Query "}
+		if ($PSBoundParameters.ContainsKey('Query') -and ![string]::IsNullOrWhiteSpace($Query))					{ $arguments += "--query=""{0}"" " -f $(PrepareArg $Query)}
 		if ($PSBoundParameters.ContainsKey('Select1') -and $Select1)											{ $arguments += '--select-1 '}
 		if ($PSBoundParameters.ContainsKey('Exit0') -and $Exit0)												{ $arguments += '--exit-0 '}
 		if ($PSBoundParameters.ContainsKey('Filter') -and ![string]::IsNullOrEmpty($Filter))					{ $arguments += "--filter=$Filter " }
