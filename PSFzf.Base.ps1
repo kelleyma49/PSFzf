@@ -334,8 +334,6 @@ function Invoke-Fzf {
 			try {
            		$process.StandardInput.Close() | Out-Null
 				$process.WaitForExit()
-				
-				# $utf8Stream.Close()
 				$utf8Stream = $null
 			} catch {
 				# do nothing

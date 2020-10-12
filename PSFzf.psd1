@@ -80,7 +80,7 @@ FunctionsToExport = @(
     'Invoke-FuzzySetLocation',
     'Set-LocationFuzzyEverything',
     'Set-PsFzfOption',
-    'Invoke-TabCompletion'
+    'Invoke-FzfTabCompletion'
 )
 
 # Cmdlets to export from this module

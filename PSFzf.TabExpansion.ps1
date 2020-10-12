@@ -91,7 +91,6 @@ function SetTabExpansion($enable)
                     $padLength = $cursorPosition - $commandAst.Extent.StartOffset
                     $textToComplete = $commandAst.ToString().PadRight($padLength, ' ').Substring(0, $padLength)
                 
-                    #WriteTabExpLog "Expand: command: '$($commandAst.Extent.Text)', padded: '$textToComplete', padlen: $padLength"
                     Expand-GitCommandPsFzf $textToComplete
                 }
                 
@@ -212,16 +211,16 @@ function Expand-GitCommandPsFzf($lastWord) {
 }
 
 
-function Invoke-TabCompletion()
+function Invoke-FzfTabCompletion()
 {
 	$script:continueCompletion = $true
 	do 
 	{
-		$script:continueCompletion = script:Invoke-TabCompletionInner
+		$script:continueCompletion = script:Invoke-FzfTabCompletionInner
 	}
 	while ($script:continueCompletion)
 }
-function script:Invoke-TabCompletionInner()
+function script:Invoke-FzfTabCompletionInner()
 {
 	$script:result = @()
 
