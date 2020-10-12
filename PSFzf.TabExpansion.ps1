@@ -257,7 +257,7 @@ function script:Invoke-FzfTabCompletionInner()
 		if ($expectTrigger -eq '\') {
 			$expectTrigger += $expectTrigger 
 		}
-		$completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf -Layout reverse -Expect $expectTrigger -Query "$prefix" | 
+		$completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf -Layout reverse -Expect $expectTrigger -Query "$prefix" -Bind 'tab:down,btab:up' | 
         ForEach-Object {
 			if ($script:checkCompletion) {
 				$script:continueCompletion = $_ -eq $script:TabContinuousTrigger
