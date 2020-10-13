@@ -12,7 +12,7 @@ jobs:
     - name: Install needed software
       run: ./.github/scripts/Install.ps1
       env:
-        FZF_VERSION: 0.21.0
+        FZF_VERSION: 0.23.0
       shell: pwsh
     - name: Build PSFzf-Binary
       run: ./.github/scripts/Build.ps1
@@ -31,7 +31,7 @@ jobs:
     - name: Install needed software
       run: ./.github/scripts/Install.ps1
       env:
-        FZF_VERSION: 0.21.0
+        FZF_VERSION: 0.23.0
       shell: pwsh
     - name: Build PSFzf-Binary
       run: ./.github/scripts/Build.ps1
@@ -49,7 +49,7 @@ jobs:
     - name: Install needed software
       run: ./.github/scripts/Install.ps1
       env:
-        FZF_VERSION: 0.21.0
+        FZF_VERSION: 0.23.0
       shell: powershell
     - name: Build PSFzf-Binary
       run: ./.github/scripts/Build.ps1
