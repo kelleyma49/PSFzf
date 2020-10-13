@@ -106,8 +106,7 @@ function CheckFzfTrigger {
     param($commandName, $parameterName, $wordToComplete, $commandAst, $cursorPosition,$action)
     if ([string]::IsNullOrWhiteSpace($env:FZF_COMPLETION_TRIGGER)) {
         $completionTrigger = '**'
-    }
-    else {
+    } else {
         $completionTrigger = $env:FZF_COMPLETION_TRIGGER
     }
     if ($wordToComplete.EndsWith($completionTrigger)) {
@@ -132,7 +131,7 @@ function GetServiceSelection() {
 
 function RegisterBuiltinCompleters {
     $processIdOrNameScriptBlock = {
-        param($commandName, $parameterName, $wordToComplete, $commandAst, $cursorPosition,$action)
+        param($commandName, $parameterName, $wordToComplete, $commandAst, $cursorPosition, $action)
         $wordToComplete = CheckFzfTrigger $commandName $parameterName $wordToComplete $commandAst $cursorPosition
         if ($null -ne $wordToComplete)
         {
@@ -148,7 +147,10 @@ function RegisterBuiltinCompleters {
                 $script:resultArr += $result -replace "([0-9]+)\s*(.*)",$group
             }
 
-            $script:resultArr -join ', '
+            if ($script:resultArr.Length -ge 1) {
+                $script:resultArr -join ', '
+            }
+            
             #HACK: workaround for fact that PSReadLine seems to clear screen 
             # after keyboard shortcut action is executed:
             [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
@@ -179,7 +181,9 @@ function RegisterBuiltinCompleters {
                 $script:resultArr += $result.Substring(24+1)
             }
 
-            $script:resultArr -join ', '
+            if ($script:resultArr.Length -ge 1) {
+                $script:resultArr -join ', '
+            }
             #HACK: workaround for fact that PSReadLine seems to clear screen 
             # after keyboard shortcut action is executed:
             [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
