@@ -28,7 +28,7 @@ $script:UseFd = $false
 
 function Get-FileSystemCmd
 {
-	param($dir)
+	param($dir, [switch]$dirOnly = $false)
 	if ([string]::IsNullOrWhiteSpace($env:FZF_DEFAULT_COMMAND)) {
 		if ($script:UseFd) {
 			# need to quote if there's spaces in the path name:
@@ -37,7 +37,11 @@ function Get-FileSystemCmd
 			} else {
 				$strDir = $dir
 			}
-			$script:DefaultFileSystemFdCmd -f $strDir
+			if ($dirOnly) {
+				($script:DefaultFileSystemFdCmd -f '--type directory {0}') -f $strDir
+			} else {
+				$script:DefaultFileSystemFdCmd -f $strDir
+			}
 		} else {
 			$script:ShellCmd -f ($script:DefaultFileSystemCmd -f $dir)
 		}
@@ -652,7 +656,7 @@ function Invoke-FzfPsReadlineHandlerSetLocation {
 		$prevDefaultOpts = $env:FZF_DEFAULT_OPTS
 		$env:FZF_DEFAULT_OPTS = $env:FZF_DEFAULT_OPTS + ' ' + $env:FZF_ALT_C_OPTS
 		if ($null -eq $env:FZF_ALT_C_COMMAND) {
-			Get-ChildItem . -Recurse -ErrorAction SilentlyContinue -Directory | Invoke-Fzf | ForEach-Object { $result = $_ }
+			Invoke-Expression (Get-FileSystemCmd . -dirOnly) | Invoke-Fzf | ForEach-Object { $result = $_ }
 		} else {
 			Invoke-Expression ($env:FZF_ALT_C_COMMAND) | Invoke-Fzf | ForEach-Object { $result = $_ }
 		}
