@@ -38,7 +38,7 @@ function Invoke-FuzzyEdit()
             $prevDir = $PWD.Path
             cd $Directory
         }
-        Invoke-Fzf -Multi | ForEach-Object { $files += """$_""" }
+        Invoke-Expression (Get-FileSystemCmd .) | Invoke-Fzf -Multi | ForEach-Object { $files += """$_""" }
     } catch {
     }
     finally {
