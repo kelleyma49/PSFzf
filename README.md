@@ -49,7 +49,13 @@ Press <kbd>Alt+c</kbd> to start PSFzf to select a directory.  `Set-Location` wil
 Press <kbd>Alt+a</kbd> to start PSFzf to select command line arguments used in PSReadline history.  The picked argument will be inserted in the current line.  The line that would result from the selection is shown in the preview window.
 
 ## Tab Expansion
-PSFzf supports tab expansion with a small set of commands. After typing the default trigger command, which defaults to "`**`", and press <kbd>Tab</kbd>, PsFzf tab expansion will provide selectable list of options.
+PSFzf can replace the standard tab completion: 
+```powershell
+Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
+```
+To activate continuous completion, press the directory separator character to complete the current selection and start tab completion for the next part of the container path.
+
+PSFzf supports specialized tab expansion with a small set of commands. After typing the default trigger command, which defaults to "`**`", and press <kbd>Tab</kbd>, PsFzf tab expansion will provide selectable list of options.
 
 The following commands are supported:
 
