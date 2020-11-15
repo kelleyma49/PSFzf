@@ -2,6 +2,7 @@
 $script:GitKeyHandlers = @()
 
 $script:gitPath = $null
+$script:bashPath = $null
 $script:gitPathLong = $null
 
 function SetGitKeyBindings($enable)
@@ -20,6 +21,8 @@ function SetGitKeyBindings($enable)
                 $a = New-Object -ComObject Scripting.FileSystemObject 
                 $f = $a.GetFolder($script:gitPathLong) 
                 $script:gitPath = $f.ShortPath
+                $script:bashPath = $(Join-Path $script:gitPath "bin\bash.exe")
+                $script:bashPath = Resolve-Path $script:bashPath  
             } else {
                 Write-Error "Failed to register git key bindings - git executable not found"
                 return
@@ -76,9 +79,9 @@ function Invoke-PsFzfGitFiles() {
         return
     }
 
-    $previewCmd = $(Join-Path $PsScriptRoot 'bat/PsFzfGitFiles-Preview.bat') + " ${script:gitPath}" + ' {-1}' + $(Get-ColorAlways)
+    $previewCmd = "${script:bashPath} " + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitFiles-Preview.sh') + ' {-1}' + $(Get-ColorAlways) + " $pwd"
     $result = @()
-
+   
     $headerStrings = Get-HeaderStrings
 
     git status --short | `
@@ -97,7 +100,7 @@ function Invoke-PsFzfGitHashes() {
         return
     }
 
-    $previewCmd = $(Join-Path $PsScriptRoot 'bat/PsFzfGitHashes-Preview.bat') + " ${script:gitPath}" + ' {}' + $(Get-ColorAlways)
+    $previewCmd = "${script:bashPath} " + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitHashes-Preview.sh') + ' {}' + $(Get-ColorAlways) + " $pwd"
     $result = @()
     git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph | `
         Invoke-Fzf -Ansi -NoSort -ReverseInput -Multi -Bind ctrl-s:toggle-sort `
@@ -120,7 +123,7 @@ function Invoke-PsFzfGitHashes() {
         return
     }
 
-    $previewCmd = $(Join-Path $PsScriptRoot 'bat/PsFzfGitBranches-Preview.bat') + " ${script:gitPath}" + ' {}' + $(Get-ColorAlways)
+    $previewCmd = "${script:bashPath} " + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + ' {}' + $(Get-ColorAlways) + " $pwd"
     $result = @()
     git branch -a | & "${script:gitPathLong}\usr\bin\grep.exe" -v '/HEAD\s' | 
         ForEach-Object { $_.Substring('* '.Length) } | Sort-Object | `
