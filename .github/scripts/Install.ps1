@@ -11,7 +11,7 @@ if ($IsLinux -or $IsMacOS) {
   } else {
     $prefix = 'darwin'
   }
-  Invoke-WebRequest https://github.com/junegunn/fzf/releases/download/${env:FZF_VERSION}/fzf-${env:FZF_VERSION}-${prefix}_amd64.tar.tgz -OutFile fzf.tgz -Verbose
+  Invoke-WebRequest https://github.com/junegunn/fzf/releases/download/${env:FZF_VERSION}/fzf-${env:FZF_VERSION}-${prefix}_amd64.tar.gz -OutFile fzf.tgz -Verbose
   mkdir ./fzf/
   tar -xvf ./fzf.tgz -C ./fzf/
 } else {  
