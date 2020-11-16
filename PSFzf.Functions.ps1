@@ -91,7 +91,11 @@ function Invoke-FuzzyFasd() {
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyHistory() {
-    $result = Get-History | ForEach-Object { $_.CommandLine } | Invoke-Fzf -Reverse -NoSort
+    if (Get-Command Get-PSReadLineOption -ErrorAction SilentlyContinue) {
+        $result = Get-Content (Get-PSReadLineOption).HistorySavePath | Invoke-Fzf -Reverse -NoSort
+    } else {
+        $result = Get-History | ForEach-Object { $_.CommandLine } | Invoke-Fzf -Reverse -NoSort
+    }
     if ($null -ne $result) {
         Write-Output "Invoking '$result'`n"
         Invoke-Expression "$result" -Verbose
