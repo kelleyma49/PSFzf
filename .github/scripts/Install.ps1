@@ -6,7 +6,12 @@ $modules = @('Pester', '4.10.1'), @('platyPS', $null)
 
 # get fzf:
 if ($IsLinux -or $IsMacOS) {
-  Invoke-WebRequest https://github.com/junegunn/fzf/releases/download/${env:FZF_VERSION}/fzf-${env:FZF_VERSION}-linux_amd64.tar.tgz -OutFile fzf.tgz -Verbose
+  if ($IsLinux) {
+    $prefix = 'linux'
+  } else {
+    $prefix = 'darwin'
+  }
+  Invoke-WebRequest https://github.com/junegunn/fzf/releases/download/${env:FZF_VERSION}/fzf-${env:FZF_VERSION}-${prefix}_amd64.tar.tgz -OutFile fzf.tgz -Verbose
   mkdir ./fzf/
   tar -xvf ./fzf.tgz -C ./fzf/
 } else {  
