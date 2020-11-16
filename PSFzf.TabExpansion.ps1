@@ -260,8 +260,17 @@ function script:Invoke-FzfTabCompletionInner()
 		# need to escape the key if it's a forward slash:
 		if ($expectTrigger -eq '\') {
 			$expectTrigger += $expectTrigger 
-		}
-		$completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf -Layout reverse -Expect $expectTrigger -Query "$prefix" -Bind 'tab:down,btab:up' -Preview 'bat --color=always {}'  | 
+        }
+        
+        $previewScript = $(Join-Path $PsScriptRoot 'helpers/PsFzfTabExpansion-Preview.ps1')
+        $additionalCmd = @{ Preview="pwsh -NoProfile -NonInteractive -File $previewScript " + $PWD.Path + " {}" } 
+
+        $completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf `
+            -Layout reverse `
+            -Expect $expectTrigger `
+            -Query "$prefix" `
+            -Bind 'tab:down,btab:up' `
+            @additionalCmd | 
         ForEach-Object {
 			if ($script:checkCompletion) {
 				$script:continueCompletion = $_ -eq $script:TabContinuousTrigger
