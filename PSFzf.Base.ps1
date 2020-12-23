@@ -767,8 +767,8 @@ FindFzf
 
 try 
 {
-	$fzfVersion = $(& $script:FzfLocation --version).Split('.') 
-	$script:UseHeightOption = $fzfVersion.length -eq 3 -and `
+	$fzfVersion = $(& $script:FzfLocation --version).Replace(' (devel)','').Split('.') 
+	$script:UseHeightOption = $fzfVersion.length -ge 2 -and `
 							  ([int]$fzfVersion[0] -gt 0 -or `
 							  [int]$fzfVersion[1] -ge 21) -and `
 							  $script:RunningInWindowsTerminal 	
