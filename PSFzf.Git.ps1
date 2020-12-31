@@ -85,7 +85,7 @@ function Invoke-PsFzfGitFiles() {
     $headerStrings = Get-HeaderStrings
 
     git status --short | `
-        Invoke-Fzf -Border -Multi -Ansi `
+        Invoke-Fzf -Multi -Ansi `
             -Preview "$previewCmd" -Header $headerStrings[0] -Bind $headerStrings[1] | foreach-object { 
                 $result += $_.Substring('?? '.Length) 
             } 
@@ -102,12 +102,13 @@ function Invoke-PsFzfGitHashes() {
 
     $previewCmd = "${script:bashPath} " + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitHashes-Preview.sh') + ' {}' + $(Get-ColorAlways) + " $pwd"
     $result = @()
-    git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph | `
-        Invoke-Fzf -Ansi -NoSort -ReverseInput -Multi -Bind ctrl-s:toggle-sort `
+    
+    & git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" $(Get-ColorAlways).Trim()  | `
+        Invoke-Fzf -Ansi -NoSort -Multi -Bind ctrl-s:toggle-sort `
         -Header 'Press CTRL-S to toggle sort' `
         -Preview "$previewCmd" | ForEach-Object {
-            if ($_ -match '(\s+[a-f0-9]{7,7}\s+)|(\s+[a-f0-9]{40,40}\s+)') {
-                $result += $Matches[0].Trim()
+            if ($_ -match '\d\d-\d\d-\d\d\s+([a-f0-9]+)\s+') {
+                $result += $Matches.1
             }
         }
 
