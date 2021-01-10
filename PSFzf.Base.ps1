@@ -302,20 +302,11 @@ function Invoke-Fzf {
 			$process.StartInfo.WorkingDirectory = $pwd.Path
 		}
         
-        # Creating string builders to store stdout:
-        $stdOutStr = New-Object -TypeName System.Text.StringBuilder
-
         # Adding event handers for stdout:
-        $scriptBlockRecv = {
-            if (! [String]::IsNullOrEmpty($EventArgs.Data)) {
-                $Event.MessageData.AppendLine($EventArgs.Data)
-            }
-        }
-		$stdOutEventId = "PsFzfStdOutEh-" + [System.Guid]::NewGuid()
-        $stdOutEvent = Register-ObjectEvent -InputObject $process `
-    		-Action $scriptBlockRecv -EventName 'OutputDataReceived' `
-			-SourceIdentifier $stdOutEventId `
-        	-MessageData $stdOutStr
+    	$stdOutEventId = "PsFzfStdOutEh-" + [System.Guid]::NewGuid()
+    	$stdOutEvent = Register-ObjectEvent -InputObject $process `
+    		-EventName 'OutputDataReceived' `
+			-SourceIdentifier $stdOutEventId
 
         $processHasExited = new-object psobject -property @{flag = $false}
         # register on exit:
@@ -345,12 +336,21 @@ function Invoke-Fzf {
 
 			$stdOutEventId,$exitedEventId | ForEach-Object {
 				Unregister-Event $_
+			}
+
+			$stdOutEvent,$exitedEvent | ForEach-Object {
 				Stop-Job $_
 				Remove-Job $_ -Force
 			}
-            $stdOutStr.ToString().Split([System.Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries) | ForEach-Object {
-				Write-Output $_
-			}			
+
+			# events seem to be generated out of order - thereforce, we need sort by time created. For examp`le,
+			# -print-query and -expect and will be outputted first if specified on the command line. 
+			Get-Event -SourceIdentifier $stdOutEventId | `
+				Sort-Object -Property TimeGenerated | `
+				Where-Object { $null -ne $_.SourceEventArgs.Data } | ForEach-Object {
+					Write-Output $_.SourceEventArgs.Data
+					Remove-Event -EventIdentifier $_.EventIdentifier
+				}
 		}
 	}
 
