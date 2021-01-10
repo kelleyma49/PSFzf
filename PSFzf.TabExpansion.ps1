@@ -265,24 +265,33 @@ function script:Invoke-FzfTabCompletionInner()
         $previewScript = $(Join-Path $PsScriptRoot 'helpers/PsFzfTabExpansion-Preview.ps1')
         $additionalCmd = @{ Preview="pwsh -NoProfile -NonInteractive -File $previewScript " + $PWD.Path + " {}" } 
 
+        $script:fzfOutput = @()
         $completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf `
             -Layout reverse `
             -Expect $expectTrigger `
             -Query "$prefix" `
+            -PrintQuery `
             -Bind 'tab:down,btab:up' `
-            @additionalCmd | 
-        ForEach-Object {
-			if ($script:checkCompletion) {
-				$script:continueCompletion = $_ -eq $script:TabContinuousTrigger
-				if (-not $script:continueCompletion) {
-					$script:result += $_
-				}
-				$script:checkCompletion = $false
-			} else {
-				$script:result += $_
-			}
-		}
+            @additionalCmd | ForEach-Object {
+                if ($null -eq $_) {
+                    $script:fzfOutput += ""
+                } else {
+                    $script:fzfOutput += $_
+                }
+            }
 
+        # check if there's a selection:
+        if ($script:fzfOutput.Length -gt 2) {
+            $script:result = $script:fzfOutput[2..($script:fzfOutput.Length-1)]
+        }
+        # or just complete with the query string: 
+        else {
+            $script:result = $script:fzfOutput[0]
+        }    
+
+        # check if we should continue completion:
+        $script:continueCompletion = $script:fzfOutput[1] -eq $script:TabContinuousTrigger
+    
 		#HACK: workaround for fact that PSReadLine seems to clear screen 
 		# after keyboard shortcut action is executed:
 		[Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
