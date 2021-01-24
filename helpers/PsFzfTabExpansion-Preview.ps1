@@ -1,6 +1,10 @@
 [CmdletBinding()]
 param ($DirName,$Item)
 
+# trim quote strings:
+$DirName = $DirName.Trim("'").Trim('"')
+$Item = $Item.Trim("'").Trim('"')
+
 $RunningInWindowsTerminal = [bool]($env:WT_Session)
 $IsWindowsCheck = ($PSVersionTable.PSVersion.Major -le 5) -or $IsWindows
 $ansiCompatible = $script:RunningInWindowsTerminal -or (-not $script:IsWindowsCheck)
