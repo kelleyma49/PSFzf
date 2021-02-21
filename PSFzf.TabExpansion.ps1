@@ -263,7 +263,7 @@ function script:Invoke-FzfTabCompletionInner()
         }
         
         $previewScript = $(Join-Path $PsScriptRoot 'helpers/PsFzfTabExpansion-Preview.ps1')
-        $additionalCmd = @{ Preview=$("pwsh -NoProfile -NonInteractive -File $previewScript \""" + $PWD.Path + "\"" {}") } 
+        $additionalCmd = @{ Preview=$("pwsh -NoProfile -NonInteractive -File \`"$previewScript\`" \""" + $PWD.Path + "\"" {}") } 
 
         $script:fzfOutput = @()
         $completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf `
