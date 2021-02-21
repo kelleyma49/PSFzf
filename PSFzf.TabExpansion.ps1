@@ -266,7 +266,7 @@ function script:Invoke-FzfTabCompletionInner()
         $path = $PWD.Path.Replace('\','/')
         
         $previewScript = $(Join-Path $PsScriptRoot 'helpers/PsFzfTabExpansion-Preview.ps1')
-        $additionalCmd = @{ Preview=$("pwsh -NoProfile -NonInteractive -File $previewScript \""" + $path + "\"" {}") } 
+        $additionalCmd = @{ Preview=$("pwsh -NoProfile -NonInteractive -File \""$previewScript\"" \""" + $path + "\"" {}") } 
 
         $script:fzfOutput = @()
         $completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf `
