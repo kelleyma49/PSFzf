@@ -65,7 +65,15 @@ function Invoke-FuzzyEdit()
     }
     
     if ($null -ne $files) {
-        Invoke-Expression -Command ("$editor $editorOptions {0}" -f ($files -join ' ')) 
+        $fileList = ''
+        $files | ForEach-Object {
+            if ($Directory) {
+                $fileList += (Join-Path $Directory $_) + ' '
+            } else {
+                $fileList += $_ + ' '
+            }
+        }
+        Invoke-Expression -Command ("$editor $editorOptions $fileList") 
     }
 }
 
