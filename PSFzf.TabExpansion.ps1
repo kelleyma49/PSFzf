@@ -261,9 +261,12 @@ function script:Invoke-FzfTabCompletionInner()
 		if ($expectTrigger -eq '\') {
 			$expectTrigger += $expectTrigger 
         }
+
+        # normalize so path works correctly for Windows:
+        $path = $PWD.Path.Replace('\','/')
         
         $previewScript = $(Join-Path $PsScriptRoot 'helpers/PsFzfTabExpansion-Preview.ps1')
-        $additionalCmd = @{ Preview=$("pwsh -NoProfile -NonInteractive -File $previewScript \""" + $PWD.Path + "\"" {}") } 
+        $additionalCmd = @{ Preview=$("pwsh -NoProfile -NonInteractive -File $previewScript \""" + $path + "\"" {}") } 
 
         $script:fzfOutput = @()
         $completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf `

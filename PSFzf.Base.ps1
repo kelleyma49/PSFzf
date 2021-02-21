@@ -289,7 +289,7 @@ function Invoke-Fzf {
 		if ($script:UseFd -and $script:RunningInWindowsTerminal -and -not $arguments.Contains('--ansi')) {
 			$arguments += "--ansi "
 		}
-
+		
 		# prepare to start process:
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo.FileName = $script:FzfLocation
@@ -746,8 +746,8 @@ $PsReadlineShortcuts = @{
 		'ScriptBlock' = { Invoke-FzfPsReadlineHandlerHistoryArgs } };
 	PSReadlineChordTabCompletion = [PSCustomObject]@{
 		'Chord' = "Tab"
-		'BriefDesc' = 'crap'
-		'Desc' = 'crap'
+		'BriefDesc' = 'Fzf Tab Completion'
+		'Desc' = 'Invoke Fzf for tab completion'
 		'ScriptBlock' = { Invoke-TabCompletion } };	
 }
 if (Get-Module -ListAvailable -Name PSReadline) {
