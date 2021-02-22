@@ -124,7 +124,7 @@ function Invoke-PsFzfGitHashes() {
         return
     }
 
-    $previewCmd = "${script:bashPath} " + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + ' {}' + $(Get-ColorAlways) + " \""$pwd\"""
+    $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + '\"" {}' + $(Get-ColorAlways) + " \""$pwd\"""
     $result = @()
     git branch -a | & "${script:gitPathLong}\usr\bin\grep.exe" -v '/HEAD\s' | 
         ForEach-Object { $_.Substring('* '.Length) } | Sort-Object | `
