@@ -79,7 +79,7 @@ function Invoke-PsFzfGitFiles() {
         return
     }
 
-    $previewCmd = "${script:bashPath} " + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitFiles-Preview.sh') + ' {-1}' + $(Get-ColorAlways) + " $pwd"
+    $previewCmd = "${script:bashPath} " + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitFiles-Preview.sh') + ' {-1}' + $(Get-ColorAlways) + " \""$pwd\"""
     $result = @()
    
     $headerStrings = Get-HeaderStrings
@@ -100,7 +100,7 @@ function Invoke-PsFzfGitHashes() {
         return
     }
 
-    $previewCmd = "${script:bashPath} " + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitHashes-Preview.sh') + ' {}' + $(Get-ColorAlways) + " $pwd"
+    $previewCmd = "${script:bashPath} " + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitHashes-Preview.sh') + ' {}' + $(Get-ColorAlways) + " \""$pwd\"""
     $result = @()
     
     & git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" $(Get-ColorAlways).Trim()  | `
@@ -124,7 +124,7 @@ function Invoke-PsFzfGitHashes() {
         return
     }
 
-    $previewCmd = "${script:bashPath} " + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + ' {}' + $(Get-ColorAlways) + " $pwd"
+    $previewCmd = "${script:bashPath} " + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + ' {}' + $(Get-ColorAlways) + " \""$pwd\"""
     $result = @()
     git branch -a | & "${script:gitPathLong}\usr\bin\grep.exe" -v '/HEAD\s' | 
         ForEach-Object { $_.Substring('* '.Length) } | Sort-Object | `

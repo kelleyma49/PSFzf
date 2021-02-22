@@ -2,9 +2,8 @@ set -e
 args=$2
 dir="${3//\\//}"
 file=$1
-#head_path=${git_path}'/usr/bin/head.exe'
 
 pushd . > /dev/null
-cd $dir
+cd "$dir"
 git diff $args $file | head -500
 popd > /dev/null
