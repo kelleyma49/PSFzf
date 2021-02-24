@@ -32,7 +32,7 @@ if (Test-Path $path -PathType Container) {
 elseif (Test-Path $path -PathType leaf) {
     # use bat (https://github.com/sharkdp/bat) if it's available:
     if ($ansiCompatible -and $(Get-Command bat -ErrorAction SilentlyContinue)) {
-        bat --style=numbers,changes --color always $path
+        bat "--style=numbers,changes" --color always $path
     } else {
         Get-Content $path
     }
