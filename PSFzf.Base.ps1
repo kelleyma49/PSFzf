@@ -156,6 +156,19 @@ function Set-PsFzfOption{
 	}
 }
 
+function Stop-Pipeline {
+	# borrowed from https://stackoverflow.com/a/34800670:
+	(Add-Type -Passthru -TypeDefinition '
+	using System.Management.Automation;
+	namespace PSFzf.IO {
+	  public static class CustomPipelineStopper {
+		public static void Stop(Cmdlet cmdlet) {
+		  throw (System.Exception) System.Activator.CreateInstance(typeof(Cmdlet).Assembly.GetType("System.Management.Automation.StopUpstreamCommandsException"), cmdlet);
+		}
+	  }
+	}')::Stop($PSCmdlet)
+}
+
 function Invoke-Fzf {
 	param( 
             # Search
@@ -289,7 +302,7 @@ function Invoke-Fzf {
 		if ($script:UseFd -and $script:RunningInWindowsTerminal -and -not $arguments.Contains('--ansi')) {
 			$arguments += "--ansi "
 		}
-		
+
 		# prepare to start process:
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo.FileName = $script:FzfLocation
@@ -334,13 +347,17 @@ function Invoke-Fzf {
 				# do nothing
 			}
 
-			$stdOutEventId,$exitedEventId | ForEach-Object {
-				Unregister-Event $_
-			}
+			try {
+				#$stdOutEventId,$exitedEventId | ForEach-Object {
+				#	Unregister-Event $_ -ErrorAction SilentlyContinue
+				#}
+	
+				$stdOutEvent,$exitedEvent | ForEach-Object {
+					Stop-Job $_  -ErrorAction SilentlyContinue						
+					Remove-Job $_ -Force  -ErrorAction SilentlyContinue
+				}	
+			} catch {
 
-			$stdOutEvent,$exitedEvent | ForEach-Object {
-				Stop-Job $_
-				Remove-Job $_ -Force
 			}
 
 			# events seem to be generated out of order - thereforce, we need sort by time created. For examp`le,
@@ -355,77 +372,74 @@ function Invoke-Fzf {
 	}
 
 	Process {
-		$brokePipeline = $false
         $hasInput = $PSBoundParameters.ContainsKey('Input')
-        
-        try {
-			# handle no piped input:
-			if (!$hasInput) {
-                # optimization for filesystem provider:
-                if ($PWD.Provider.Name -eq 'FileSystem') {
-					Invoke-Expression (Get-FileSystemCmd $PWD.Path) | ForEach-Object { 
-                        $utf8Stream.WriteLine($_)
-                        if ($processHasExited.flag) {
-                            throw "breaking inner pipeline"
-                        }
-				    }
-                }
-                else {
-                    Get-ChildItem . -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
-                        $item = $_ 
-                        if ($item -is [System.String]) {
-                            $str = $item
-                        } else {
-                            # search through common properties:
-                            $str = $item.FullName
-                            if ($null -eq $str) {
-                                $str = $item.Name
-                                if ($null -eq $str) {
-                                    $str = $item.ToString()
-                                }
-                            }
-                        }
-                        if (![System.String]::IsNullOrWhiteSpace($str)) {
-                            $utf8Stream.WriteLine($str)
-                        }
-
-                        if ($processHasExited.flag) {
-                            throw "breaking inner pipeline"
-                        }
-				    }
-                }
-                 
-			} else {
-                foreach ($item in $Input) {
-                    if ($item -is [System.String]) {
-				    $str = $item
-                    } else {
-                        # search through common properties:
-                        $str = $item.FullName
-                        if ($null -eq $str) {
-                            $str = $item.Name
-                            if ($null -eq $str) {
-                                $str = $item.ToString()
-                            }
-                        }
-                    }
-                    if (![System.String]::IsNullOrWhiteSpace($str)) {
-                        $utf8Stream.WriteLine($str)
-                    }
-                    if ($processHasExited.flag) {
-                        throw "breaking inner pipeline"
+		
+        # handle no piped input:
+		if (!$hasInput) {
+			# optimization for filesystem provider:
+			if ($PWD.Provider.Name -eq 'FileSystem') {
+				Invoke-Expression (Get-FileSystemCmd $PWD.Path) | ForEach-Object { 
+					$utf8Stream.WriteLine($_)
+					if ($processHasExited.flag -or $process.HasExited) {
+						$utf8Stream = $null
+						& $cleanup
+						Stop-Pipeline
 					}
 				}
 			}
-			$utf8Stream.Flush()
-		} catch {
-			# do nothing
-			$brokePipeline = $true
-		}
+			else {
+				Get-ChildItem . -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+					$item = $_ 
+					if ($item -is [System.String]) {
+						$str = $item
+					} else {
+						# search through common properties:
+						$str = $item.FullName
+						if ($null -eq $str) {
+							$str = $item.Name
+							if ($null -eq $str) {
+								$str = $item.ToString()
+							}
+						}
+					}
+					if (![System.String]::IsNullOrWhiteSpace($str)) {
+						$utf8Stream.WriteLine($str)
+					}
 
-		if ($brokePipeline) {
-			& $cleanup
-			throw "Stopped fzf pipeline input"
+					if ($processHasExited.flag -or $process.HasExited) {
+						$utf8Stream = $null
+						& $cleanup
+						Stop-Pipeline
+					}
+				}
+			}
+				
+		} else {
+			foreach ($item in $Input) {
+				if ($item -is [System.String]) {
+				$str = $item
+				} else {
+					# search through common properties:
+					$str = $item.FullName
+					if ($null -eq $str) {
+						$str = $item.Name
+						if ($null -eq $str) {
+							$str = $item.ToString()
+						}
+					}
+				}
+				if (![System.String]::IsNullOrWhiteSpace($str)) {
+					$utf8Stream.WriteLine($str)
+				}
+				if ($processHasExited.flag -or $process.HasExited) {
+					& $cleanup
+					Stop-Pipeline
+					#return
+				}
+			}
+		}
+		if ($utf8Stream -ne $null) {
+			$utf8Stream.Flush()
 		}
 	}
 
