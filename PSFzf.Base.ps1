@@ -353,7 +353,7 @@ function Invoke-Fzf {
 				#}
 	
 				$stdOutEvent,$exitedEvent | ForEach-Object {
-					Stop-Job $_  -ErrorAction SilentlyContinue						
+					Stop-Job $_  -ErrorAction SilentlyContinue
 					Remove-Job $_ -Force  -ErrorAction SilentlyContinue
 				}	
 			} catch {
