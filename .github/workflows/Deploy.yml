@@ -17,7 +17,9 @@ jobs:
             FZF_VERSION: 0.24.3
           shell: pwsh
         - name: Build PSFzf-Binary
-          run: ./.github/scripts/Build.ps1
+          run: |
+            dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org --configfile $env:APPDATA\NuGet\NuGet.Config
+            ./.github/scripts/Build.ps1
           shell: pwsh
         - name: Publish
           run: ./.github/scripts/Deploy.ps1
