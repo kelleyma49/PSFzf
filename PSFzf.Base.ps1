@@ -589,6 +589,10 @@ function Invoke-FzfPsReadlineHandlerHistory {
 		$prevDefaultOpts = $env:FZF_DEFAULT_OPTS
 		$env:FZF_DEFAULT_OPTS = $env:FZF_DEFAULT_OPTS + ' ' + $env:FZF_CTRL_R_OPTS 
 
+		$line = $null
+		$cursor = $null	
+		[Microsoft.PowerShell.PSConsoleReadline]::GetBufferState([ref]$line, [ref]$cursor)
+
 		$reader = New-Object PSFzf.IO.ReverseLineReader -ArgumentList $((Get-PSReadlineOption).HistorySavePath)
 
 		$fileHist = @{}
@@ -597,7 +601,7 @@ function Invoke-FzfPsReadlineHandlerHistory {
 				$fileHist.Add($_,$true)
 				$_
 			}
-		} | Invoke-Fzf -NoSort -Bind ctrl-r:toggle-sort | ForEach-Object { $result = $_ }
+		} | Invoke-Fzf -NoSort -Query "$line" -Bind ctrl-r:toggle-sort | ForEach-Object { $result = $_ }
 	}
 	catch
 	{
@@ -615,7 +619,7 @@ function Invoke-FzfPsReadlineHandlerHistory {
 	[Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
 
 	if (-not [string]::IsNullOrEmpty($result)) {
-		[Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
+		[Microsoft.PowerShell.PSConsoleReadLine]::Replace(0,$line.Length,$result)
 	}
 }
 
