@@ -311,7 +311,7 @@ function Invoke-Fzf {
         $process.StartInfo.RedirectStandardInput = $true
         $process.StartInfo.RedirectStandardOutput = $true
 		$process.StartInfo.UseShellExecute = $false
-		if ($pwd.Provider -eq 'FileSystem') {
+		if ($pwd.Provider.Name -eq 'FileSystem') {
 			$process.StartInfo.WorkingDirectory = $pwd.Path
 		}
         
