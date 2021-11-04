@@ -1,17 +1,17 @@
 {
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
-    "version": "0.1.0",
+    "version": "2.0.0",
     "command": "powershell",
-    "isShellCommand": true,
-    "showOutput": "always",
-    "suppressTaskName": true,
     "tasks": [
         {
-            "taskName": "Test",
-            "args": [ 
-                "-ExecutionPolicy", "RemoteSigned",
-                "-Command", "${workspaceRoot}\\RunPester.ps1"
+            "label": "Test",
+            "type": "shell",
+            "args": [
+                "-ExecutionPolicy",
+                "RemoteSigned",
+                "-Command",
+                "${workspaceRoot}\\RunPester.ps1"
             ],
             "problemMatcher": {
                 "owner": "pester",
