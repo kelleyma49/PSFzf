@@ -34,9 +34,7 @@ function Expand-GitWithFzf($lastBlock) {
         }
     }
 
-    #HACK: workaround for fact that PSReadLine seems to clear screen 
-    # after keyboard shortcut action is executed:
-    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+    InvokePromptHack
 }
 
 function Expand-FileDirectoryPath($lastWord) {
@@ -68,9 +66,7 @@ function Expand-FileDirectoryPath($lastWord) {
         Set-Location $prevPath
     }
 
-    #HACK: workaround for fact that PSReadLine seems to clear screen 
-    # after keyboard shortcut action is executed:
-    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+    InvokePromptHack
 }
 
 $script:TabExpansionEnabled = $false
@@ -151,9 +147,7 @@ function RegisterBuiltinCompleters {
                 $script:resultArr -join ', '
             }
             
-            #HACK: workaround for fact that PSReadLine seems to clear screen 
-            # after keyboard shortcut action is executed:
-            [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+            InvokePromptHack
         } else {
             # don't return anything - let normal tab completion work
         }
@@ -184,9 +178,7 @@ function RegisterBuiltinCompleters {
             if ($script:resultArr.Length -ge 1) {
                 $script:resultArr -join ', '
             }
-            #HACK: workaround for fact that PSReadLine seems to clear screen 
-            # after keyboard shortcut action is executed:
-            [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+            InvokePromptHack
         } else {
             # don't return anything - let normal tab completion work
         }
@@ -295,9 +287,7 @@ function script:Invoke-FzfTabCompletionInner()
         # check if we should continue completion:
         $script:continueCompletion = $script:fzfOutput[1] -eq $script:TabContinuousTrigger
     
-		#HACK: workaround for fact that PSReadLine seems to clear screen 
-		# after keyboard shortcut action is executed:
-		[Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+		InvokePromptHack
 	}	
 
 	$result = $script:result

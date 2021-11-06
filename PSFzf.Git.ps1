@@ -89,7 +89,7 @@ function Invoke-PsFzfGitFiles() {
             -Preview "$previewCmd" -Header $headerStrings[0] -Bind $headerStrings[1] | foreach-object { 
                 $result += $_.Substring('?? '.Length) 
             } 
-    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+    InvokePromptHack
     if ($result.Length -gt 0) {
         $result = $result -join " "
         [Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
@@ -112,7 +112,7 @@ function Invoke-PsFzfGitHashes() {
             }
         }
 
-    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+    InvokePromptHack
     if ($result.Length -gt 0) {
         $result = $result -join " "
         [Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
