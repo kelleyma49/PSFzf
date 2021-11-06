@@ -59,6 +59,23 @@ function FixCompletionResult($str)
 	}
 }
 
+
+
+#HACK: workaround for fact that PSReadLine seems to clear screen 
+# after keyboard shortcut action is executed, and to work around a UTF8 
+# PSReadLine issue (GitHub PSFZF issue #71)
+function InvokePromptHack()
+{
+	$previousOutputEncoding = [Console]::OutputEncoding
+	[Console]::OutputEncoding = [Text.Encoding]::UTF8
+	
+	try {
+		[Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+	} finally {
+		[Console]::OutputEncoding = $previousOutputEncoding
+	}
+}
+
 $script:FzfLocation = $null
 $script:PSReadlineHandlerChords = @()
 $script:TabContinuousTrigger = [IO.Path]::DirectorySeparatorChar.ToString()
@@ -556,9 +573,7 @@ function Invoke-FzfPsReadlineHandlerProvider {
 		$env:FZF_DEFAULT_OPTS = $prevDefaultOpts
 	}
 	
-	#HACK: workaround for fact that PSReadLine seems to clear screen 
-	# after keyboard shortcut action is executed:
-	[Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+	InvokePromptHack
 
 	if ($null -ne $result) {
 		# quote strings if we need to:
@@ -614,9 +629,7 @@ function Invoke-FzfPsReadlineHandlerHistory {
 		$reader.Dispose()
 	}
 
-	#HACK: workaround for fact that PSReadLine seems to clear screen 
-	# after keyboard shortcut action is executed:
-	[Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+	InvokePromptHack
 
 	if (-not [string]::IsNullOrEmpty($result)) {
 		[Microsoft.PowerShell.PSConsoleReadLine]::Replace(0,$line.Length,$result)
@@ -654,9 +667,7 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 		$reader.Dispose()
 	}
 	
-	#HACK: workaround for fact that PSReadLine seems to clear screen 
-	# after keyboard shortcut action is executed:
-	[Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+	InvokePromptHack
 
 	if (-not [string]::IsNullOrEmpty($result)) {
 		# add quotes:
@@ -691,9 +702,7 @@ function Invoke-FzfPsReadlineHandlerSetLocation {
         Set-Location $result
         [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 	} else {
-		#HACK: workaround for fact that PSReadLine seems to clear screen 
-		# after keyboard shortcut action is executed:
-		[Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+		InvokePromptHack
 	}
 }
 
