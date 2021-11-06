@@ -50,6 +50,30 @@ function Get-FileSystemCmd
 	}
 }
 
+class FzfDefaultOpts {
+	[bool]$UsePsFzfOpts
+	[string]$PrevEnv
+	[bool]$Restored
+
+	FzfDefaultOpts([string]$tempVal) {
+		$this.UsePsFzfOpts = -not [string]::IsNullOrWhiteSpace($env:_PSFZF_FZF_DEFAULT_OPTS)
+		$this.PrevEnv = $env:FZF_DEFAULT_OPTS
+		$env:FZF_DEFAULT_OPTS = $this.Get() + " " + $tempVal
+	}
+
+	[string]Get() {
+		if ($this.UsePsFzfOpts) {
+			return $env:_PSFZF_FZF_DEFAULT_OPTS;
+		} else {
+			return $env:FZF_DEFAULT_OPTS;
+		}
+	}
+
+	[void]Restore() {
+		$env:FZF_DEFAULT_OPTS = $this.PrevEnv
+	}
+}
+
 function FixCompletionResult($str) 
 {
 	if ($str.Contains(" ") -or $str.Contains("`t")) {
@@ -60,6 +84,7 @@ function FixCompletionResult($str)
 }
 
 $script:FzfLocation = $null
+$script:OverrideFzfDefaults = $null
 $script:PSReadlineHandlerChords = @()
 $script:TabContinuousTrigger = [IO.Path]::DirectorySeparatorChar.ToString()
 
@@ -291,8 +316,13 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('PrintQuery') -and $PrintQuery)										{ $arguments += '--print-query '}
 		if ($PSBoundParameters.ContainsKey('Expect') -and ![string]::IsNullOrWhiteSpace($Expect)) 	   			{ $arguments += "--expect=""$Expect"" "}
 	 
+		if (!$script:OverrideFzfDefaults) {
+			$script:OverrideFzfDefaults = [FzfDefaultOpts]::new("")
+		}
+
 		if ($script:UseHeightOption -and [string]::IsNullOrWhiteSpace($Height) -and `
-		  	([string]::IsNullOrWhiteSpace($env:FZF_DEFAULT_OPTS) -or (-not $env:FZF_DEFAULT_OPTS.Contains('--height')))) {
+		  	([string]::IsNullOrWhiteSpace($script:OverrideFzfDefaults.Get()) -or `
+			(-not $script:OverrideFzfDefaults.Get().Contains('--height')))) {
 			$arguments += "--height=40% "
 		}
 		
@@ -339,6 +369,11 @@ function Invoke-Fzf {
         $utf8Stream = New-Object System.IO.StreamWriter -ArgumentList $process.StandardInput.BaseStream, $utf8Encoding
 
 		$cleanup = [scriptblock] {
+			if ($script:OverrideFzfDefaults) {
+				$script:OverrideFzfDefaults.Restore()
+				$script:OverrideFzfDefaults = $null
+			}
+
 			try {
            		$process.StandardInput.Close() | Out-Null
 				$process.WaitForExit()
@@ -438,7 +473,7 @@ function Invoke-Fzf {
 				}
 			}
 		}
-		if ($utf8Stream -ne $null) {
+		if ($null -ne $utf8Stream) {
 			$utf8Stream.Flush()
 		}
 	}
@@ -523,9 +558,9 @@ function Invoke-FzfPsReadlineHandlerProvider {
     $result = @()
     try 
     {
-		$prevDefaultOpts = $env:FZF_DEFAULT_OPTS
-		$env:FZF_DEFAULT_OPTS = $env:FZF_DEFAULT_OPTS + ' ' + $env:FZF_CTRL_T_OPTS
-        if (-not [System.String]::IsNullOrWhiteSpace($env:FZF_CTRL_T_COMMAND)) {
+		$script:OverrideFzfDefaults = [FzfDefaultOpts]::new($env:FZF_CTRL_T_OPTS)
+
+		if (-not [System.String]::IsNullOrWhiteSpace($env:FZF_CTRL_T_COMMAND)) {
 			Invoke-Expression ($env:FZF_CTRL_T_COMMAND) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
 		} else {
 			if ([string]::IsNullOrWhiteSpace($currentPath)) {
@@ -553,7 +588,10 @@ function Invoke-FzfPsReadlineHandlerProvider {
 	}
 	finally 
 	{
-		$env:FZF_DEFAULT_OPTS = $prevDefaultOpts
+		if ($script:OverrideFzfDefaults) {
+			$script:OverrideFzfDefaults.Restore()
+			$script:OverrideFzfDefaults = $null
+		}
 	}
 	
 	#HACK: workaround for fact that PSReadLine seems to clear screen 
@@ -586,8 +624,7 @@ function Invoke-FzfPsReadlineHandlerHistory {
 	$result = $null
 	try
 	{
-		$prevDefaultOpts = $env:FZF_DEFAULT_OPTS
-		$env:FZF_DEFAULT_OPTS = $env:FZF_DEFAULT_OPTS + ' ' + $env:FZF_CTRL_R_OPTS 
+		$script:OverrideFzfDefaults = [FzfDefaultOpts]::new($env:FZF_CTRL_R_OPTS)
 
 		$line = $null
 		$cursor = $null	
@@ -609,7 +646,11 @@ function Invoke-FzfPsReadlineHandlerHistory {
 	}
 	finally 
 	{
-		$env:FZF_DEFAULT_OPTS = $prevDefaultOpts
+		if ($script:OverrideFzfDefaults) {
+			$script:OverrideFzfDefaults.Restore()
+			$script:OverrideFzfDefaults = $null
+		}
+
 		# ensure that stream is closed:
 		$reader.Dispose()
 	}
@@ -671,8 +712,8 @@ function Invoke-FzfPsReadlineHandlerSetLocation {
 	$result = $null
 	try 
     {
-		$prevDefaultOpts = $env:FZF_DEFAULT_OPTS
-		$env:FZF_DEFAULT_OPTS = $env:FZF_DEFAULT_OPTS + ' ' + $env:FZF_ALT_C_OPTS
+		$script:OverrideFzfDefaults = [FzfDefaultOpts]::new($env:FZF_ALT_C_OPTS)
+
 		if ($null -eq $env:FZF_ALT_C_COMMAND) {
 			Invoke-Expression (Get-FileSystemCmd . -dirOnly) | Invoke-Fzf | ForEach-Object { $result = $_ }
 		} else {
@@ -685,7 +726,10 @@ function Invoke-FzfPsReadlineHandlerSetLocation {
 	}
 	finally 
 	{
-		$env:FZF_DEFAULT_OPTS = $prevDefaultOpts
+		if ($script:OverrideFzfDefaults) {
+			$script:OverrideFzfDefaults.Restore()
+			$script:OverrideFzfDefaults = $null
+		}
 	}
     if (-not [string]::IsNullOrEmpty($result)) {
         Set-Location $result
