@@ -38,7 +38,7 @@ function Invoke-FuzzyEdit()
             $prevDir = $PWD.ProviderPath
             cd $Directory
         }
-        Invoke-Expression (Get-FileSystemCmd .) | Invoke-Fzf -Multi | ForEach-Object { $files += """$_""" }
+        Invoke-Expression (Get-FileSystemCmd .) | Invoke-Fzf -Multi | ForEach-Object { $files += "$_" }
     } catch {
     }
     finally {
@@ -64,16 +64,23 @@ function Invoke-FuzzyEdit()
         }
     }
     
-    if ($null -ne $files) {
-        $fileList = ''
-        $files | ForEach-Object {
+    if ($files.Count -gt 0) {
+        try {
             if ($Directory) {
-                $fileList += (Join-Path $Directory $_) + ' '
-            } else {
-                $fileList += $_ + ' '
+                $prevDir = $PWD.Path
+                cd $Directory
+            }
+            # Not sure if being passed relative or absolute path
+            $fileList = '"{0}"' -f ( (Resolve-Path $files) -join '" "' )
+            Invoke-Expression -Command ("$editor $editorOptions $fileList") 
+        }
+        catch {
+        }
+        finally {
+            if ($prevDir) {
+                cd $prevDir
             }
         }
-        Invoke-Expression -Command ("$editor $editorOptions $fileList") 
     }
 }
 
