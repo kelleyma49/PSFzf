@@ -35,7 +35,7 @@ function Invoke-FuzzyEdit()
     $files = @()
     try {
         if ($Directory) {
-            $prevDir = $PWD.Path
+            $prevDir = $PWD.ProviderPath
             cd $Directory
         }
         Invoke-Expression (Get-FileSystemCmd .) | Invoke-Fzf -Multi | ForEach-Object { $files += """$_""" }
@@ -135,7 +135,7 @@ function Invoke-FuzzyKillProcess() {
 function Invoke-FuzzySetLocation() {
     param($Directory=$null)
 
-    if ($null -eq $Directory) { $Directory = $PWD.Path }
+    if ($null -eq $Directory) { $Directory = $PWD.ProviderPath }
     $result = $null
     try {
         if ([string]::IsNullOrWhiteSpace($env:FZF_DEFAULT_COMMAND)) {
@@ -157,7 +157,7 @@ if ((-not $IsLinux) -and (-not $IsMacOS)) {
     function Set-LocationFuzzyEverything() {
         param($Directory=$null)
         if ($null -eq $Directory) {
-            $Directory = $PWD.Path
+            $Directory = $PWD.ProviderPath
             $Global = $False
         } else {
             $Global = $True

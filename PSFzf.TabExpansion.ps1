@@ -48,9 +48,9 @@ function Expand-FileDirectoryPath($lastWord) {
         $file = Split-Path $lastWord -Leaf    
     }
     if (-not [System.IO.Path]::IsPathRooted($dir)) {
-        $dir = Join-Path $PWD.Path $dir
+        $dir = Join-Path $PWD.ProviderPath $dir
     }
-    $prevPath = $Pwd.Path
+    $prevPath = $Pwd.ProviderPath
     try {
         if (-not [string]::IsNullOrEmpty($dir)) {
             Set-Location $dir
@@ -255,7 +255,7 @@ function script:Invoke-FzfTabCompletionInner()
         }
 
         # normalize so path works correctly for Windows:
-        $path = $PWD.Path.Replace('\','/')
+        $path = $PWD.ProviderPath.Replace('\','/')
         
         $previewScript = $(Join-Path $PsScriptRoot 'helpers/PsFzfTabExpansion-Preview.ps1')
         $additionalCmd = @{ Preview=$("pwsh -NoProfile -NonInteractive -File \""$previewScript\"" \""" + $path + "\"" {}") } 

@@ -359,7 +359,7 @@ function Invoke-Fzf {
         $process.StartInfo.RedirectStandardOutput = $true
 		$process.StartInfo.UseShellExecute = $false
 		if ($pwd.Provider.Name -eq 'FileSystem') {
-			$process.StartInfo.WorkingDirectory = $pwd.Path
+			$process.StartInfo.WorkingDirectory = $pwd.ProviderPath
 		}
         
         # Adding event handers for stdout:
@@ -430,7 +430,7 @@ function Invoke-Fzf {
 		if (!$hasInput) {
 			# optimization for filesystem provider:
 			if ($PWD.Provider.Name -eq 'FileSystem') {
-				Invoke-Expression (Get-FileSystemCmd $PWD.Path) | ForEach-Object { 
+				Invoke-Expression (Get-FileSystemCmd $PWD.ProviderPath) | ForEach-Object { 
 					$utf8Stream.WriteLine($_)
 					if ($processHasExited.flag -or $process.HasExited) {
 						$utf8Stream = $null
