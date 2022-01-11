@@ -110,7 +110,7 @@ namespace PSFzf.IO
                 for (int i = 0; i < replacementText.Length; i++)
                 {
                     if (i == matchText.Length
-                        || char.ToLowerInvariant(replacementText[i]) != char.ToLowerInvariant(matchText[i]))
+                        || replacementText[i] != matchText[i])
                     {
                         ambiguous = true;
                         replacementText = replacementText.Substring(0, i);
@@ -131,7 +131,7 @@ namespace PSFzf.IO
                     for (int i = 0; i < replacementText.Length; i++)
                     {
                         if (i == matchText.Length
-                            || char.ToLowerInvariant(replacementText[i]) != char.ToLowerInvariant(matchText[i]))
+                            || replacementText[i] != matchText[i])
                         {
                             ambiguous = true;
                             replacementText = replacementText.Substring(0, i);
