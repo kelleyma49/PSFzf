@@ -1,6 +1,6 @@
 # check if we're running on Windows PowerShell. This method is faster than Get-Command:
 if ($(get-host).Version.Major -le 5) {
-         = 'powershell'
+    $script:PowershellCmd = 'powershell'
 } else {
     $script:PowershellCmd = 'pwsh'
 }
