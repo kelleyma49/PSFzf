@@ -2,7 +2,6 @@ $ErrorActionPreference = "Stop"
 
 # Force bootstrap of the Nuget PackageManagement Provider; Reference: http://www.powershellgallery.com/GettingStarted?section=Get%20Started 
 Get-PackageProvider -Name NuGet -Force -Verbose
-$modules = @('Pester', '4.10.1'), @('platyPS', $null)
 
 # get fzf:
 if ($IsLinux -or $IsMacOS) {
@@ -20,6 +19,7 @@ if ($IsLinux -or $IsMacOS) {
   Expand-Archive fzf.zip
 }
 
+$modules = @('Pester', '4.10.1'), @('platyPS', $null), @('PSScriptAnalyzer', $null)
 $modules | ForEach-Object { 
   $module = $_[0]
   $version = $_[1]
