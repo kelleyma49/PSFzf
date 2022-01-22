@@ -25,4 +25,4 @@ $analyzerSettings = @{
       }
   }
 }
-Invoke-ScriptAnalyzer -Path ./PsFzf.psm1 -Settings $analyzerSettings
+Invoke-ScriptAnalyzer -Path ./PSFzf.psm1 -Settings $analyzerSettings
