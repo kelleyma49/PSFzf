@@ -10,5 +10,4 @@ if ($res.FailedCount -gt 0) {
   throw "$($res.FailedCount) tests failed."
 }
 
-
 Invoke-ScriptAnalyzer -Path ./PSFzf.psm1 -Settings ./PSScriptAnalyzerSettings.psd1
