@@ -10,19 +10,4 @@ if ($res.FailedCount -gt 0) {
   throw "$($res.FailedCount) tests failed."
 }
 
-# borrowed from https://devblogs.microsoft.com/powershell/using-psscriptanalyzer-to-check-powershell-version-compatibility/
-$analyzerSettings = @{
-  Rules = @{
-      PSUseCompatibleSyntax = @{
-          Enable = $true
-
-          # List the targeted versions of PowerShell here
-          TargetVersions = @(
-              '5.1',
-              '6.2'
-              '7.0'
-          )
-      }
-  }
-}
-Invoke-ScriptAnalyzer -Path ./PSFzf.psm1 -Settings $analyzerSettings
+Invoke-ScriptAnalyzer -Path ./PSFzf.psm1 -Settings ./PSScriptAnalyzerSettings.psd1
