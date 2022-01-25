@@ -16,18 +16,18 @@ dir /s/b/ad "{0}"
 } else {
 	$script:ShellCmd = '/bin/sh -c "{0}"'
 	$script:DefaultFileSystemCmd = @"
-find -L {0} -path '*/\.*' -prune -o -type f -print -o -type l -print 2> /dev/null
+find -L '{0}' -path '*/\.*' -prune -o -type f -print -o -type l -print 2> /dev/null
 "@
 	$script:DefaultFileSystemCmdDirOnly = @"
-find -L {0} -path '*/\.*' -prune -o -type d -print 2> /dev/null
+find -L '{0}' -path '*/\.*' -prune -o -type d -print 2> /dev/null
 "@
 }
 
 $script:RunningInWindowsTerminal = [bool]($env:WT_Session)
 if ($script:RunningInWindowsTerminal) {
-	$script:DefaultFileSystemFdCmd = "fd.exe --color always . {0}"	
+	$script:DefaultFileSystemFdCmd = "fd.exe --color always . `"{0}`""
 } else {
-	$script:DefaultFileSystemFdCmd = "fd.exe . {0}"	
+	$script:DefaultFileSystemFdCmd = "fd.exe . `"{0}`""
 }
 
 $script:UseFd = $false
@@ -39,16 +39,10 @@ function Get-FileSystemCmd
 	# FZF_DEFAULT_COMMAND, so we never use it in that case.
 	if ($dirOnly -or [string]::IsNullOrWhiteSpace($env:FZF_DEFAULT_COMMAND)) {
 		if ($script:UseFd) {
-			# need to quote if there's spaces in the path name:
-			if ($dir.Contains(' ')) {
-				$strDir = """$dir""" 
-			} else {
-				$strDir = $dir
-			}
 			if ($dirOnly) {
-				($script:DefaultFileSystemFdCmd -f '--type directory {0}') -f $strDir
+				"$($script:DefaultFileSystemFdCmd -f $dir) --type directory"
 			} else {
-				$script:DefaultFileSystemFdCmd -f $strDir
+				$script:DefaultFileSystemFdCmd -f $dir
 			}
 		} else {
 			$cmd = $script:DefaultFileSystemCmd
