@@ -491,7 +491,13 @@ function Invoke-Fzf {
 			}
 		}
 		if ($null -ne $utf8Stream) {
-			$utf8Stream.Flush()
+			try {
+				$utf8Stream.Flush()
+			} catch {
+				# Error when flushing the stream should not cause a pipeline
+				# to exit. In particular, we will get a 'broken pipe' error
+				# here when accepting selection early on Linux. See #112.
+			}
 		}
 	}
 
