@@ -383,7 +383,7 @@ function Invoke-Fzf {
         $process.BeginOutputReadLine() | Out-Null
 
 		$utf8Encoding = New-Object System.Text.UTF8Encoding -ArgumentList $false
-        $utf8Stream = New-Object System.IO.StreamWriter -ArgumentList $process.StandardInput.BaseStream, $utf8Encoding
+        $script:utf8Stream = New-Object System.IO.StreamWriter -ArgumentList $process.StandardInput.BaseStream, $utf8Encoding
 
 		$cleanup = [scriptblock] {
 			if ($script:OverrideFzfDefaults) {
@@ -394,7 +394,6 @@ function Invoke-Fzf {
 			try {
            		$process.StandardInput.Close() | Out-Null
 				$process.WaitForExit()
-				$utf8Stream = $null
 			} catch {
 				# do nothing
 			}
@@ -421,6 +420,13 @@ function Invoke-Fzf {
 					Remove-Event -EventIdentifier $_.EventIdentifier
 				}
 		}
+		$checkProcessStatus = [scriptblock] {
+			if ($processHasExited.flag -or $process.HasExited) {
+				$script:utf8stream = $null
+				& $cleanup
+				Stop-Pipeline
+			}
+		}
 	}
 
 	Process {
@@ -430,12 +436,13 @@ function Invoke-Fzf {
 		if (!$hasInput) {
 			# optimization for filesystem provider:
 			if ($PWD.Provider.Name -eq 'FileSystem') {
-				Invoke-Expression (Get-FileSystemCmd $PWD.ProviderPath) | ForEach-Object { 
-					$utf8Stream.WriteLine($_)
-					if ($processHasExited.flag -or $process.HasExited) {
-						$utf8Stream = $null
-						& $cleanup
-						Stop-Pipeline
+				Invoke-Expression (Get-FileSystemCmd $PWD.ProviderPath) | ForEach-Object {
+					try {
+						$utf8Stream.WriteLine($_)
+					} catch [System.Management.Automation.MethodInvocationException] {
+						# Possibly broken pipe. Next clause will handle graceful shutdown.
+					} finally {
+						& $checkProcessStatus
 					}
 				}
 			}
@@ -455,21 +462,20 @@ function Invoke-Fzf {
 						}
 					}
 					if (![System.String]::IsNullOrWhiteSpace($str)) {
-						$utf8Stream.WriteLine($str)
+						try {
+							$utf8Stream.WriteLine($str)
+						} catch [System.Management.Automation.MethodInvocationException] {
+							# Possibly broken pipe. We will shutdown the pipe below.
+						}
 					}
-
-					if ($processHasExited.flag -or $process.HasExited) {
-						$utf8Stream = $null
-						& $cleanup
-						Stop-Pipeline
-					}
+					& $checkProcessStatus
 				}
 			}
-				
+
 		} else {
 			foreach ($item in $Input) {
 				if ($item -is [System.String]) {
-				$str = $item
+					$str = $item
 				} else {
 					# search through common properties:
 					$str = $item.FullName
@@ -481,22 +487,21 @@ function Invoke-Fzf {
 					}
 				}
 				if (![System.String]::IsNullOrWhiteSpace($str)) {
-					$utf8Stream.WriteLine($str)
+					try {
+						$utf8Stream.WriteLine($str)
+					} catch [System.Management.Automation.MethodInvocationException] {
+						# Possibly broken pipe. We will shutdown the pipe below.
+					}
 				}
-				if ($processHasExited.flag -or $process.HasExited) {
-					& $cleanup
-					Stop-Pipeline
-					#return
-				}
+				& $checkProcessStatus
 			}
 		}
 		if ($null -ne $utf8Stream) {
 			try {
 				$utf8Stream.Flush()
-			} catch {
-				# Error when flushing the stream should not cause a pipeline
-				# to exit. In particular, we will get a 'broken pipe' error
-				# here when accepting selection early on Linux. See #112.
+			} catch [System.Management.Automation.MethodInvocationException] {
+				# Possibly broken pipe, check process status.
+				& $checkProcessStatus
 			}
 		}
 	}
