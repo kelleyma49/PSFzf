@@ -10,10 +10,16 @@ if ($script:IsWindows) {
 	$script:DefaultFileSystemCmd = @"
 dir /s/b "{0}"
 "@ 
+	$script:DefaultFileSystemCmdDirOnly = @"
+dir /s/b/ad "{0}"
+"@
 } else {
 	$script:ShellCmd = '/bin/sh -c "{0}"'
 	$script:DefaultFileSystemCmd = @"
-find {0} -path '*/\.*' -prune -o -type f -print -o -type l -print 2> /dev/null
+find -L {0} -path '*/\.*' -prune -o -type f -print -o -type l -print 2> /dev/null
+"@
+	$script:DefaultFileSystemCmdDirOnly = @"
+find -L {0} -path '*/\.*' -prune -o -type d -print 2> /dev/null
 "@
 }
 
@@ -29,7 +35,9 @@ $script:UseFd = $false
 function Get-FileSystemCmd
 {
 	param($dir, [switch]$dirOnly = $false)
-	if ([string]::IsNullOrWhiteSpace($env:FZF_DEFAULT_COMMAND)) {
+	# Note that there is no way to know how to list only directories using
+	# FZF_DEFAULT_COMMAND, so we never use it in that case.
+	if ($dirOnly -or [string]::IsNullOrWhiteSpace($env:FZF_DEFAULT_COMMAND)) {
 		if ($script:UseFd) {
 			# need to quote if there's spaces in the path name:
 			if ($dir.Contains(' ')) {
@@ -43,7 +51,11 @@ function Get-FileSystemCmd
 				$script:DefaultFileSystemFdCmd -f $strDir
 			}
 		} else {
-			$script:ShellCmd -f ($script:DefaultFileSystemCmd -f $dir)
+			$cmd = $script:DefaultFileSystemCmd
+			if ($dirOnly) {
+				$cmd = $script:DefaultFileSystemCmdDirOnly
+			}
+			$script:ShellCmd -f ($cmd -f $dir)
 		}
 	} else {
 		$script:ShellCmd -f ($env:FZF_DEFAULT_COMMAND -f $dir)
