@@ -700,7 +700,8 @@ function Invoke-FzfPsReadlineHandlerHistory {
 	}
 }
 
-function Invoke-FzfPsReadlineHandlerHistoryArgs {	
+function Invoke-FzfPsReadlineHandlerHistoryArgs {
+	$result = @()
 	try 
     {
 		$line = $null
@@ -720,7 +721,7 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 		} | Where-Object {$_.type -eq "commandargument" -or $_.type -eq "string"} | 
 				ForEach-Object { 
 					if (!$contentTable.ContainsKey($_.Content)) { $_.Content ; $contentTable[$_.Content] = $true } 
-				} | Invoke-Fzf -NoSort -Preview "echo $line" -PreviewWindow "up:20%" | ForEach-Object { $result = $_ }
+				} | Invoke-Fzf -NoSort -Multi | ForEach-Object { $result += $_ }
 	}
 	catch 
 	{
@@ -733,12 +734,16 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 	
 	InvokePromptHack
 
-	if (-not [string]::IsNullOrEmpty($result)) {
+	[array]$result = $result | ForEach-Object {
 		# add quotes:
-		if ($result.Contains(" ") -or $result.Contains("`t")) {
-			$result = "'{0}'" -f $result.Replace("'","''")
-		}
-		[Microsoft.PowerShell.PSConsoleReadLine]::Replace($cursor,0,$result)
+		if ($_.Contains(" ") -or $_.Contains("`t")) {
+			"'{0}'" -f $_.Replace("'","''")
+		} else {
+			$_
+		}	
+	}
+	if ($result.Length -ge 0) {
+		[Microsoft.PowerShell.PSConsoleReadLine]::Replace($cursor,0,($result -join ' '))
 	}
 }
 
