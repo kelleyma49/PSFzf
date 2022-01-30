@@ -5,11 +5,11 @@ param(
 	[parameter(Position=3,Mandatory=$false)][string]$PSReadlineChordReverseHistoryArgs = 'Alt+a')
 
 $script:IsWindows = ($PSVersionTable.PSVersion.Major -le 5) -or $IsWindows
-if ($script:IsWindows) {	
-	$script:ShellCmd = 'cmd.exe /S /C {0}'	
+if ($script:IsWindows) {
+	$script:ShellCmd = 'cmd.exe /S /C {0}'
 	$script:DefaultFileSystemCmd = @"
 dir /s/b "{0}"
-"@ 
+"@
 	$script:DefaultFileSystemCmdDirOnly = @"
 dir /s/b/ad "{0}"
 "@
@@ -31,9 +31,9 @@ if ($script:RunningInWindowsTerminal) {
 }
 
 $script:UseFd = $false
-$script:AltCCommand = [ScriptBlock]{ 
-	param($Location) 
-	Set-Location $Location 
+$script:AltCCommand = [ScriptBlock]{
+	param($Location)
+	Set-Location $Location
 }
 
 function Get-FileSystemCmd
@@ -84,7 +84,7 @@ class FzfDefaultOpts {
 	}
 }
 
-function FixCompletionResult($str) 
+function FixCompletionResult($str)
 {
 	if ($str.Contains(" ") -or $str.Contains("`t")) {
 		return "'{0}'" -f $str.Replace("`r`n","").Trim(@('''','"'))
@@ -95,14 +95,14 @@ function FixCompletionResult($str)
 
 
 
-#HACK: workaround for fact that PSReadLine seems to clear screen 
-# after keyboard shortcut action is executed, and to work around a UTF8 
+#HACK: workaround for fact that PSReadLine seems to clear screen
+# after keyboard shortcut action is executed, and to work around a UTF8
 # PSReadLine issue (GitHub PSFZF issue #71)
 function InvokePromptHack()
 {
 	$previousOutputEncoding = [Console]::OutputEncoding
 	[Console]::OutputEncoding = [Text.Encoding]::UTF8
-	
+
 	try {
 		[Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
 	} finally {
@@ -117,7 +117,7 @@ $script:TabContinuousTrigger = [IO.Path]::DirectorySeparatorChar.ToString()
 
 $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
 {
-	$PsReadlineShortcuts.Values | Where-Object Chord | ForEach-Object { 
+	$PsReadlineShortcuts.Values | Where-Object Chord | ForEach-Object {
 		Remove-PSReadlineKeyHandler $_.Chord
 	}
 	RemovePsFzfAliases
@@ -187,7 +187,7 @@ function Set-PsFzfOption{
 				}
 				$info.Chord = $newChord
 			}
-		}	
+		}
 	}
 
 	if ($EnableAliasFuzzyEdit) 			{ SetPsFzfAlias "fe"      Invoke-FuzzyEdit}
@@ -199,7 +199,7 @@ function Set-PsFzfOption{
 	if ($EnableAliasFuzzyGitStatus) 	{ SetPsFzfAlias "fgs"     Invoke-FuzzyGitStatus }
 	if ($EnableAliasFuzzySetEverything) {
         if (${function:Set-LocationFuzzyEverything}) {
-            SetPsFzfAlias "cde" Set-LocationFuzzyEverything 
+            SetPsFzfAlias "cde" Set-LocationFuzzyEverything
         }
 	}
 	if ($PSBoundParameters.ContainsKey('EnableFd')) {
@@ -228,7 +228,7 @@ function Stop-Pipeline {
 }
 
 function Invoke-Fzf {
-	param( 
+	param(
             # Search
 			[Alias("x")]
 			[switch]$Extended,
@@ -283,7 +283,7 @@ function Invoke-Fzf {
             # History
 			[string]$History,
 			[int]$HistorySize = -1,
-			
+
             #Preview
             [string]$Preview,
 			[string]$PreviewWindow,
@@ -299,13 +299,13 @@ function Invoke-Fzf {
 			[string]$Filter,
 			[switch]$PrintQuery,
 			[string]$Expect,
-			
+
 		  	[Parameter(ValueFromPipeline=$True)]
             [object[]]$Input
     )
 
 	Begin {
-		# process parameters: 
+		# process parameters:
 		$arguments = ''
 		if ($PSBoundParameters.ContainsKey('Extended') -and $Extended) 											{ $arguments += '--extended '}
 		if ($PSBoundParameters.ContainsKey('Exact') -and $Exact) 			        							{ $arguments += '--exact '}
@@ -348,7 +348,7 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('Filter') -and ![string]::IsNullOrEmpty($Filter))					{ $arguments += "--filter=$Filter " }
 		if ($PSBoundParameters.ContainsKey('PrintQuery') -and $PrintQuery)										{ $arguments += '--print-query '}
 		if ($PSBoundParameters.ContainsKey('Expect') -and ![string]::IsNullOrWhiteSpace($Expect)) 	   			{ $arguments += "--expect=""$Expect"" "}
-	 
+
 		if (!$script:OverrideFzfDefaults) {
 			$script:OverrideFzfDefaults = [FzfDefaultOpts]::new("")
 		}
@@ -358,7 +358,7 @@ function Invoke-Fzf {
 			(-not $script:OverrideFzfDefaults.Get().Contains('--height')))) {
 			$arguments += "--height=40% "
 		}
-		
+
 		if ($Border -eq $true -and -not [string]::IsNullOrWhiteSpace($BorderStyle)) {
 			throw '-Border and -BorderStyle are mutally exclusive'
 		}
@@ -377,7 +377,7 @@ function Invoke-Fzf {
 		if ($pwd.Provider.Name -eq 'FileSystem') {
 			$process.StartInfo.WorkingDirectory = $pwd.ProviderPath
 		}
-        
+
         # Adding event handers for stdout:
     	$stdOutEventId = "PsFzfStdOutEh-" + [System.Guid]::NewGuid()
     	$stdOutEvent = Register-ObjectEvent -InputObject $process `
@@ -418,17 +418,17 @@ function Invoke-Fzf {
 				#$stdOutEventId,$exitedEventId | ForEach-Object {
 				#	Unregister-Event $_ -ErrorAction SilentlyContinue
 				#}
-	
+
 				$stdOutEvent,$exitedEvent | ForEach-Object {
 					Stop-Job $_  -ErrorAction SilentlyContinue
 					Remove-Job $_ -Force  -ErrorAction SilentlyContinue
-				}	
+				}
 			} catch {
 
 			}
 
 			# events seem to be generated out of order - thereforce, we need sort by time created. For examp`le,
-			# -print-query and -expect and will be outputted first if specified on the command line. 
+			# -print-query and -expect and will be outputted first if specified on the command line.
 			Get-Event -SourceIdentifier $stdOutEventId | `
 				Sort-Object -Property TimeGenerated | `
 				Where-Object { $null -ne $_.SourceEventArgs.Data } | ForEach-Object {
@@ -447,7 +447,7 @@ function Invoke-Fzf {
 
 	Process {
         $hasInput = $PSBoundParameters.ContainsKey('Input')
-		
+
         # handle no piped input:
 		if (!$hasInput) {
 			# optimization for filesystem provider:
@@ -464,7 +464,7 @@ function Invoke-Fzf {
 			}
 			else {
 				Get-ChildItem . -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
-					$item = $_ 
+					$item = $_
 					if ($item -is [System.String]) {
 						$str = $item
 					} else {
@@ -529,7 +529,7 @@ function Invoke-Fzf {
 
 function Find-CurrentPath {
 	param([string]$line,[int]$cursor,[ref]$leftCursor,[ref]$rightCursor)
-	
+
 	if ($line.Length -eq 0) {
 		$leftCursor.Value = $rightCursor.Value = 0
 		return $null
@@ -600,7 +600,7 @@ function Invoke-FzfPsReadlineHandlerProvider {
 	}
 
     $result = @()
-    try 
+    try
     {
 		$script:OverrideFzfDefaults = [FzfDefaultOpts]::new($env:FZF_CTRL_T_OPTS)
 
@@ -613,10 +613,10 @@ function Invoke-FzfPsReadlineHandlerProvider {
 				$resolvedPath = Resolve-Path $currentPath -ErrorAction SilentlyContinue
 				$providerName = $null
 				if ($null -ne $resolvedPath) {
-					$providerName = $resolvedPath.Provider.Name 
+					$providerName = $resolvedPath.Provider.Name
 				}
 				switch ($providerName) {
-					# Get-ChildItem is way too slow - we optimize for the FileSystem provider by 
+					# Get-ChildItem is way too slow - we optimize for the FileSystem provider by
 					# using batch commands:
 					'FileSystem'    { Invoke-Expression (Get-FileSystemCmd $resolvedPath.ProviderPath) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
 					'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object Name -ExpandProperty Name | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
@@ -626,18 +626,18 @@ function Invoke-FzfPsReadlineHandlerProvider {
 			}
 		}
     }
-    catch 
+    catch
     {
         # catch custom exception
 	}
-	finally 
+	finally
 	{
 		if ($script:OverrideFzfDefaults) {
 			$script:OverrideFzfDefaults.Restore()
 			$script:OverrideFzfDefaults = $null
 		}
 	}
-	
+
 	InvokePromptHack
 
 	if ($null -ne $result) {
@@ -649,7 +649,7 @@ function Invoke-FzfPsReadlineHandlerProvider {
 		} else {
 			$result = FixCompletionResult $result
 		}
-		
+
 		$str = $result -join ','
 		if ($addSpace) {
 			$str = ' ' + $str
@@ -659,7 +659,7 @@ function Invoke-FzfPsReadlineHandlerProvider {
 			[Microsoft.PowerShell.PSConsoleReadLine]::Insert($str)
 		} else {
 			[Microsoft.PowerShell.PSConsoleReadLine]::Replace($leftCursor,$replaceLen+1,$str)
-		}		
+		}
 	}
 }
 function Invoke-FzfPsReadlineHandlerHistory {
@@ -669,7 +669,7 @@ function Invoke-FzfPsReadlineHandlerHistory {
 		$script:OverrideFzfDefaults = [FzfDefaultOpts]::new($env:FZF_CTRL_R_OPTS)
 
 		$line = $null
-		$cursor = $null	
+		$cursor = $null
 		[Microsoft.PowerShell.PSConsoleReadline]::GetBufferState([ref]$line, [ref]$cursor)
 
 		$reader = New-Object PSFzf.IO.ReverseLineReader -ArgumentList $((Get-PSReadlineOption).HistorySavePath)
@@ -686,7 +686,7 @@ function Invoke-FzfPsReadlineHandlerHistory {
 	{
 		# catch custom exception
 	}
-	finally 
+	finally
 	{
 		if ($script:OverrideFzfDefaults) {
 			$script:OverrideFzfDefaults.Restore()
@@ -706,28 +706,28 @@ function Invoke-FzfPsReadlineHandlerHistory {
 
 function Invoke-FzfPsReadlineHandlerHistoryArgs {
 	$result = @()
-	try 
+	try
     {
 		$line = $null
 		$cursor = $null
 		[Microsoft.PowerShell.PSConsoleReadline]::GetBufferState([ref]$line, [ref]$cursor)
 		$line = $line.Insert($cursor,"{}") # add marker for fzf
-        
+
         $contentTable = @{}
 		$reader = New-Object PSFzf.IO.ReverseLineReader -ArgumentList $((Get-PSReadlineOption).HistorySavePath)
-		
+
 		$fileHist = @{}
 		$reader.GetEnumerator() | ForEach-Object {
 			if (-not $fileHist.ContainsKey($_)) {
 				$fileHist.Add($_,$true)
-				[System.Management.Automation.PsParser]::Tokenize($_, [ref] $null) 
-			}  
-		} | Where-Object {$_.type -eq "commandargument" -or $_.type -eq "string"} | 
-				ForEach-Object { 
-					if (!$contentTable.ContainsKey($_.Content)) { $_.Content ; $contentTable[$_.Content] = $true } 
+				[System.Management.Automation.PsParser]::Tokenize($_, [ref] $null)
+			}
+		} | Where-Object {$_.type -eq "commandargument" -or $_.type -eq "string"} |
+				ForEach-Object {
+					if (!$contentTable.ContainsKey($_.Content)) { $_.Content ; $contentTable[$_.Content] = $true }
 				} | Invoke-Fzf -NoSort -Multi | ForEach-Object { $result += $_ }
 	}
-	catch 
+	catch
 	{
 		# catch custom exception
 	}
@@ -735,7 +735,7 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 	{
 		$reader.Dispose()
 	}
-	
+
 	InvokePromptHack
 
 	[array]$result = $result | ForEach-Object {
@@ -744,7 +744,7 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 			"'{0}'" -f $_.Replace("'","''")
 		} else {
 			$_
-		}	
+		}
 	}
 	if ($result.Length -ge 0) {
 		[Microsoft.PowerShell.PSConsoleReadLine]::Replace($cursor,0,($result -join ' '))
@@ -753,7 +753,7 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 
 function Invoke-FzfPsReadlineHandlerSetLocation {
 	$result = $null
-	try 
+	try
     {
 		$script:OverrideFzfDefaults = [FzfDefaultOpts]::new($env:FZF_ALT_C_OPTS)
 
@@ -762,12 +762,12 @@ function Invoke-FzfPsReadlineHandlerSetLocation {
 		} else {
 			Invoke-Expression ($env:FZF_ALT_C_COMMAND) | Invoke-Fzf | ForEach-Object { $result = $_ }
 		}
-    } 
-	catch 
+    }
+	catch
 	{
 		# catch custom exception
 	}
-	finally 
+	finally
 	{
 		if ($script:OverrideFzfDefaults) {
 			$script:OverrideFzfDefaults.Restore()
@@ -775,7 +775,7 @@ function Invoke-FzfPsReadlineHandlerSetLocation {
 		}
 	}
     if (-not [string]::IsNullOrEmpty($result)) {
-		& $script:AltCCommand -Location $result 
+		& $script:AltCCommand -Location $result
         [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 	} else {
 		InvokePromptHack
@@ -792,7 +792,7 @@ function SetPsReadlineShortcut($Chord,[switch]$Override,$BriefDesc,$Desc,[script
 	} else {
 		Set-PSReadlineKeyHandler -Key $Chord -Description $Desc -BriefDescription $BriefDesc -ScriptBlock $scriptBlock
 		return $true
-	} 
+	}
 }
 
 
@@ -816,42 +816,42 @@ function FindFzf()
         if ($null -eq $script:FzfLocation) {
             $result = Get-Command $_ -ErrorAction SilentlyContinue
             $result | ForEach-Object {
-                $script:FzfLocation = Resolve-Path $_.Source   
+                $script:FzfLocation = Resolve-Path $_.Source
             }
         }
     }
-    
+
     if ($null -eq $script:FzfLocation) {
-        throw 'Failed to find fzf binary in PATH.  You can download a binary from this page: https://github.com/junegunn/fzf/releases' 
+        throw 'Failed to find fzf binary in PATH.  You can download a binary from this page: https://github.com/junegunn/fzf/releases'
     }
 }
 
 $PsReadlineShortcuts = @{
 	PSReadlineChordProvider = [PSCustomObject]@{
-		'Chord' = "$PSReadlineChordProvider" 
-		'BriefDesc' = 'Fzf Provider Select' 
-		'Desc' = 'Run fzf for current provider based on current token' 
+		'Chord' = "$PSReadlineChordProvider"
+		'BriefDesc' = 'Fzf Provider Select'
+		'Desc' = 'Run fzf for current provider based on current token'
 		'ScriptBlock' = { Invoke-FzfPsReadlineHandlerProvider } };
 	PSReadlineChordReverseHistory = [PsCustomObject]@{
-		'Chord' = "$PSReadlineChordReverseHistory" 
-		'BriefDesc' = 'Fzf Reverse History Select' 
-		'Desc' = 'Run fzf to search through PSReadline history' 
+		'Chord' = "$PSReadlineChordReverseHistory"
+		'BriefDesc' = 'Fzf Reverse History Select'
+		'Desc' = 'Run fzf to search through PSReadline history'
 		'ScriptBlock' = { Invoke-FzfPsReadlineHandlerHistory } };
 	PSReadlineChordSetLocation = @{
 		'Chord' = "$PSReadlineChordSetLocation"
 		'BriefDesc' = 'Fzf Set Location'
-		'Desc' = 'Run fzf to select directory to set current location' 
+		'Desc' = 'Run fzf to select directory to set current location'
 		'ScriptBlock' = { Invoke-FzfPsReadlineHandlerSetLocation } };
 	PSReadlineChordReverseHistoryArgs = @{
 		'Chord' = "$PSReadlineChordReverseHistoryArgs"
 		'BriefDesc' = 'Fzf Reverse History Arg Select'
-		'Desc' = 'Run fzf to search through command line arguments in PSReadline history' 
+		'Desc' = 'Run fzf to search through command line arguments in PSReadline history'
 		'ScriptBlock' = { Invoke-FzfPsReadlineHandlerHistoryArgs } };
 	PSReadlineChordTabCompletion = [PSCustomObject]@{
 		'Chord' = "Tab"
 		'BriefDesc' = 'Fzf Tab Completion'
 		'Desc' = 'Invoke Fzf for tab completion'
-		'ScriptBlock' = { Invoke-TabCompletion } };	
+		'ScriptBlock' = { Invoke-TabCompletion } };
 }
 if (Get-Module -ListAvailable -Name PSReadline) {
 	$PsReadlineShortcuts.GetEnumerator() | ForEach-Object {
@@ -861,22 +861,22 @@ if (Get-Module -ListAvailable -Name PSReadline) {
 		if (-not $result) {
 			$info.Chord = $null
 		}
-	} 
+	}
 } else {
-	Write-Warning "PSReadline module not found - keyboard handlers not installed" 
+	Write-Warning "PSReadline module not found - keyboard handlers not installed"
 }
 
 FindFzf
 
-try 
+try
 {
-	$fzfVersion = $(& $script:FzfLocation --version).Replace(' (devel)','').Split('.') 
+	$fzfVersion = $(& $script:FzfLocation --version).Replace(' (devel)','').Split('.')
 	$script:UseHeightOption = $fzfVersion.length -ge 2 -and `
 							  ([int]$fzfVersion[0] -gt 0 -or `
 							  [int]$fzfVersion[1] -ge 21) -and `
-							  $script:RunningInWindowsTerminal 	
+							  $script:RunningInWindowsTerminal
 }
-catch 
+catch
 {
 	# continue
 }

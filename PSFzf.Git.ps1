@@ -16,13 +16,13 @@ function SetGitKeyBindings($enable)
         if ($null -eq $gitPath) {
             $gitInfo = Get-Command git.exe -ErrorAction SilentlyContinue
             if ($null -ne $gitInfo) {
-                $script:gitPathLong = Split-Path (Split-Path $gitInfo.Source -Parent) -Parent  
+                $script:gitPathLong = Split-Path (Split-Path $gitInfo.Source -Parent) -Parent
 
-                $a = New-Object -ComObject Scripting.FileSystemObject 
-                $f = $a.GetFolder($script:gitPathLong) 
+                $a = New-Object -ComObject Scripting.FileSystemObject
+                $f = $a.GetFolder($script:gitPathLong)
                 $script:gitPath = $f.ShortPath
                 $script:bashPath = $(Join-Path $script:gitPath "bin\bash.exe")
-                $script:bashPath = Resolve-Path $script:bashPath  
+                $script:bashPath = Resolve-Path $script:bashPath
             } else {
                 Write-Error "Failed to register git key bindings - git executable not found"
                 return
@@ -81,14 +81,14 @@ function Invoke-PsFzfGitFiles() {
 
     $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitFiles-Preview.sh') + "\"" {-1}" + $(Get-ColorAlways) + " \""$pwd\"""
     $result = @()
-   
+
     $headerStrings = Get-HeaderStrings
 
     git status --short | `
         Invoke-Fzf -Multi -Ansi `
-            -Preview "$previewCmd" -Header $headerStrings[0] -Bind $headerStrings[1] | foreach-object { 
-                $result += $_.Substring('?? '.Length) 
-            } 
+            -Preview "$previewCmd" -Header $headerStrings[0] -Bind $headerStrings[1] | foreach-object {
+                $result += $_.Substring('?? '.Length)
+            }
     InvokePromptHack
     if ($result.Length -gt 0) {
         $result = $result -join " "
@@ -102,7 +102,7 @@ function Invoke-PsFzfGitHashes() {
 
     $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitHashes-Preview.sh') + "\"" {}" + $(Get-ColorAlways) + " \""$pwd\"""
     $result = @()
-    
+
     & git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" $(Get-ColorAlways).Trim()  | `
         Invoke-Fzf -Ansi -NoSort -Multi -Bind ctrl-s:toggle-sort `
         -Header 'Press CTRL-S to toggle sort' `
@@ -126,7 +126,7 @@ function Invoke-PsFzfGitHashes() {
 
     $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + "\"" {}" + $(Get-ColorAlways) + " \""$pwd\"""
     $result = @()
-    git branch -a | & "${script:gitPathLong}\usr\bin\grep.exe" -v '/HEAD\s' | 
+    git branch -a | & "${script:gitPathLong}\usr\bin\grep.exe" -v '/HEAD\s' |
         ForEach-Object { $_.Substring('* '.Length) } | Sort-Object | `
                 Invoke-Fzf -Ansi -Multi -PreviewWindow "right:70%" -Preview "$previewCmd" | ForEach-Object {
                         $result += $_
