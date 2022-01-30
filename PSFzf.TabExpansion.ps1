@@ -272,30 +272,27 @@ function script:Invoke-FzfTabCompletionInner()
             -Layout reverse `
             -Expect $expectTrigger `
             -Query "$prefix" `
-            -PrintQuery `
             -Bind 'tab:down,btab:up' `
             @additionalCmd | ForEach-Object {
-                if ($null -eq $_) {
-                    $script:fzfOutput += ""
-                } else {
+                if ($null -ne $_ -and -not [string]::IsNullOrWhiteSpace($_)) {
                     $script:fzfOutput += $_
                 }
             }
-
+    
         # check if there's a selection:
-        if ($script:fzfOutput.Length -gt 2) {
-            $script:result = $script:fzfOutput[2..($script:fzfOutput.Length-1)]
+        if ($script:fzfOutput.Length -ge 1) {
+            $script:result = $script:fzfOutput[0]
         }
         # or just complete with the query string: 
         else {
-            $script:result = $script:fzfOutput[0]
+            $script:result = $prefix
         }    
 
         # check if we should continue completion:
         $script:continueCompletion = $script:fzfOutput[1] -eq $script:TabContinuousTrigger
     
 		InvokePromptHack
-	}	
+    }	
 
 	$result = $script:result
 	if ($null -ne $result) {
