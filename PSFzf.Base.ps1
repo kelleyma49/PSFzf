@@ -31,6 +31,10 @@ if ($script:RunningInWindowsTerminal) {
 }
 
 $script:UseFd = $false
+$script:AltCCommand = [ScriptBlock]{ 
+	param($Location) 
+	Set-Location $Location 
+}
 
 function Get-FileSystemCmd
 {
@@ -160,7 +164,9 @@ function Set-PsFzfOption{
 		[switch]
 		$EnableAliasFuzzyGitStatus,
 		[switch]
-		$EnableFd
+		$EnableFd,
+		[ScriptBlock]
+		$AltCCommand
 	)
 	if ($PSBoundParameters.ContainsKey('TabExpansion')) {
 		SetTabExpansion $TabExpansion
@@ -201,6 +207,10 @@ function Set-PsFzfOption{
 	}
 	if ($PSBoundParameters.ContainsKey('TabContinuousTrigger')) {
 		$script:TabContinuousTrigger = $TabContinuousTrigger
+	}
+
+	if ($PSBoundParameters.ContainsKey('AltCCommand')) {
+		$script:AltCCommand = $AltCCommand
 	}
 }
 
@@ -765,7 +775,7 @@ function Invoke-FzfPsReadlineHandlerSetLocation {
 		}
 	}
     if (-not [string]::IsNullOrEmpty($result)) {
-        Set-Location $result
+		& $script:AltCCommand -Location $result 
         [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 	} else {
 		InvokePromptHack
