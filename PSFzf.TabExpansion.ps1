@@ -49,10 +49,10 @@ function Expand-FileDirectoryPath($lastWord) {
     $lastWord = $lastWord.Substring(0, $lastWord.Length - 2)
     if ($lastWord.EndsWith('\')) {
         $dir = $lastWord.Substring(0, $lastWord.Length - 1)
-        $file = $null    
+        $file = $null
     } elseif (-not [string]::IsNullOrWhiteSpace($lastWord)) {
         $dir = Split-Path $lastWord -Parent
-        $file = Split-Path $lastWord -Leaf    
+        $file = Split-Path $lastWord -Leaf
     }
     if (-not [System.IO.Path]::IsPathRooted($dir)) {
         $dir = Join-Path $PWD.ProviderPath $dir
@@ -87,22 +87,22 @@ function SetTabExpansion($enable)
 
                 Register-ArgumentCompleter -CommandName git,tgit,gitk -Native -ScriptBlock {
                     param($wordToComplete, $commandAst, $cursorPosition)
-                
+
                     # The PowerShell completion has a habit of stripping the trailing space when completing:
                     # git checkout <tab>
                     # The Expand-GitCommand expects this trailing space, so pad with a space if necessary.
                     $padLength = $cursorPosition - $commandAst.Extent.StartOffset
                     $textToComplete = $commandAst.ToString().PadRight($padLength, ' ').Substring(0, $padLength)
-                
+
                     Expand-GitCommandPsFzf $textToComplete
                 }
-                
+
         }
     } else {
         if ($script:TabExpansionEnabled) {
             $script:TabExpansionEnabled = $false
         }
-    }   
+    }
 }
 
 function CheckFzfTrigger {
@@ -125,7 +125,7 @@ function GetServiceSelection() {
         $ResultAction
     )
     $header = [System.Environment]::NewLine + $("{0,-24} NAME" -f "DISPLAYNAME") + [System.Environment]::NewLine
-    $result = Get-Service | Where-Object { ![string]::IsNullOrEmpty($_.Name) } | ForEach-Object { 
+    $result = Get-Service | Where-Object { ![string]::IsNullOrEmpty($_.Name) } | ForEach-Object {
         "{0,-24} {1}" -f $_.DisplayName.Substring(0,[System.Math]::Min(24,$_.DisplayName.Length)),$_.Name } | Invoke-Fzf -Multi -Header $header
     $result | ForEach-Object {
         &$ResultAction $_
@@ -146,14 +146,14 @@ function RegisterBuiltinCompleters {
 
             $script:resultArr = @()
             GetProcessSelection -ResultAction {
-                param($result) 
+                param($result)
                 $script:resultArr += $result -replace "([0-9]+)\s*(.*)",$group
             }
 
             if ($script:resultArr.Length -ge 1) {
                 $script:resultArr -join ', '
             }
-            
+
             InvokePromptHack
         } else {
             # don't return anything - let normal tab completion work
@@ -162,7 +162,7 @@ function RegisterBuiltinCompleters {
 
     'Get-Process','Stop-Process' | ForEach-Object {
         Register-ArgumentCompleter -CommandName $_ -ParameterName "Name" -ScriptBlock $processIdOrNameScriptBlock
-        Register-ArgumentCompleter -CommandName $_ -ParameterName "Id" -ScriptBlock $processIdOrNameScriptBlock            
+        Register-ArgumentCompleter -CommandName $_ -ParameterName "Id" -ScriptBlock $processIdOrNameScriptBlock
     }
 
     $serviceNameScriptBlock = {
@@ -178,7 +178,7 @@ function RegisterBuiltinCompleters {
 
             $script:resultArr = @()
             GetServiceSelection -ResultAction {
-                param($result) 
+                param($result)
                 $script:resultArr += $result.Substring(24+1)
             }
 
@@ -193,7 +193,7 @@ function RegisterBuiltinCompleters {
 
     'Get-Service','Start-Service','Stop-Service' | ForEach-Object {
         Register-ArgumentCompleter -CommandName $_ -ParameterName "Name" -ScriptBlock $serviceNameScriptBlock
-        Register-ArgumentCompleter -CommandName $_ -ParameterName "DisplayName" -ScriptBlock $serviceNameScriptBlock            
+        Register-ArgumentCompleter -CommandName $_ -ParameterName "DisplayName" -ScriptBlock $serviceNameScriptBlock
     }
 }
 
@@ -217,7 +217,7 @@ function Expand-GitCommandPsFzf($lastWord) {
 function Invoke-FzfTabCompletion()
 {
 	$script:continueCompletion = $true
-	do 
+	do
 	{
 		$script:continueCompletion = script:Invoke-FzfTabCompletionInner
 	}
@@ -227,17 +227,17 @@ function script:Invoke-FzfTabCompletionInner()
 {
 	$script:result = @()
 
-	[void] [System.Reflection.Assembly]::LoadWithPartialName("System.Management.Automation") 
+	[void] [System.Reflection.Assembly]::LoadWithPartialName("System.Management.Automation")
 	$line = $null
 	$cursor = $null
 	[Microsoft.PowerShell.PSConsoleReadline]::GetBufferState([ref]$line, [ref]$cursor)
 
-	if ($cursor -lt 0 -or [string]::IsNullOrWhiteSpace($line)) { 
+	if ($cursor -lt 0 -or [string]::IsNullOrWhiteSpace($line)) {
 		return $false
 	}
 	$completions = [System.Management.Automation.CommandCompletion]::CompleteInput($line, $cursor, @{})
-    
-    $completionMatches = $completions.CompletionMatches 
+
+    $completionMatches = $completions.CompletionMatches
 	if ($completionMatches.Count -le 0) {
 		return $false
 	}
@@ -245,27 +245,27 @@ function script:Invoke-FzfTabCompletionInner()
 
     $addSpace = $null -ne $currentPath -and $currentPath.StartsWith(" ")
 
-	if ($completionMatches.Count -eq 1) {		        
+	if ($completionMatches.Count -eq 1) {
         $script:result = $completionMatches[0].CompletionText
 	} elseif ($completionMatches.Count -gt 1) {
 		$helpers = New-Object PSFzf.IO.CompletionHelpers
 		$ambiguous = $false
         $addSpace  = $false
 		$prefix = $helpers.GetUnambiguousPrefix($completionMatches,[ref]$ambiguous)
-		
+
 		$script:result = @()
 		$script:checkCompletion = $true
 		$expectTrigger = $script:TabContinuousTrigger
 		# need to escape the key if it's a forward slash:
 		if ($expectTrigger -eq '\') {
-			$expectTrigger += $expectTrigger 
+			$expectTrigger += $expectTrigger
         }
 
         # normalize so path works correctly for Windows:
         $path = $PWD.ProviderPath.Replace('\','/')
-        
+
         $previewScript = $(Join-Path $PsScriptRoot 'helpers/PsFzfTabExpansion-Preview.ps1')
-        $additionalCmd = @{ Preview=$($script:PowershellCmd + " -NoProfile -NonInteractive -File \""$previewScript\"" \""" + $path + "\"" {}") } 
+        $additionalCmd = @{ Preview=$($script:PowershellCmd + " -NoProfile -NonInteractive -File \""$previewScript\"" \""" + $path + "\"" {}") }
 
         $script:fzfOutput = @()
         $completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf `
@@ -278,21 +278,21 @@ function script:Invoke-FzfTabCompletionInner()
                     $script:fzfOutput += $_
                 }
             }
-    
+
         # check if there's a selection:
         if ($script:fzfOutput.Length -ge 1) {
             $script:result = $script:fzfOutput[0]
         }
-        # or just complete with the query string: 
+        # or just complete with the query string:
         else {
             $script:result = $prefix
-        }    
+        }
 
         # check if we should continue completion:
         $script:continueCompletion = $script:fzfOutput[1] -eq $script:TabContinuousTrigger
-    
+
 		InvokePromptHack
-    }	
+    }
 
 	$result = $script:result
 	if ($null -ne $result) {
@@ -305,10 +305,10 @@ function script:Invoke-FzfTabCompletionInner()
 		} else {
 			$str = FixCompletionResult $result
 		}
-		
+
 		if ($script:continueCompletion) {
             $isQuoted = $str.EndsWith("'")
-            $resultTrimmed = $str.Trim(@('''','"')) 
+            $resultTrimmed = $str.Trim(@('''','"'))
 			if (Test-Path "$resultTrimmed"  -PathType Container) {
                 if ($isQuoted) {
                     $str = "'{0}{1}'" -f "$resultTrimmed",$script:TabContinuousTrigger
@@ -317,7 +317,7 @@ function script:Invoke-FzfTabCompletionInner()
                 }
 			} else {
                 # no more paths to complete, so let's stop completion:
-				$str += ' ' 
+				$str += ' '
 				$script:continueCompletion = $false
 			}
 		}
@@ -325,7 +325,7 @@ function script:Invoke-FzfTabCompletionInner()
 		if ($addSpace) {
 			$str = ' ' + $str
 		}
-    
+
         $leftCursor = $completions.ReplacementIndex
         $replacementLength = $completions.ReplacementLength
 		if ($leftCursor -le 0 -and $replacementLength -le 0) {
@@ -333,7 +333,7 @@ function script:Invoke-FzfTabCompletionInner()
 		} else {
 			[Microsoft.PowerShell.PSConsoleReadLine]::Replace($leftCursor,$replacementLength,$str)
 		}
-		
+
 	}
 
 	return $script:continueCompletion
