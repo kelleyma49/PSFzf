@@ -45,7 +45,9 @@ Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory
 Press <kbd>Alt+c</kbd> to start PSFzf to select a directory.  By default, `Set-Location` will be called with the selected directory. You can override the default command with the following code in our `$PROFILE`:
 
 ```powershell
-$commandOverride = [ScriptBlock]{ param($Location) Write-Host $Location } # example command - use $Location with a different command
+# example command - use $Location with a different command:
+$commandOverride = [ScriptBlock]{ param($Location) Write-Host $Location } 
+# pass your override to PSFzf:
 Set-PsFzfOption -AltCCommand $commandOverride
 ```
 
