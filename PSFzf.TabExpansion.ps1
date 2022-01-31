@@ -265,8 +265,6 @@ function script:Invoke-FzfTabCompletionInner()
         # normalize so path works correctly for Windows:
         $path = $PWD.ProviderPath.Replace('\','/')
 
-        $completionMatches[0] | out-file c:\github\shit.txt
-
         # need to handle parameters differently so PowerShell doesn't parse completion item as a script parameter:
         if( $completionMatches[0].ResultType -eq 'ParameterName'){
 			$Command = $Line.Substring(0, $Line.indexof(' '))
