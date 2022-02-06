@@ -174,7 +174,7 @@ Accept wildcard characters: False
 ```
 
 ### -EnableAliasFuzzyZLocation
-Enables the `ff` aliases for the `Invoke-FuzzyEdit` function 
+Enables the `fz` aliases for the `Invoke-FuzzySetZLocation` function 
 ```yaml
 Type: SwitchParameter
 Parameter Sets: (All)
@@ -188,7 +188,7 @@ Accept wildcard characters: False
 ```
 
 ### -EnableAliasFuzzyGitStatus
-Enables the `ff` aliases for the `Invoke-FuzzyEdit` function 
+Enables the `fgs` aliases for the `Invoke-FuzzyGitStatus` function 
 ```yaml
 Type: SwitchParameter
 Parameter Sets: (All)
