@@ -29,9 +29,9 @@ function SetGitKeyBindings($enable)
             }
         }
         if (Get-Command Set-PSReadLineKeyHandler -ErrorAction SilentlyContinue) {
-            @('ctrl+g,ctrl+f','Select Git Files', {Invoke-PsFzfGitFiles}), `
-            @('ctrl+g,ctrl+s','Select Git Hashes', {Invoke-PsFzfGitHashes}), `
-            @('ctrl+g,ctrl+b','Select Git Branches', {Invoke-PsFzfGitBranches}) | ForEach-Object {
+            @('ctrl+g,ctrl+f','Select Git files via fzf', {Invoke-PsFzfGitFiles}), `
+            @('ctrl+g,ctrl+s','Select Git hashes via fzf', {Invoke-PsFzfGitHashes}), `
+            @('ctrl+g,ctrl+b','Select Git branches via fzf', {Invoke-PsFzfGitBranches}) | ForEach-Object {
                 $script:GitKeyHandlers += $_[0]
                 Set-PSReadLineKeyHandler -Chord $_[0] -Description $_[1] -ScriptBlock $_[2]
             }

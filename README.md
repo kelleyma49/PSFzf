@@ -95,7 +95,7 @@ PsFzf supports overriding behavior by setting these fzf environment variables:
 * `FZF_ALT_C_COMMAND` - The command specified in this environment variable will be used when <kbd>Alt+c</kbd> is pressed by the user.
 
 # Helper Functions
-In addition to its core function [Invoke-Fzf](docs/Invoke-Fzf.md), PSFzf includes a set of useful functions and aliases:
+In addition to its core function [Invoke-Fzf](docs/Invoke-Fzf.md), PSFzf includes a set of useful functions and aliases. The aliases are not installed by default. To enable aliases, use [`Set-PSFzfOption`](docs/Set-PsFzfOption.md)'s  `-EnableAlias`* options.
 
 
 | Function                                                             | Alias      | Description
@@ -115,15 +115,15 @@ Follow the [installation instructions for fzf](https://github.com/junegunn/fzf#i
 ## Windows
 The latest version of `fzf` is available via [Chocolatey](https://chocolatey.org/packages/fzf), or you can download the `fzf` binary and place it in your path.  Run `Get-Command fzf*.exe` to verify that PowerShell can find the executable.
 
-PSFzf has been tested under PowerShell 5.0 & 6.0.
+PSFzf has been tested under PowerShell 5.0, 6.0, and 7.0.
 
 ## MacOS
 Use Homebrew or download the binary and place it in your path.  Run `Get-Command fzf*` to verify that PowerShell can find the executable.
 
-PSFzf has been tested under PowerShell 6.0.
+PSFzf has been tested under PowerShell 6.0 and 7.0.
 
 ## Linux
-PSFzf has been tested under PowerShell 6.0 in the Windows Subsystem for Linux.
+PSFzf has been tested under PowerShell 6.0 and 7.0 in the Windows Subsystem for Linux.
 
 # Installation
 PSFzf is available on the [PowerShell Gallery](https://www.powershellgallery.com/packages/PSFzf).  PSReadline should be imported before PSFzf as PSFzf registers PSReadline key handlers listed in the [PSReadline integration section](https://github.com/kelleyma49/PSFzf#psreadline-integration).

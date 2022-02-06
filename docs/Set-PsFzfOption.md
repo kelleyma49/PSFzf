@@ -58,6 +58,21 @@ Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
+### -GitKeyBindings
+Enables key bindings for git commands.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: 
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -TabExpansion
 Enables tab expansion support
 
@@ -73,6 +88,153 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -EnableAliasFuzzyEdit
+Enables the `fe` aliases for the `Invoke-FuzzyEdit` function 
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: 
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -EnableAliasFuzzyFasd
+Enables the `ff` aliases for the `Invoke-FuzzyFasd` function 
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: 
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -EnableAliasFuzzyHistory
+Enables the `fh` aliases for the `Invoke-FuzzyHistory` function 
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: 
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -EnableAliasFuzzyKillProcess
+Enables the `fkill` aliases for the `Invoke-FuzzyKillProcess` function 
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: 
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -EnableAliasFuzzySetLocation
+Enables the `fd` aliases for the `Invoke-FuzzySetLocation` function 
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: 
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -EnableAliasFuzzySetEverything
+Enables the `cde` aliases for the `Set-LocationFuzzyEverything` function 
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: 
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -EnableAliasFuzzyZLocation
+Enables the `ff` aliases for the `Invoke-FuzzyEdit` function 
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: 
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -EnableAliasFuzzyGitStatus
+Enables the `ff` aliases for the `Invoke-FuzzyEdit` function 
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: 
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -EnableFd
+uses the `fd` command instead of the OS specific file and directory commands
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: 
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -AltCCommand
+Specifies a user supplied command that will be used in the command that is bound to the Alt-C command
+
+```powershell
+# example command - use $Location with a different command:
+$commandOverride = [ScriptBlock]{ param($Location) Write-Host $Location } 
+# pass your override to PSFzf:
+Set-PsFzfOption -AltCCommand $commandOverride
+```
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases: 
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
 ## INPUTS
 ### None
 
