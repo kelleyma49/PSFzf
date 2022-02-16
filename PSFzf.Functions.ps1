@@ -198,6 +198,33 @@ function Invoke-FuzzyZLocation() {
 
 
 #.ExternalHelp PSFzf.psm1-help.xml
+function Invoke-FuzzyScoop() {
+    param(
+        [string]$subcommand      = "install",
+        [string]$subcommandflags = ""
+    )
+
+    $result = $null
+    $scoopexists = Get-Command scoop -ErrorAction Ignore
+    if ($scoopexists) {
+        $apps = New-Object System.Collections.ArrayList
+        Get-ChildItem "$(Split-Path $scoopexists.Path)\..\buckets" | ForEach-Object {
+          $bucket = $_.Name
+          Get-ChildItem "$($_.FullName)\bucket" | ForEach-Object {
+            $apps.Add($bucket + '/' + ($_.Name -replace '.json', '')) > $null
+          }
+        }
+
+        $result = $apps | Invoke-Fzf -Header "Scoop Applications" -Multi -Preview "scoop info {}" -PreviewWindow wrap
+    }
+
+    if ($null -ne $result) {
+        Invoke-Expression "scoop $subcommand $($result -join ' ') $subcommandflags"
+    }
+}
+
+
+#.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyGitStatus() {
     $result = @()
     try {
@@ -228,6 +255,7 @@ function Enable-PsFzfAliases()
             SetPsFzfAliasCheck "cde" Set-LocationFuzzyEverything
         }
         SetPsFzfAliasCheck "fz"      Invoke-FuzzyZLocation
+        SetPsFzfAliasCheck "fs"      Invoke-FuzzyScoop
         SetPsFzfAliasCheck "fgs"     Invoke-FuzzyGitStatus
     }
 }

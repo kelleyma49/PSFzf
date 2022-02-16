@@ -24,8 +24,8 @@ Get-ChildItem . -Recurse -Attributes !Directory | Invoke-Fzf | % { notepad $_ }
 For day-to-day usage, see the [helper functions included with this module](https://github.com/kelleyma49/PSFzf#helper-functions).
 
 ## PSReadline Integration
-### Select Current Provider Path (default chord: <kbd>Ctrl+t</kbd>) 
-Press <kbd>Ctrl+t</kbd> to start PSFzf to select provider paths.  PSFzf will parse the current token and use that as the starting path to search from.  If current token is empty, or the token isn't a valid path, PSFzf will search below the current working directory.  
+### Select Current Provider Path (default chord: <kbd>Ctrl+t</kbd>)
+Press <kbd>Ctrl+t</kbd> to start PSFzf to select provider paths.  PSFzf will parse the current token and use that as the starting path to search from.  If current token is empty, or the token isn't a valid path, PSFzf will search below the current working directory.
 
 Multiple items can be selected.  If more than one is selected by the user, the results are returned as a comma separated list.  Results are properly quoted if they contain whitespace.
 
@@ -46,7 +46,7 @@ Press <kbd>Alt+c</kbd> to start PSFzf to select a directory.  By default, `Set-L
 
 ```powershell
 # example command - use $Location with a different command:
-$commandOverride = [ScriptBlock]{ param($Location) Write-Host $Location } 
+$commandOverride = [ScriptBlock]{ param($Location) Write-Host $Location }
 # pass your override to PSFzf:
 Set-PsFzfOption -AltCCommand $commandOverride
 ```
@@ -56,7 +56,7 @@ Set-PsFzfOption -AltCCommand $commandOverride
 Press <kbd>Alt+a</kbd> to start PSFzf to select command line arguments used in PSReadline history.  The picked argument will be inserted in the current line.  The line that would result from the selection is shown in the preview window.
 
 ## Tab Expansion
-PSFzf can replace the standard tab completion: 
+PSFzf can replace the standard tab completion
 ```powershell
 Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
 ```
@@ -103,14 +103,15 @@ In addition to its core function [Invoke-Fzf](docs/Invoke-Fzf.md), PSFzf include
 | [`Invoke-FuzzyEdit`](docs/Invoke-FuzzyEdit.md)                       | `fe`       | Starts an editor for the selected files in the fuzzy finder.
 | [`Invoke-FuzzyFasd`](docs/Invoke-FuzzyFasd.md)                       | `ff`       | Starts fzf with input from the files saved in [fasd ](https://github.com/clvv/fasd)(non-Windows) or [fasdr](https://github.com/kelleyma49/fasdr) (Windows) and sets the current location.
 | [`Invoke-FuzzyZLocation`](docs/Invoke-FuzzyZLocation.md)             | `fz`       | Starts fzf with input from the history of [ZLocation](https://github.com/vors/ZLocation) and sets the current location.
-| [`Invoke-FuzzyGitStatus`](docs/Invoke-FuzzyGitStatus.md)             | `fgs`      |  Starts fzf with input from output of the `git status` function.
+| [`Invoke-FuzzyGitStatus`](docs/Invoke-FuzzyGitStatus.md)             | `fgs`      | Starts fzf with input from output of the `git status` function.
 | [`Invoke-FuzzyHistory`](docs/Invoke-FuzzyHistory.md)                 | `fh`       | Rerun a previous command from history based on the user's selection in fzf.
 | [`Invoke-FuzzyKillProcess`](docs/Invoke-FuzzyKillProcess.md)         | `fkill`    | Runs `Stop-Process` on processes selected by the user in fzf.
 | [`Invoke-FuzzySetLocation`](docs/Invoke-FuzzySetLocation.md)         | `fd`       | Sets the current location from the user's selection in fzf.
 | [`Set-LocationFuzzyEverything`](docs/Set-LocationFuzzyEverything.md) | `cde`      | Sets the current location based on the [Everything](https://www.voidtools.com/) database.
+| [`Invoke-FuzzyScoop`](docs/Invoke-FuzzyScoop.md)                     | `fs`       | Starts fzf on [Scoop](https://scoop.sh) applications list.
 
 # Prerequisites
-Follow the [installation instructions for fzf](https://github.com/junegunn/fzf#installation) before installing PSFzf.   PSFzf will run `Get-Command` to find `fzf` in your path.  
+Follow the [installation instructions for fzf](https://github.com/junegunn/fzf#installation) before installing PSFzf.   PSFzf will run `Get-Command` to find `fzf` in your path.
 
 ## Windows
 The latest version of `fzf` is available via [Chocolatey](https://chocolatey.org/packages/fzf), or you can download the `fzf` binary and place it in your path.  Run `Get-Command fzf*.exe` to verify that PowerShell can find the executable.
@@ -132,4 +133,5 @@ PSFzf is available on the [PowerShell Gallery](https://www.powershellgallery.com
 * [`Invoke-FuzzyFasd`](docs/Invoke-FuzzyFasd.md) requires [Fasdr](https://github.com/kelleyma49/fasdr) to be previously installed under Windows.  Other platforms require [Fasd](https://github.com/clvv/fasd) to be installed.
 * [`Invoke-FuzzyZLocation`](docs/Invoke-FuzzyZLocation.md) requires [ZLocation](https://github.com/vors/ZLocation) and works only under Windows.
 * [`Set-LocationFuzzyEverything`](docs/Set-LocationFuzzyEverything.md) works only under Windows and requires [PSEverything](https://www.powershellgallery.com/packages/PSEverything) to be previously installed.
+* [`Invoke-FuzzyScoop`](docs/Invoke-FuzzyScoop.md) works only under Windows and requires [Scoop](https://scoop.sh) to be previously installed.
 * [`Invoke-FuzzyGitStatus`](docs/Invoke-FuzzyGitStatus.md) requires [git](https://git-scm.com/) to be installed.
