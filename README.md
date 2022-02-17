@@ -56,7 +56,7 @@ Set-PsFzfOption -AltCCommand $commandOverride
 Press <kbd>Alt+a</kbd> to start PSFzf to select command line arguments used in PSReadline history.  The picked argument will be inserted in the current line.  The line that would result from the selection is shown in the preview window.
 
 ## Tab Expansion
-PSFzf can replace the standard tab completion
+PSFzf can replace the standard tab completion:
 ```powershell
 Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
 ```
