@@ -17,21 +17,22 @@ LONG DESCRIPTION
       * Convenience function for invoking previous history (Invoke-FuzzyHistory, or fh)
       * Convenience function for killing processes (Invoke-FuzzyKillProcess, or fkill)
       * Convenience function for setting the current location (Invoke-FuzzySetLocation, or fd)
+      * Convenience function for selecting Scoop applications (Invoke-FuzzyScoop, or fs)
       * Convenience function for selecting a file or folder from Everything (Set-LocationFuzzyEverything, or cde)
-      
+
   Basic Usage
   -----------
-  Invoke-PSFzf reads input from the pipeline.  For example, the following command allows the user to 
+  Invoke-PSFzf reads input from the pipeline.  For example, the following command allows the user to
   to select a file from the interface and set the current location to that folder:
-  
+
     cd (gci -Recurse | where {$_.PSIsContainer} | Invoke-Fzf)
-  
+
   If Invoke-PSFzf is passed an object, it attempts to find a common property to display, like Name or FullName.
   For example, these will display just the name rather than the string representation of the object:
-  
+
     Get-Process | Invoke-Fzf
     gci alias: | Invoke-Fzf
-    
+
 POWERSHELL COMPATIBILITY
 
     Compatibility information can be found here: https://github.com/kelleyma49/PSFzf/blob/master/README.md#prerequisites.

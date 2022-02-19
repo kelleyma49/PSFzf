@@ -173,6 +173,20 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -EnableAliasFuzzyScoop
+Enables the `fs` aliases for the `Invoke-FuzzyScoop` function 
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: 
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -EnableAliasFuzzyZLocation
 Enables the `fz` aliases for the `Invoke-FuzzySetZLocation` function 
 ```yaml

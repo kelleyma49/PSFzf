@@ -158,6 +158,8 @@ function Set-PsFzfOption{
 		[switch]
 		$EnableAliasFuzzySetLocation,
 		[switch]
+		$EnableAliasFuzzyScoop,
+		[switch]
 		$EnableAliasFuzzySetEverything,
 		[switch]
 		$EnableAliasFuzzyZLocation,
@@ -197,6 +199,7 @@ function Set-PsFzfOption{
 	if ($EnableAliasFuzzySetLocation) 	{ SetPsFzfAlias "fd"      Invoke-FuzzySetLocation }
 	if ($EnableAliasFuzzyZLocation) 	{ SetPsFzfAlias "fz"      Invoke-FuzzyZLocation }
 	if ($EnableAliasFuzzyGitStatus) 	{ SetPsFzfAlias "fgs"     Invoke-FuzzyGitStatus }
+	if ($EnableAliasFuzzyScoop) 	{ SetPsFzfAlias "fs"     Invoke-FuzzyScoop }
 	if ($EnableAliasFuzzySetEverything) {
         if (${function:Set-LocationFuzzyEverything}) {
             SetPsFzfAlias "cde" Set-LocationFuzzyEverything

@@ -78,6 +78,7 @@ FunctionsToExport = @(
     'Invoke-FuzzyHistory',
     'Invoke-FuzzyKillProcess',
     'Invoke-FuzzySetLocation',
+    'Invoke-FuzzyScoop',
     'Set-LocationFuzzyEverything',
     'Set-PsFzfOption',
     'Invoke-FzfTabCompletion'
