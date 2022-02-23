@@ -127,7 +127,7 @@ PSFzf has been tested under PowerShell 6.0 and 7.0.
 PSFzf has been tested under PowerShell 6.0 and 7.0 in the Windows Subsystem for Linux.
 
 # Installation
-PSFzf is available on the [PowerShell Gallery](https://www.powershellgallery.com/packages/PSFzf).  PSReadline should be imported before PSFzf as PSFzf registers PSReadline key handlers listed in the [PSReadline integration section](https://github.com/kelleyma49/PSFzf#psreadline-integration).
+PSFzf is available on the [PowerShell Gallery](https://www.powershellgallery.com/packages/PSFzf) and [Scoop](https://github.com/ScoopInstaller/Extras/blob/master/bucket/psfzf.json).  PSReadline should be imported before PSFzf as PSFzf registers PSReadline key handlers listed in the [PSReadline integration section](https://github.com/kelleyma49/PSFzf#psreadline-integration).
 
 ## Helper Function Requirements
 * [`Invoke-FuzzyFasd`](docs/Invoke-FuzzyFasd.md) requires [Fasdr](https://github.com/kelleyma49/fasdr) to be previously installed under Windows.  Other platforms require [Fasd](https://github.com/clvv/fasd) to be installed.
