@@ -60,7 +60,7 @@ function Invoke-FuzzyEdit()
         $editor = 'code'
         $editorOptions += '--reuse-window'
     } else {
-        $editor = ($env:EDITOR && $env:VISUAL)
+        $editor = if($ENV:VISUAL){$ENV:VISUAL}elseif($ENV:EDITOR){$ENV:EDITOR} 
         if ($null -eq $editor) {
             if (!$IsWindows) {
                 $editor = 'vim'
