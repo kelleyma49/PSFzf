@@ -34,11 +34,18 @@ function Invoke-FuzzyEdit()
 
     $files = @()
     try {
-        if ($Directory) {
-            $prevDir = $PWD.ProviderPath
-            cd $Directory
-        }
-        Invoke-Expression (Get-FileSystemCmd .) | Invoke-Fzf -Multi | ForEach-Object { $files += "$_" }
+		if( Test-Path $Directory){
+			if( (Get-Item $Directory).PsIsContainer ) {
+				if ($Directory) {
+					$prevDir = $PWD.ProviderPath
+					cd $Directory
+				}
+				Invoke-Expression (Get-FileSystemCmd .) | Invoke-Fzf -Multi | ForEach-Object { $files += "$_" }
+			}else {
+				$files+=$Directory
+				$Directory = Split-Path -Parent $Directory
+			}
+		}
     } catch {
     }
     finally {
