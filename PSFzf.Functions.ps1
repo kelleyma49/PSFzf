@@ -57,6 +57,7 @@ function Invoke-FuzzyEdit()
     # HACK to check to see if we're running under Visual Studio Code.
     # If so, reuse Visual Studio Code currently open windows:
     $editorOptions = ''
+	$editorOptions += $FzfUserEditorOptions
     if ($null -ne $env:VSCODE_PID) {
         $editor = 'code'
         $editorOptions += '--reuse-window'
