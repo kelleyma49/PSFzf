@@ -89,10 +89,13 @@ Get-ChildItem . -Recurse | ? { $_.PSIsContainer } | Invoke-Fzf | Set-Location
 
 ## Overriding Behavior
 PsFzf supports overriding behavior by setting these fzf environment variables:
-* `_PSFZF_FZF_DEFAULT_OPTS` - If this environment variable is set, then `FZF_DEFAULT_OPTS` is temporarily set with the contents. This allows the user to have different default options for PSFZF and fzf.
-* `FZF_DEFAULT_COMMAND` - The command specified in this environment variable will override the default command when PSFZF detects that the current location is a file system provider.
-* `FZF_CTRL_T_COMMAND` - The command specified in this environment variable will be used when <kbd>Ctrl+t</kbd> is pressed by the user.
-* `FZF_ALT_C_COMMAND` - The command specified in this environment variable will be used when <kbd>Alt+c</kbd> is pressed by the user.
+| Env Var Name                 | Description                                                                                                                  |
+|------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| `_PSFZF_FZF_DEFAULT_OPTS`    | If this environment variable is set, then `FZF_DEFAULT_OPTS` is temporarily set with the contents. This allows the user to have different default options for PSFZF and fzf.
+| `FZF_DEFAULT_COMMAND`        | The command specified in this environment variable will override the default command when PSFZF detects that the current location is a file system provider. |                                                                                     
+| `FZF_CTRL_T_COMMAND`         | The command specified in this environment variable will be used when <kbd>Ctrl+t</kbd> is pressed by the user.                |
+| `FZF_ALT_C_COMMAND`          | The command specified in this environment variable will be used when <kbd>Alt+c</kbd> is pressed by the user.                 |
+| `PSFZF_EDITOR_OPTIONS`       | Contains options passed to the editor application used in the `Invoke-FuzzyEdit()` function                                   |
 
 # Helper Functions
 In addition to its core function [Invoke-Fzf](docs/Invoke-Fzf.md), PSFzf includes a set of useful functions and aliases. The aliases are not installed by default. To enable aliases, use [`Set-PSFzfOption`](docs/Set-PsFzfOption.md)'s  `-EnableAlias`* options.
