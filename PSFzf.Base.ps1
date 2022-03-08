@@ -23,7 +23,7 @@ find -L '{0}' -path '*/\.*' -prune -o -type d -print 2> /dev/null
 "@
 }
 
-$script:RunningInWindowsTerminal = [bool]($env:WT_Session)
+$script:RunningInWindowsTerminal = [bool]($env:WT_Session) -or [bool]($env:ConEmuANSI)
 if ($script:RunningInWindowsTerminal) {
 	$script:DefaultFileSystemFdCmd = "fd.exe --color always . `"{0}`""
 } else {
