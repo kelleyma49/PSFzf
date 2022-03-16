@@ -25,9 +25,9 @@ find -L '{0}' -path '*/\.*' -prune -o -type d -print 2> /dev/null
 
 $script:RunningInWindowsTerminal = [bool]($env:WT_Session) -or [bool]($env:ConEmuANSI)
 if ($script:RunningInWindowsTerminal) {
-	$script:DefaultFileSystemFdCmd = "fd.exe --color always . `"{0}`""
+	$script:DefaultFileSystemFdCmd = "fd.exe --color always . --full-path `"{0}`" --fixed-strings"
 } else {
-	$script:DefaultFileSystemFdCmd = "fd.exe . `"{0}`""
+	$script:DefaultFileSystemFdCmd = "fd.exe . --full-path `"{0}`" --fixed-strings"
 }
 
 $script:UseFd = $false
@@ -81,6 +81,19 @@ class FzfDefaultOpts {
 
 	[void]Restore() {
 		$env:FZF_DEFAULT_OPTS = $this.PrevEnv
+	}
+}
+
+class FzfDefaultCmd {
+	[string]$PrevEnv
+
+	FzfDefaultCmd([string]$overrideVal) {
+		$this.PrevEnv = $env:FZF_DEFAULT_COMMAND
+		$env:FZF_DEFAULT_COMMAND = $overrideVal
+	}
+
+	[void]Restore() {
+		$env:FZF_DEFAULT_COMMAND = $this.PrevEnv
 	}
 }
 
@@ -590,6 +603,36 @@ function Find-CurrentPath {
 	return $str.Trim("'").Trim('"')
 }
 
+function Invoke-FzfDefaultSystem {
+	param($ProviderPath,$DefaultOpts)
+
+	$script:OverrideFzfDefaultCommand = [FzfDefaultCmd]::new($env:FZF_DEFAULT_COMMAND)
+	$script:OverrideFzfDefaultOpts = [FzfDefaultOpts]::new($env:FZF_DEFAULT_OPTS)
+
+	try {
+		$env:FZF_DEFAULT_COMMAND = Get-FileSystemCmd $ProviderPath
+		$env:FZF_DEFAULT_OPTS +=  " " + $DefaultOpts
+
+		$result = @()
+		& $script:FzfLocation | ForEach-Object {
+			$result += $_
+		}
+	} catch {
+		# ignore errors
+	} finally {
+		if ($script:OverrideFzfDefaultCommand) {
+			$script:OverrideFzfDefaultCommand.Restore()
+			$script:OverrideFzfDefaultCommand = $null
+		}
+		if ($script:OverrideFzfDefaultOpts) {
+			$script:OverrideFzfDefaultOpts.Restore()
+			$script:OverrideFzfDefaultOpts = $null
+		}
+	}
+
+	return $result
+}
+
 function Invoke-FzfPsReadlineHandlerProvider {
 	$leftCursor = $null
 	$rightCursor = $null
@@ -608,7 +651,8 @@ function Invoke-FzfPsReadlineHandlerProvider {
 		$script:OverrideFzfDefaults = [FzfDefaultOpts]::new($env:FZF_CTRL_T_OPTS)
 
 		if (-not [System.String]::IsNullOrWhiteSpace($env:FZF_CTRL_T_COMMAND)) {
-			Invoke-Expression ($env:FZF_CTRL_T_COMMAND) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
+			#Invoke-Expression ($env:FZF_CTRL_T_COMMAND) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
+			&$script:FzfLocation | ForEach-Object { $result += $_ }
 		} else {
 			if ([string]::IsNullOrWhiteSpace($currentPath)) {
 				Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
@@ -621,7 +665,7 @@ function Invoke-FzfPsReadlineHandlerProvider {
 				switch ($providerName) {
 					# Get-ChildItem is way too slow - we optimize for the FileSystem provider by
 					# using batch commands:
-					'FileSystem'    { Invoke-Expression (Get-FileSystemCmd $resolvedPath.ProviderPath) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
+					'FileSystem'    { $result = Invoke-FzfDefaultSystem $resolvedPath.ProviderPath '--multi --ansi' }
 					'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object Name -ExpandProperty Name | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
 					$null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object FullName -ExpandProperty FullName | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
 					Default         {}
