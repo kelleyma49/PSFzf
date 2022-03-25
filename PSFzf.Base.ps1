@@ -36,9 +36,9 @@ $script:AltCCommand = [ScriptBlock]{
 	Set-Location $Location
 }
 
-function Get-FileSystemCmd
-{
+function Get-FileSystemCmd {
 	param($dir, [switch]$dirOnly = $false)
+
 	# Note that there is no way to know how to list only directories using
 	# FZF_DEFAULT_COMMAND, so we never use it in that case.
 	if ($dirOnly -or [string]::IsNullOrWhiteSpace($env:FZF_DEFAULT_COMMAND)) {
@@ -146,6 +146,7 @@ function script:PrepareArg($argStr) {
 		return $argStr
 	}
 }
+
 function Set-PsFzfOption{
 	param(
 		[switch]
@@ -443,7 +444,7 @@ function Invoke-Fzf {
 
 			}
 
-			# events seem to be generated out of order - thereforce, we need sort by time created. For examp`le,
+			# events seem to be generated out of order - therefore, we need sort by time created. For example,
 			# -print-query and -expect and will be outputted first if specified on the command line.
 			Get-Event -SourceIdentifier $stdOutEventId | `
 				Sort-Object -Property TimeGenerated | `
@@ -606,17 +607,50 @@ function Find-CurrentPath {
 function Invoke-FzfDefaultSystem {
 	param($ProviderPath,$DefaultOpts)
 
-	$script:OverrideFzfDefaultCommand = [FzfDefaultCmd]::new($env:FZF_DEFAULT_COMMAND)
-	$script:OverrideFzfDefaultOpts = [FzfDefaultOpts]::new($env:FZF_DEFAULT_OPTS)
+	$script:OverrideFzfDefaultOpts = [FzfDefaultOpts]::new($DefaultOpts)
+	$arguments = ''
+	if (-not $script:OverrideFzfDefaultOpts.Get().Contains('--height')) {
+		$arguments += "--height=40% "
+  	}
 
+	if ($script:UseFd -and $script:RunningInWindowsTerminal -and -not $script:OverrideFzfDefaultOpts.Get().Contains('--ansi')) {
+		$arguments += "--ansi "
+	}
+
+	$script:OverrideFzfDefaultCommand = [FzfDefaultCmd]::new('')
 	try {
-		$env:FZF_DEFAULT_COMMAND = Get-FileSystemCmd $ProviderPath
-		$env:FZF_DEFAULT_OPTS +=  " " + $DefaultOpts
+		# native filesystem walking is MUCH faster with native Rust code:
+		$env:FZF_DEFAULT_COMMAND = ""
 
 		$result = @()
-		& $script:FzfLocation | ForEach-Object {
-			$result += $_
-		}
+
+		# --height doesn't work with Invoke-Expression - not sure why. Thus, we need to use
+		# System.Diagnostics.Process:
+		$process = New-Object System.Diagnostics.Process
+		$process.StartInfo.FileName = $script:FzfLocation
+		$process.StartInfo.Arguments = $arguments
+		$process.StartInfo.RedirectStandardInput = $false
+		$process.StartInfo.RedirectStandardOutput = $true
+		$process.StartInfo.UseShellExecute = $false
+		$process.StartInfo.WorkingDirectory = $ProviderPath
+
+		# Adding event handers for stdout:
+		$stdOutEventId = "Invoke-FzfDefaultSystem-PsFzfStdOutEh-" + [System.Guid]::NewGuid()
+		$stdOutEvent = Register-ObjectEvent -InputObject $process `
+			-EventName 'OutputDataReceived' `
+			-SourceIdentifier $stdOutEventId
+
+		$process.Start() | Out-Null
+		$process.BeginOutputReadLine() | Out-Null
+		$process.WaitForExit()
+
+		Get-Event -SourceIdentifier $stdOutEventId | `
+			Sort-Object -Property TimeGenerated | `
+			Where-Object { $null -ne $_.SourceEventArgs.Data } | ForEach-Object {
+				$result += $_.SourceEventArgs.Data
+				Remove-Event -EventIdentifier $_.EventIdentifier
+			}
+		Remove-Event -SourceIdentifier $stdOutEventId
 	} catch {
 		# ignore errors
 	} finally {
@@ -651,8 +685,7 @@ function Invoke-FzfPsReadlineHandlerProvider {
 		$script:OverrideFzfDefaults = [FzfDefaultOpts]::new($env:FZF_CTRL_T_OPTS)
 
 		if (-not [System.String]::IsNullOrWhiteSpace($env:FZF_CTRL_T_COMMAND)) {
-			#Invoke-Expression ($env:FZF_CTRL_T_COMMAND) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
-			&$script:FzfLocation | ForEach-Object { $result += $_ }
+			Invoke-Expression ($env:FZF_CTRL_T_COMMAND) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
 		} else {
 			if ([string]::IsNullOrWhiteSpace($currentPath)) {
 				Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
@@ -663,9 +696,14 @@ function Invoke-FzfPsReadlineHandlerProvider {
 					$providerName = $resolvedPath.Provider.Name
 				}
 				switch ($providerName) {
-					# Get-ChildItem is way too slow - we optimize for the FileSystem provider by
-					# using batch commands:
-					'FileSystem'    { $result = Invoke-FzfDefaultSystem $resolvedPath.ProviderPath '--multi --ansi' }
+					# Get-ChildItem is way too slow - we optimize using our own function for calling fzf directly (Invoke-FzfDefaultSystem):
+					'FileSystem'    {
+						if ([bool]$env:PSFZF_EXPERIMENTAL_CTRL_T_SPEEDUP) {
+							$result = Invoke-FzfDefaultSystem $resolvedPath.ProviderPath '--multi'
+						} else {
+							Invoke-Expression (Get-FileSystemCmd $resolvedPath.ProviderPath) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
+						}
+					}
 					'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object Name -ExpandProperty Name | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
 					$null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object FullName -ExpandProperty FullName | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
 					Default         {}
