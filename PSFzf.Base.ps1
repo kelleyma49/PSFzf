@@ -851,12 +851,18 @@ function Invoke-FzfHandlerHistoryHost {
 		$contentTable = @{}
 		$reader = New-Object PSFzf.IO.ReverseLineReader -ArgumentList $((Get-PSReadlineOption).HistorySavePath)
 		
-		$reader.GetEnumerator() | Where-Object { $_ -imatch $($Commands -join '|')  } | ForEach-Object {
-			$tokens =  ([System.Management.Automation.PsParser]::Tokenize($_, [ref] $null) | Where-Object { $_.Type -eq 'CommandArgument' }) 
-			if( $tokens.Count -gt 0){
-				$tokens[0].Content
-			}
-		}| Select-Object -Unique  | Invoke-Fzf -NoSort -Bind ctrl-r:toggle-sort | ForEach-Object { $result = $_ }
+		$reader.GetEnumerator() | Where-Object { $_ -ilike '*-ComputerName*' -or  $_ -imatch $($Commands -join '|')  } | ForEach-Object {
+			$tokens =  ([System.Management.Automation.PsParser]::Tokenize($_, [ref] $null))
+			$TokenComputerParameter = $tokens |? { $_.Content -eq '-ComputerName' -and $_.Type -eq 'CommandParameter' }
+			if($TokenComputerParameter){
+				$tokens[1+ $tokens.IndexOf($TokenComputerParameter)].Content
+			}elseif($tokens |? {$_.Type -eq 'Command' -and $_.Content -match $($Commands -join '|')}){
+				$SelectedToken = $tokens |? {$_.Type -eq 'CommandArgument'}
+				if($SelectedToken.Count -gt 0){
+					$SelectedToken[0].Content
+				}
+			} 
+		} | Select-Object -Unique  | Invoke-Fzf -NoSort -Bind ctrl-r:toggle-sort | ForEach-Object { $result = $_ }
 
 	}catch{
 
