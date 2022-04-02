@@ -837,7 +837,9 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 }
 
 function Invoke-FzfHandlerHistoryHost {
-	$Commands = @('icm','Invoke-Command','Enter-PSSession','etsn')
+	$Cmdlets = @('Invoke-Command','Enter-PSSession')
+	$Alias = (get-alias |? { $Cmdlets -contains $_.ResolvedCommand }).Name
+	$Commands = $Cmdlets + $Alias
 	$result = @()
 	try
 	{
@@ -849,12 +851,12 @@ function Invoke-FzfHandlerHistoryHost {
 		$contentTable = @{}
 		$reader = New-Object PSFzf.IO.ReverseLineReader -ArgumentList $((Get-PSReadlineOption).HistorySavePath)
 		
-		$reader.GetEnumerator() | Where-Object { $_ -match $($Commands -join '|')  } | ForEach-Object {
+		$reader.GetEnumerator() | Where-Object { $_ -imatch $($Commands -join '|')  } | ForEach-Object {
 			$tokens =  ([System.Management.Automation.PsParser]::Tokenize($_, [ref] $null) | Where-Object { $_.Type -eq 'CommandArgument' }) 
 			if( $tokens.Count -gt 0){
 				$tokens[0].Content
 			}
-		} | Invoke-Fzf -NoSort -Bind ctrl-r:toggle-sort | ForEach-Object { $result = $_ }
+		}| Select-Object -Unique  | Invoke-Fzf -NoSort -Bind ctrl-r:toggle-sort | ForEach-Object { $result = $_ }
 
 	}catch{
 
