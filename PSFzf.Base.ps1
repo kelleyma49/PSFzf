@@ -836,6 +836,39 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 	}
 }
 
+function Invoke-FzfHandlerHistoryHost {
+	$Commands = @('icm','Invoke-Command','Enter-PSSession','etsn')
+	$result = @()
+	try
+	{
+		$line = $null
+		$cursor = $null
+		[Microsoft.PowerShell.PSConsoleReadline]::GetBufferState([ref]$line, [ref]$cursor)
+		$line = $line.Insert($cursor,"{}") # add marker for fzf
+		
+		$contentTable = @{}
+		$reader = New-Object PSFzf.IO.ReverseLineReader -ArgumentList $((Get-PSReadlineOption).HistorySavePath)
+		
+		$reader.GetEnumerator() | Where-Object { $_ -match $($Commands -join '|')  } | ForEach-Object {
+			$tokens =  ([System.Management.Automation.PsParser]::Tokenize($_, [ref] $null) | Where-Object { $_.Type -eq 'CommandArgument' }) 
+			if( $tokens.Count -gt 0){
+				$tokens[0].Content
+			}
+		} | Invoke-Fzf -NoSort -Bind ctrl-r:toggle-sort | ForEach-Object { $result = $_ }
+
+	}catch{
+
+	}finally{
+		$reader.Dispose()
+	}
+
+	InvokePromptHack
+
+	if (-not [string]::IsNullOrEmpty($result)) {
+		[Microsoft.PowerShell.PSConsoleReadLine]::Replace($cursor,0, ' ' + $result)
+	}
+}
+
 function Invoke-FzfPsReadlineHandlerSetLocation {
 	$result = $null
 	try
