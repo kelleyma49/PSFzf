@@ -308,7 +308,7 @@ function Invoke-FuzzyGitStatus() {
 
 function Invoke-PsFzfRipgrep() {
     # this function is adapted from https://github.com/junegunn/fzf/blob/master/ADVANCED.md#switching-between-ripgrep-mode-and-fzf-mode
-    param([Parameter(Mandatory)]$SearchString)
+    param([Parameter(Mandatory)]$SearchString, [switch]$NoEditor)
 
     $RG_PREFIX = "rg --column --line-number --no-heading --color=always --smart-case "
     $INITIAL_QUERY = $SearchString
@@ -326,7 +326,7 @@ function Invoke-PsFzfRipgrep() {
             $env:FZF_DEFAULT_COMMAND = '{0} $(printf %q "{1}")' -f $RG_PREFIX, $INITIAL_QUERY
         }
 
-        fzf.exe --ansi `
+        & $script:FzfLocation --ansi `
             --color "hl:-1:underline,hl+:-1:underline:reverse" `
             --disabled --query "$INITIAL_QUERY" `
             --bind "change:reload:$sleepCmd $RG_PREFIX {q} || $trueCmd" `
@@ -343,13 +343,18 @@ function Invoke-PsFzfRipgrep() {
             $split = $results.Split(':')
             $fileList = $split[0]
             $lineNum = $split[1]
-            $cmd = Get-EditorLaunch -FileList $fileList -LineNum $lineNum
-            Write-Host "Executing '$cmd'..."
-            Invoke-Expression -Command $cmd
+            if ($NoEditor) {
+                Resolve-Path $fileList
+            }
+            else {
+                $cmd = Get-EditorLaunch -FileList $fileList -LineNum $lineNum
+                Write-Host "Executing '$cmd'..."
+                Invoke-Expression -Command $cmd
+            }
         }
     }
     catch {
-        # ignore errors
+        Write-Error "Error occurred: $_"
     }
     finally {
         if ($script:OverrideFzfDefaultCommand) {
