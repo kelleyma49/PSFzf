@@ -8,7 +8,7 @@ schema: 2.0.0
 Starts an editor for the selected files in the fuzzy finder.
 ## SYNTAX
 
-```
+```PowerShell
 Invoke-FuzzyEdit [-Directory <string>]
 ```
 
@@ -22,7 +22,7 @@ If Invoke-FuzzyEdit is executed in the Visual Studio Code integrated terminal, t
 Launches fzf in the current directory and loads the selected files in the default editor.
 
 
-```
+```PowerShell
 Invoke-FuzzyEdit
 ```
 

@@ -8,7 +8,7 @@ schema: 2.0.0
 Sets the current location from the user's selection in fzf.
 ## SYNTAX
 
-```
+```PowerShell
 Invoke-FuzzySetLocation [-Directory <string>]
 ```
 
@@ -20,7 +20,7 @@ Set the current location of a subdirectory based on the user's selection in fzf.
 	
 Launches fzf and allows the user to select a subdirectory from the Windows directory.
 
-```
+```PowerShell
 Invoke-FuzzySetLocation c:\Windows
 ```
 

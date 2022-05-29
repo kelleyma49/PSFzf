@@ -8,7 +8,7 @@ schema: 2.0.0
 Runs `Stop-Process` on processes selected by the user in fzf.
 ## SYNTAX
 
-```
+```PowerShell
 Invoke-FuzzyKillProcess
 ```
 
@@ -21,7 +21,7 @@ Runs Stop-Process on all processes selected by the the user in fzf.
 Launches fzf and stops the selected processes.
 
 
-```
+```PowerShell
 Invoke-FuzzyKillProcess
 ```
 

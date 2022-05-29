@@ -8,7 +8,7 @@ schema: 2.0.0
 Starts fzf with input from output of the `git status` function.
 ## SYNTAX
 
-```
+```PowerShell
 Invoke-FuzzyGitStatus
 ```
 
@@ -28,7 +28,7 @@ These keyboard shortcuts are supported:
 Launches fzf with input from a `git status` command executed in the current directory.
 
 
-```
+```PowerShell
 Invoke-FuzzyGitStatus
 ```
 

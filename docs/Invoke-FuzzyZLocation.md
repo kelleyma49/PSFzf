@@ -8,7 +8,7 @@ schema: 2.0.0
 Starts fzf with input from the history saved by ZLocation and sets the current location.
 ## SYNTAX
 
-```
+```PowerShell
 Invoke-FuzzyZLocation
 ```
 
@@ -21,7 +21,7 @@ Allows the user to select a file from ZLocation's history database and set the c
 Launches fzf with input from ZLocation's history database and set the location based on user selection.
 
 
-```
+```PowerShell
 Invoke-FuzzyZLocation
 ```
 

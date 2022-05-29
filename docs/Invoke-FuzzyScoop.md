@@ -8,7 +8,7 @@ schema: 2.0.0
 Starts fzf on Scoop applications list.
 ## SYNTAX
 
-```
+```PowerShell
 Invoke-FuzzyScoop [-subcommand <string>] [-subcommandflags <string>]
 ```
 
@@ -20,7 +20,7 @@ Allows the user to select (multiple) applications from locally stored Scoop buck
 
 Launches fzf and selects some applications to install.
 
-```
+```PowerShell
 Invoke-FuzzyScoop
 ```
 
@@ -29,7 +29,7 @@ Invoke-FuzzyScoop
 Launches fzf for selects some applications to uninstall.
 
 
-```
+```PowerShell
 Invoke-FuzzyScoop -subcommand uninstall
 ```
 
