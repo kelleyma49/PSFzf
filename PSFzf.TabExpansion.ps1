@@ -283,14 +283,12 @@ function script:Invoke-FzfTabCompletionInner()
             -Query "$prefix" `
             -Bind 'tab:down,btab:up' `
             @additionalCmd | ForEach-Object {
-                if ($null -ne $_ -and -not [string]::IsNullOrWhiteSpace($_)) {
-                    $script:fzfOutput += $_
-                }
+                $script:fzfOutput += $_
             }
 
         # check if there's a selection:
-        if ($script:fzfOutput.Length -ge 1) {
-            $script:result = $script:fzfOutput[0]
+        if ($script:fzfOutput.Length -gt 1) {
+            $script:result = $script:fzfOutput[1]
         }
         # or just complete with the query string:
         else {
@@ -298,7 +296,7 @@ function script:Invoke-FzfTabCompletionInner()
         }
 
         # check if we should continue completion:
-        $script:continueCompletion = $script:fzfOutput[1] -eq $script:TabContinuousTrigger
+        $script:continueCompletion = $script:fzfOutput[0] -eq $script:TabContinuousTrigger
 
 		InvokePromptHack
     }
