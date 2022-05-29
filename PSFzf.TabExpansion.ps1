@@ -1,10 +1,3 @@
-# check if we're running on Windows PowerShell. This method is faster than Get-Command:
-if ($(get-host).Version.Major -le 5) {
-    $script:PowershellCmd = 'powershell'
-} else {
-    $script:PowershellCmd = 'pwsh'
-}
-
 # borrowed from https://github.com/dahlbyk/posh-git/blob/f69efd9229029519adb32e37a464b7e1533a372c/src/GitTabExpansion.ps1#L81
 filter script:quoteStringWithSpecialChars {
     if ($_ -and ($_ -match '\s+|#|@|\$|;|,|''|\{|\}|\(|\)')) {
