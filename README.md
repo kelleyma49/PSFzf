@@ -139,3 +139,4 @@ PSFzf is available on the [PowerShell Gallery](https://www.powershellgallery.com
 * [`Set-LocationFuzzyEverything`](docs/Set-LocationFuzzyEverything.md) works only under Windows and requires [PSEverything](https://www.powershellgallery.com/packages/PSEverything) to be previously installed.
 * [`Invoke-FuzzyScoop`](docs/Invoke-FuzzyScoop.md) works only under Windows and requires [Scoop](https://scoop.sh) to be previously installed.
 * [`Invoke-FuzzyGitStatus`](docs/Invoke-FuzzyGitStatus.md) requires [git](https://git-scm.com/) to be installed.
+* [`Invoke-PsFzfRipgrep`](docs/Invoke-PsFzfRipgrep.md) requires [ripgrep](https://github.com/BurntSushi/ripgrep) and [bat](https://github.com/sharkdp/bat) to be installed.
