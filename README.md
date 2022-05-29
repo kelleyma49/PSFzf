@@ -110,8 +110,9 @@ In addition to its core function [Invoke-Fzf](docs/Invoke-Fzf.md), PSFzf include
 | [`Invoke-FuzzyHistory`](docs/Invoke-FuzzyHistory.md)                 | `fh`       | Rerun a previous command from history based on the user's selection in fzf.
 | [`Invoke-FuzzyKillProcess`](docs/Invoke-FuzzyKillProcess.md)         | `fkill`    | Runs `Stop-Process` on processes selected by the user in fzf.
 | [`Invoke-FuzzySetLocation`](docs/Invoke-FuzzySetLocation.md)         | `fd`       | Sets the current location from the user's selection in fzf.
-| [`Set-LocationFuzzyEverything`](docs/Set-LocationFuzzyEverything.md) | `cde`      | Sets the current location based on the [Everything](https://www.voidtools.com/) database.
 | [`Invoke-FuzzyScoop`](docs/Invoke-FuzzyScoop.md)                     | `fs`       | Starts fzf on [Scoop](https://scoop.sh) applications list.
+| [`Invoke-PsFzfRipgrep`](docs/Invoke-PsFzfRipgrep.md)                 | N/A        | Uses Ripgrep and Fzf to interactively search files.
+| [`Set-LocationFuzzyEverything`](docs/Set-LocationFuzzyEverything.md) | `cde`      | Sets the current location based on the [Everything](https://www.voidtools.com/) database.
 
 # Prerequisites
 Follow the [installation instructions for fzf](https://github.com/junegunn/fzf#installation) before installing PSFzf.   PSFzf will run `Get-Command` to find `fzf` in your path.
