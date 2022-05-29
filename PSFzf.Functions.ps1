@@ -28,6 +28,33 @@ function script:RemovePsFzfAliases {
         Remove-Item -Path Alias:$_
     }
 }
+
+function Get-EditorLaunch() {
+    param($FileList,$LineNum=0)
+    # HACK to check to see if we're running under Visual Studio Code.
+    # If so, reuse Visual Studio Code currently open windows:
+    $editorOptions = ''
+	$editorOptions += $env:PSFZF_EDITOR_OPTIONS
+    if ($null -ne $env:VSCODE_PID) {
+        $editor = 'code'
+        $editorOptions += ' --reuse-window'
+    } else {
+        $editor = if($ENV:VISUAL){$ENV:VISUAL}elseif($ENV:EDITOR){$ENV:EDITOR}
+        if ($null -eq $editor) {
+            if (!$IsWindows) {
+                $editor = 'vim'
+            } else {
+                $editor = 'code'
+            }
+        }
+    }
+
+    if ($editor -eq 'code') {
+        "$editor $editorOptions --goto {0}:{1}" -f $FileList, $LineNum
+    } elseif ($editor -eq 'vim') {
+        "$editor $editorOptions {0} +{1}" -f $fileList, $LineNum
+    }
+}
 function Invoke-FuzzyEdit()
 {
     param($Directory=".")
@@ -52,23 +79,7 @@ function Invoke-FuzzyEdit()
         }
     }
 
-    # HACK to check to see if we're running under Visual Studio Code.
-    # If so, reuse Visual Studio Code currently open windows:
-    $editorOptions = ''
-	$editorOptions += $env:PSFZF_EDITOR_OPTIONS
-    if ($null -ne $env:VSCODE_PID) {
-        $editor = 'code'
-        $editorOptions += ' --reuse-window'
-    } else {
-        $editor = if($ENV:VISUAL){$ENV:VISUAL}elseif($ENV:EDITOR){$ENV:EDITOR}
-        if ($null -eq $editor) {
-            if (!$IsWindows) {
-                $editor = 'vim'
-            } else {
-                $editor = 'code'
-            }
-        }
-    }
+
 
     if ($files.Count -gt 0) {
         try {
@@ -78,7 +89,7 @@ function Invoke-FuzzyEdit()
             }
             # Not sure if being passed relative or absolute path
             $fileList = '"{0}"' -f ( (Resolve-Path $files) -join '" "' )
-            Invoke-Expression -Command ("$editor $editorOptions $fileList")
+            Invoke-Expression -Command (Get-EditorLaunch -FileList $fileList)
         }
         catch {
         }
@@ -91,7 +102,7 @@ function Invoke-FuzzyEdit()
 }
 
 
-    #.ExternalHelp PSFzf.psm1-help.xml
+#.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyFasd() {
     $result = $null
     try {
