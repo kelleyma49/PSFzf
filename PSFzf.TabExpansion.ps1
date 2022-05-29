@@ -138,16 +138,19 @@ function RegisterBuiltinCompleters {
         $wordToComplete = CheckFzfTrigger $commandName $parameterName $wordToComplete $commandAst $cursorPosition
         if ($null -ne $wordToComplete)
         {
-            if ($parameterName -eq 'Name') {
-                $group = '$2'
-            } elseif ($parameterName -eq 'Id') {
-                $group = '$1'
-            }
-
+            $selectType = $parameterName
             $script:resultArr = @()
             GetProcessSelection -ResultAction {
                 param($result)
-                $script:resultArr += $result -replace "([0-9]+)\s*(.*)",$group
+                $resultSplit=$result.split(' ',[System.StringSplitOptions]::RemoveEmptyEntries)
+
+                if ($selectType -eq 'Name') {
+                    $processNameIdx = 3
+                    $script:resultArr += $resultSplit[$processNameIdx..$resultSplit.Length] -join ' '
+                } elseif ($selectType -eq 'Id') {
+                    $processIdIdx = 2
+                    $script:resultArr += $resultSplit[$processIdIdx]
+                }
             }
 
             if ($script:resultArr.Length -ge 1) {
