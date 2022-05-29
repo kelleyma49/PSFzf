@@ -8,7 +8,7 @@ schema: 2.0.0
 Starts fzf with input from the files saved in fasd (non-Windows) or fasdr (Windows) and sets the current location.
 ## SYNTAX
 
-```
+```PowerShell
 Invoke-FuzzyFasd
 ```
 
@@ -21,7 +21,7 @@ Allows the user to select a file from fasd's database and set the current locati
 Launches fzf with input from fasd's database and set the location based on user selection.
 
 
-```
+```PowerShell
 Invoke-FuzzyFasd
 ```
 

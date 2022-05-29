@@ -8,7 +8,7 @@ schema: 2.0.0
 Sets the available PSFzf options.
 ## SYNTAX
 
-```
+```PowerShell
 Set-PsFzfOption
 ```
 
@@ -21,7 +21,7 @@ Allows the user to set various PSFzf options, such as PSReadline chords and tab 
 Set PsFzf's history and file finder keyboard shortcuts.
 
 
-```
+```PowerShell
 Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
 ```
 

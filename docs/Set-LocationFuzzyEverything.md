@@ -8,7 +8,7 @@ schema: 2.0.0
 Sets the current location based on the Everything database.
 ## SYNTAX
 
-```
+```PowerShell
 Set-LocationFuzzyEverything [-Directory <string>]
 ```
 
@@ -21,7 +21,7 @@ Allows the user to select a directory from the Everything database and sets the 
 Launches fzf and sets the current location based on the user selection.
 
 
-```
+```PowerShell
 Set-LocationFuzzyEverything
 ```
 
@@ -30,7 +30,7 @@ Set-LocationFuzzyEverything
 Launches fzf for all subdirectories of c:\Windows and sets the current location based on the user selection.
 
 
-```
+```PowerShell
 Set-LocationFuzzyEverything c:\Windows
 ```
 

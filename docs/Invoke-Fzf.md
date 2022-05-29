@@ -10,7 +10,7 @@ schema: 2.0.0
 Starts the fuzzy file finder based on input from the pipeline.
 ## SYNTAX
 
-```
+```PowerShell
 Invoke-Fzf [-Extended] [-ExtendedExact] [-CaseInsensitive] [-CaseSensitive] [[-Delimiter] <String>] [-NoSort]
  [-ReverseInput] [[-Tiebreak] <String>] [-Multi] [-NoMouse] [-Cycle] [-NoHScroll] [-Reverse] [-InlineInfo]
  [[-Prompt] <String>] [[-Header] <String>] [[-HeaderLines] <Int32>] [[-History] <String>]
@@ -24,7 +24,7 @@ The Add-Frecent function adds a path to the Fasdr database for the passed in pro
 ## EXAMPLES
 
 ### Example 1
-```
+```PowerShell
 PS C:\> Set-Location (Invoke-Fzf)
 ```
 

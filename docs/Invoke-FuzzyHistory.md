@@ -8,7 +8,7 @@ schema: 2.0.0
 Rerun a previous command from history based on the user's selection in fzf.
 ## SYNTAX
 
-```
+```PowerShell
 Invoke-FuzzyHistory
 ```
 
@@ -20,7 +20,7 @@ Executes a command selected by the user in fzf.
 	
 Launches fzf and executes the command selected by the user.
 
-```
+```PowerShell
 Invoke-FuzzyHistory
 ```
 
