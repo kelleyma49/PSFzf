@@ -294,6 +294,7 @@ function Invoke-FuzzyGitStatus() {
 }
 
 function Invoke-PsFzfRipgrep() {
+    # this function is adapted from https://github.com/junegunn/fzf/blob/master/ADVANCED.md#switching-between-ripgrep-mode-and-fzf-mode
     param([Parameter(Mandatory)]$SearchString)
 
     $RG_PREFIX="rg --column --line-number --no-heading --color=always --smart-case "
