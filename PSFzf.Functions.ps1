@@ -123,24 +123,54 @@ function Invoke-FuzzyHistory() {
     }
 }
 
-#.ExternalHelp PSFzf.psm1-help.xml
+
+# needs to match helpers/GetProcessesList.ps1
+function GetProcessesList()
+{
+    Get-Process | `
+    Where-Object { ![string]::IsNullOrEmpty($_.ProcessName) } | `
+    ForEach-Object {
+        $pmSize = $_.PM/1MB
+        $cpu = $_.CPU
+        # make sure we display a value so we can correctly parse selections:
+        if ($null -eq $cpu) {
+            $cpu = 0.0
+        }
+        "{0,-8:n2} {1,-8:n2} {2,-8} {3}" -f $pmSize, $cpu,$_.Id,$_.ProcessName }
+}
 
 function GetProcessSelection() {
     param(
         [scriptblock]
         $ResultAction
     )
-    $header = "`n" + $("{0,-8} PROCESS NAME" -f "ID") + "`n"
-    $result = Get-Process | Where-Object { ![string]::IsNullOrEmpty($_.ProcessName) } | ForEach-Object { "{0,-8} {1}" -f $_.Id,$_.ProcessName } | Invoke-Fzf -Multi -Header $header
+
+    $previewScript = $(Join-Path $PsScriptRoot 'helpers/GetProcessesList.ps1')
+    $cmd =$('pwsh' + " -NoProfile -NonInteractive -File \""$previewScript\""")
+
+    $header = "`n" + `
+        "`nCTRL+R-Reload`tCTRL+A-Select All`tCTRL+D-Deselect All`tCTRL+T-Toggle All`n`n" + `
+        $("{0,-8} {1,-8} {2,-8} PROCESS NAME" -f "PM(M)","CPU","ID") + "`n" + `
+        "{0,-8} {1,-8} {2,-8} {3,-12}" -f "-----","---","--","------------"
+
+    $result = GetProcessesList | `
+        Invoke-Fzf -Multi -Header $header `
+        -Bind """ctrl-r:reload($cmd),ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all""" `
+        -Preview "echo {}" -PreviewWindow """down,3,wrap""" `
+        -Layout reverse -Height 80%
     $result | ForEach-Object {
         &$ResultAction $_
     }
 }
+
+#.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyKillProcess() {
     GetProcessSelection -ResultAction {
         param($result)
-        $id = $result -replace "([0-9]+)(.*)",'$1'
-        Stop-Process $id -Verbose
+        $resultSplit=$result.split(' ',[System.StringSplitOptions]::RemoveEmptyEntries)
+        $processIdIdx = 2
+        $id = $resultSplit[$processIdIdx]
+        Stop-Process -Id $id -Verbose
     }
 }
 
