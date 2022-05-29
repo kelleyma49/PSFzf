@@ -5,14 +5,12 @@ $script:gitPath = $null
 $script:bashPath = $null
 $script:gitPathLong = $null
 
-function SetGitKeyBindings($enable)
-{
+function SetGitKeyBindings($enable) {
     if ($IsLinux -or $IsMacOS) {
         Write-Error "Failed to register git key bindings - git bindings aren't supported on non-Windows platforms"
     }
 
-    if ($enable)
-    {
+    if ($enable) {
         if ($null -eq $gitPath) {
             $gitInfo = Get-Command git.exe -ErrorAction SilentlyContinue
             if ($null -ne $gitInfo) {
@@ -23,43 +21,43 @@ function SetGitKeyBindings($enable)
                 $script:gitPath = $f.ShortPath
                 $script:bashPath = $(Join-Path $script:gitPath "bin\bash.exe")
                 $script:bashPath = Resolve-Path $script:bashPath
-            } else {
+            }
+            else {
                 Write-Error "Failed to register git key bindings - git executable not found"
                 return
             }
         }
         if (Get-Command Set-PSReadLineKeyHandler -ErrorAction SilentlyContinue) {
-            @('ctrl+g,ctrl+f','Select Git files via fzf', {Invoke-PsFzfGitFiles}), `
-            @('ctrl+g,ctrl+s','Select Git hashes via fzf', {Invoke-PsFzfGitHashes}), `
-            @('ctrl+g,ctrl+b','Select Git branches via fzf', {Invoke-PsFzfGitBranches}) | ForEach-Object {
+            @('ctrl+g,ctrl+f', 'Select Git files via fzf', { Invoke-PsFzfGitFiles }), `
+            @('ctrl+g,ctrl+s', 'Select Git hashes via fzf', { Invoke-PsFzfGitHashes }), `
+            @('ctrl+g,ctrl+b', 'Select Git branches via fzf', { Invoke-PsFzfGitBranches }) | ForEach-Object {
                 $script:GitKeyHandlers += $_[0]
                 Set-PSReadLineKeyHandler -Chord $_[0] -Description $_[1] -ScriptBlock $_[2]
             }
-        } else {
+        }
+        else {
             Write-Error "Failed to register git key bindings - PSReadLine module not loaded"
             return
         }
     }
 }
 
-function RemoveGitKeyBindings()
-{
+function RemoveGitKeyBindings() {
     $script:GitKeyHandlers | ForEach-Object {
         Remove-PSReadLineKeyHandler -Chord $_
     }
 }
 
-function IsInGitRepo()
-{
+function IsInGitRepo() {
     git rev-parse HEAD 2>&1 | Out-Null
     return $?
 }
 
-function Get-ColorAlways()
-{
+function Get-ColorAlways() {
     if ($RunningInWindowsTerminal) {
         ' --color=always'
-    } else {
+    }
+    else {
         ''
     }
 }
@@ -67,7 +65,8 @@ function Get-ColorAlways()
 function Get-HeaderStrings() {
     if ($RunningInWindowsTerminal) {
         $header = "`n`e[7mCTRL+A`e[0m Select All`t`e[7mCTRL+D`e[0m Deselect All`t`e[7mCTRL+T`e[0m Toggle All"
-    } else {
+    }
+    else {
         $header = "`nCTRL+A-Select All`tCTRL+D-Deselect All`tCTRL+T-Toggle All"
     }
 
@@ -86,9 +85,9 @@ function Invoke-PsFzfGitFiles() {
 
     git status --short | `
         Invoke-Fzf -Multi -Ansi `
-            -Preview "$previewCmd" -Header $headerStrings[0] -Bind $headerStrings[1] | foreach-object {
-                $result += $_.Substring('?? '.Length)
-            }
+        -Preview "$previewCmd" -Header $headerStrings[0] -Bind $headerStrings[1] | foreach-object {
+        $result += $_.Substring('?? '.Length)
+    }
     InvokePromptHack
     if ($result.Length -gt 0) {
         $result = $result -join " "
@@ -107,19 +106,19 @@ function Invoke-PsFzfGitHashes() {
         Invoke-Fzf -Ansi -NoSort -Multi -Bind ctrl-s:toggle-sort `
         -Header 'CTRL+S-toggle sort' `
         -Preview "$previewCmd" | ForEach-Object {
-            if ($_ -match '\d\d-\d\d-\d\d\s+([a-f0-9]+)\s+') {
-                $result += $Matches.1
-            }
+        if ($_ -match '\d\d-\d\d-\d\d\s+([a-f0-9]+)\s+') {
+            $result += $Matches.1
         }
+    }
 
     InvokePromptHack
     if ($result.Length -gt 0) {
         $result = $result -join " "
         [Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
     }
- }
+}
 
- function Invoke-PsFzfGitBranches() {
+function Invoke-PsFzfGitBranches() {
     if (-not (IsInGitRepo)) {
         return
     }
@@ -127,17 +126,17 @@ function Invoke-PsFzfGitHashes() {
     $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + "\"" {}" + $(Get-ColorAlways) + " \""$pwd\"""
     $result = @()
     git branch -a | & "${script:gitPathLong}\usr\bin\grep.exe" -v '/HEAD\s' |
-        ForEach-Object { $_.Substring('* '.Length) } | Sort-Object | `
-                Invoke-Fzf -Ansi -Multi -PreviewWindow "right:70%" -Preview "$previewCmd" | ForEach-Object {
-                        $result += $_
-                }
+    ForEach-Object { $_.Substring('* '.Length) } | Sort-Object | `
+        Invoke-Fzf -Ansi -Multi -PreviewWindow "right:70%" -Preview "$previewCmd" | ForEach-Object {
+        $result += $_
+    }
 
     [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
     if ($result.Length -gt 0) {
         $result = $result -join " "
         [Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
     }
- }
+}
 
 # gb() {
 #    is_in_git_repo || return

@@ -2,7 +2,7 @@
 @{
     Rules = @{
         PSUseCompatibleSyntax = @{
-            Enable = $true
+            Enable         = $true
 
             # List the targeted versions of PowerShell here
             TargetVersions = @(

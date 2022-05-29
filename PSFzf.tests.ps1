@@ -43,7 +43,7 @@ Describe "Find-CurrentPath" {
 				$leftCursor = $rightCursor = $null
 				Find-CurrentPath $line $cursor ([ref]$leftCursor) ([ref]$rightCursor) | Should -Be "~"
 				$leftCursor | Should -Be 0
-				$rightCursor | Should -Be ($line.Length-1)
+				$rightCursor | Should -Be ($line.Length - 1)
 			}
 
 			It "Should Return Path Cursor at Beginning" {
@@ -51,7 +51,7 @@ Describe "Find-CurrentPath" {
 				$leftCursor = $rightCursor = $null
 				Find-CurrentPath $line $cursor ([ref]$leftCursor) ([ref]$rightCursor) | Should -Be "c:\Windows\"
 				$leftCursor | Should -Be 0
-				$rightCursor | Should -Be ($line.Length-1)
+				$rightCursor | Should -Be ($line.Length - 1)
 			}
 
 			It "Should Return Path Cursor at End" {
@@ -59,7 +59,7 @@ Describe "Find-CurrentPath" {
 				$leftCursor = $rightCursor = $null
 				Find-CurrentPath $line $cursor ([ref]$leftCursor) ([ref]$rightCursor) | Should -Be "c:\Windows\"
 				$leftCursor | Should -Be 0
-				$rightCursor | Should -Be ($line.Length-1)
+				$rightCursor | Should -Be ($line.Length - 1)
 			}
 
 			It "Should Return Command and Path Cursor at Beginning" {
@@ -67,7 +67,7 @@ Describe "Find-CurrentPath" {
 				$leftCursor = $rightCursor = $null
 				Find-CurrentPath $line $cursor ([ref]$leftCursor) ([ref]$rightCursor) | Should -Be "cd"
 				$leftCursor | Should -Be 0
-				$rightCursor | Should -Be ('cd'.Length-1)
+				$rightCursor | Should -Be ('cd'.Length - 1)
 			}
 
 			It "Should Return Command and Path Cursor at End" {
@@ -75,36 +75,36 @@ Describe "Find-CurrentPath" {
 				$leftCursor = $rightCursor = $null
 				Find-CurrentPath $line $cursor ([ref]$leftCursor) ([ref]$rightCursor) | Should -Be "c:\Windows\"
 				$leftCursor | Should -Be 'cd '.Length
-				$rightCursor | Should -Be ($line.Length-1)
+				$rightCursor | Should -Be ($line.Length - 1)
 			}
 
 			It "Should Return Command and Path Cursor at End" {
-				$line = "cd C:\Windows\" ; $cursor = $line.Length-1
+				$line = "cd C:\Windows\" ; $cursor = $line.Length - 1
 				$leftCursor = $rightCursor = $null
 				Find-CurrentPath $line $cursor ([ref]$leftCursor) ([ref]$rightCursor) | Should -Be "c:\Windows\"
 				$leftCursor | Should -Be 'cd '.Length
-				$rightCursor | Should -Be ($line.Length-1)
+				$rightCursor | Should -Be ($line.Length - 1)
 			}
 
 			It "Should Return Path With Quotes Cursor at Beginning" {
-				'"',"'" | ForEach-Object {
-					$quote  = $_
+				'"', "'" | ForEach-Object {
+					$quote = $_
 					$line = $quote + 'C:\Program Files\' + $quote ; $cursor = 0
 					$leftCursor = $rightCursor = $null
 					Find-CurrentPath $line $cursor ([ref]$leftCursor) ([ref]$rightCursor) | Should -Be 'C:\Program Files\'
 					$leftCursor | Should -Be 0
-					$rightCursor | Should -Be ($line.Length-1)
+					$rightCursor | Should -Be ($line.Length - 1)
 				}
 			}
 
 			It "Should Return Path With Quotes Cursor at End" {
-				'"',"'" | ForEach-Object {
-					$quote  = $_
+				'"', "'" | ForEach-Object {
+					$quote = $_
 					$line = $quote + 'C:\Program Files\' + $quote ; $cursor = 0
 					$leftCursor = $rightCursor = $null
 					Find-CurrentPath $line $cursor ([ref]$leftCursor) ([ref]$rightCursor) | Should -Be 'C:\Program Files\'
 					$leftCursor | Should -Be 0
-					$rightCursor | Should -Be ($line.Length-1)
+					$rightCursor | Should -Be ($line.Length - 1)
 				}
 			}
 		}
@@ -129,7 +129,7 @@ Describe "Check Parameters" {
 		Context "Parameters Should Fail" {
 			It "Borders Should -Be Mutally Exclusive" {
 				{ $_ = '' | Invoke-Fzf -Border -BorderStyle 'sharp' } |
-					Should -Throw '*are mutally exclusive'
+				Should -Throw '*are mutally exclusive'
 			}
 
 			It "Validate Tiebreak" {
@@ -149,7 +149,7 @@ Describe "Check Parameters" {
 
 			It "Validate Height Pattern Percentage" {
 				{ $_ = '' | Invoke-Fzf -Height '1000%' } |
-					Should -Throw 'Cannot validate argument on parameter ''Height''*'
+				Should -Throw 'Cannot validate argument on parameter ''Height''*'
 			}
 
 			It "Validate Height Pattern Non-Number" {
@@ -216,12 +216,12 @@ Describe "Get-EditorLaunch" {
 
 			It "Should Return vim Multiple" {
 				$env:EDITOR = 'vim'
-				Get-EditorLaunch @($testFile1,$testFile2) | Should -Be "vim ""$testFile1"" ""$testFile2"""
+				Get-EditorLaunch @($testFile1, $testFile2) | Should -Be "vim ""$testFile1"" ""$testFile2"""
 			}
 
 			It "Should Return vim Multiple With Quotes" {
 				$env:EDITOR = 'vim'
-				Get-EditorLaunch @("""$testFile1""","""$testFile2""") | Should -Be "vim ""$testFile1"" ""$testFile2"""
+				Get-EditorLaunch @("""$testFile1""", """$testFile2""") | Should -Be "vim ""$testFile1"" ""$testFile2"""
 			}
 
 			It "Should Return code Single" {
@@ -247,12 +247,12 @@ Describe "Get-EditorLaunch" {
 
 			It "Should Return code Multiple" {
 				$env:EDITOR = 'code'
-				Get-EditorLaunch @($testFile1,$testFile2) | Should -Be "code ""$testFile1"" ""$testFile2"""
+				Get-EditorLaunch @($testFile1, $testFile2) | Should -Be "code ""$testFile1"" ""$testFile2"""
 			}
 
 			It "Should Return code Multiple With Quotes" {
 				$env:EDITOR = 'code'
-				Get-EditorLaunch @("""$testFile1""","""$testFile2""") | Should -Be "code ""$testFile1"" ""$testFile2"""
+				Get-EditorLaunch @("""$testFile1""", """$testFile2""") | Should -Be "code ""$testFile1"" ""$testFile2"""
 			}
 		}
 	}
@@ -260,41 +260,41 @@ Describe "Get-EditorLaunch" {
 # CI seems to have problems on GitHub CI - timing issues?
 if ( $false ) {
 
-Describe "Invoke-Fzf" {
-	InModuleScope PsFzf {
-		Context "Function Exists" {
-			It "Should Return Nothing" {
-				$result = '' | Invoke-Fzf -Query 'file1.txt' -Select1 -Exit0 -Filter ' '
-				$result | Should -Be $null
-			}
+	Describe "Invoke-Fzf" {
+		InModuleScope PsFzf {
+			Context "Function Exists" {
+				It "Should Return Nothing" {
+					$result = '' | Invoke-Fzf -Query 'file1.txt' -Select1 -Exit0 -Filter ' '
+					$result | Should -Be $null
+				}
 
-			It "Should Return 1 Item, 1 Element" {
-				$result = 'file1.txt' | Invoke-Fzf -Select1 -Exit0 -Filter 'file1.txt'
-				$result | Should -Be 'file1.txt'
-			}
+				It "Should Return 1 Item, 1 Element" {
+					$result = 'file1.txt' | Invoke-Fzf -Select1 -Exit0 -Filter 'file1.txt'
+					$result | Should -Be 'file1.txt'
+				}
 
-			It "Should Return 1 Item, Case Insensitive" {
-				$result = 'file1.txt' | Invoke-Fzf -Select1 -Exit0 -CaseInsensitive -Filter 'FILE1.TXT'
-				$result | Should -Be 'file1.txt'
-			}
+				It "Should Return 1 Item, Case Insensitive" {
+					$result = 'file1.txt' | Invoke-Fzf -Select1 -Exit0 -CaseInsensitive -Filter 'FILE1.TXT'
+					$result | Should -Be 'file1.txt'
+				}
 
-			It "Should Return Nothing, Case Sensitive" {
-				$result = 'file1.txt' | Invoke-Fzf -Select1 -Exit0 -CaseSensitive -Filter 'FILE1.TXT'
-				$result | Should -Be $null
-			}
+				It "Should Return Nothing, Case Sensitive" {
+					$result = 'file1.txt' | Invoke-Fzf -Select1 -Exit0 -CaseSensitive -Filter 'FILE1.TXT'
+					$result | Should -Be $null
+				}
 
-			It "Should Return 1 Item, No Multi" {
-				$result = 'file1.txt','file2.txt' | Invoke-Fzf -Multi -Select1 -Exit0 -Filter "file1"
-				$result | Should -Be 'file1.txt'
-			}
+				It "Should Return 1 Item, No Multi" {
+					$result = 'file1.txt', 'file2.txt' | Invoke-Fzf -Multi -Select1 -Exit0 -Filter "file1"
+					$result | Should -Be 'file1.txt'
+				}
 
-			It "Should Return 2 Item, Multi" {
-				$result = 'file1.txt','file2.txt' | Invoke-Fzf -Multi -Select1 -Exit0 -Filter "file"
-				$result.Length | Should -Be 2
-				$result[0] | Should -Be 'file1.txt'
-				$result[1] | Should -Be 'file2.txt'
+				It "Should Return 2 Item, Multi" {
+					$result = 'file1.txt', 'file2.txt' | Invoke-Fzf -Multi -Select1 -Exit0 -Filter "file"
+					$result.Length | Should -Be 2
+					$result[0] | Should -Be 'file1.txt'
+					$result[1] | Should -Be 'file2.txt'
+				}
 			}
 		}
 	}
-}
 }

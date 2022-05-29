@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param ($DirName,$Item)
+param ($DirName, $Item)
 
 # trim quote strings:
 $DirName = $DirName.Trim("'").Trim('"')
@@ -11,29 +11,32 @@ $ansiCompatible = $script:RunningInWindowsTerminal -or (-not $script:IsWindowsCh
 
 if ([System.IO.Path]::IsPathRooted($Item)) {
     $path = $Item
-} else {
+}
+else {
     $path = Join-Path $DirName $Item
 }
 # is directory?
 if (Test-Path $path -PathType Container) {
-    
+
     # don't output anything if not a git repo
-    Push-Location $path 
+    Push-Location $path
     if ($ansiCompatible) {
         git log --color=always -1 2> $null
-    } else {
+    }
+    else {
         git log -1 2> $null
     }
     Pop-Location
 
     Get-ChildItem $path
-} 
+}
 # is file?
 elseif (Test-Path $path -PathType leaf) {
     # use bat (https://github.com/sharkdp/bat) if it's available:
     if ($ansiCompatible -and $(Get-Command bat -ErrorAction SilentlyContinue)) {
         bat "--style=numbers,changes" --color always $path
-    } else {
+    }
+    else {
         Get-Content $path
     }
 }
@@ -42,9 +45,10 @@ elseif (($cmdResults = Get-Command $Item -ErrorAction SilentlyContinue)) {
     if ($cmdResults) {
         if ($cmdResults.CommandType -ne 'Application') {
             Get-Help $Item
-        } else {
+        }
+        else {
             # just output application location:
             $cmdResults.Source
-        } 
+        }
     }
 }
