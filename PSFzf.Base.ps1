@@ -619,7 +619,7 @@ function Invoke-FzfDefaultSystem {
 
 	$script:OverrideFzfDefaultCommand = [FzfDefaultCmd]::new('')
 	try {
-		# native filesystem walking is MUCH faster with native Rust code:
+		# native filesystem walking is MUCH faster with native Go code:
 		$env:FZF_DEFAULT_COMMAND = ""
 
 		$result = @()

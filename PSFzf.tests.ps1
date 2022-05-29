@@ -176,6 +176,87 @@ Describe "Check Parameters" {
 	}
 }
 
+Describe "Get-EditorLaunch" {
+
+
+	InModuleScope PSFzf {
+		Context "Vim" {
+			BeforeEach {
+				$env:PSFZF_EDITOR_OPTIONS = $null
+				$env:VSCODE_PID = $null
+				$env:VISUAL = $null
+				$env:EDITOR = $null
+
+				$testFile1 = Join-Path $TestDrive 'somefile1.txt'
+				Set-Content -Path $testFile1 -Value "hello 1"
+				$testFile2 = Join-Path $TestDrive 'somefile2.txt'
+				Set-Content -Path $testFile2 -Value "hello 2"
+			}
+
+			It "Should Return vim Single" {
+				$env:EDITOR = 'vim'
+				Get-EditorLaunch $testFile1 | Should -Be "vim ""$testFile1"" +0"
+			}
+
+			It "Should Return vim Single With Quotes" {
+				$env:EDITOR = 'vim'
+				Get-EditorLaunch """$testFile1""" | Should -Be "vim ""$testFile1"" +0"
+			}
+
+			It "Should Return vim Single With Options" {
+				$env:EDITOR = 'vim'
+				$env:PSFZF_EDITOR_OPTIONS = "--clean"
+				Get-EditorLaunch $testFile1 | Should -Be "vim --clean ""$testFile1"" +0"
+			}
+
+			It "Should Return vim Single with Line Number" {
+				$env:EDITOR = 'vim'
+				Get-EditorLaunch $testFile1 -LineNum 101 | Should -Be "vim ""$testFile1"" +101"
+			}
+
+			It "Should Return vim Multiple" {
+				$env:EDITOR = 'vim'
+				Get-EditorLaunch @($testFile1,$testFile2) | Should -Be "vim ""$testFile1"" ""$testFile2"""
+			}
+
+			It "Should Return vim Multiple With Quotes" {
+				$env:EDITOR = 'vim'
+				Get-EditorLaunch @("""$testFile1""","""$testFile2""") | Should -Be "vim ""$testFile1"" ""$testFile2"""
+			}
+
+			It "Should Return code Single" {
+				$env:EDITOR = 'code'
+				Get-EditorLaunch $testFile1 | Should -Be $('code --goto "{0}:0"' -f $testFile1)
+			}
+
+			It "Should Return code Single With Quotes" {
+				$env:EDITOR = 'code'
+				Get-EditorLaunch """$testFile1""" | Should -Be $('code --goto "{0}:0"' -f $testFile1)
+			}
+
+			It "Should Return code Single Reuse Window" {
+				$env:EDITOR = 'code'
+				$env:VSCODE_PID = 100
+				Get-EditorLaunch $testFile1 | Should -Be $('code --reuse-window --goto "{0}:0"' -f $testFile1)
+			}
+
+			It "Should Return code Single with Line Number" {
+				$env:EDITOR = 'code'
+				Get-EditorLaunch $testFile1 -LineNum 100 | Should -Be $('code --goto "{0}:100"' -f $testFile1)
+			}
+
+			It "Should Return code Multiple" {
+				$env:EDITOR = 'code'
+				Get-EditorLaunch @($testFile1,$testFile2) | Should -Be "code ""$testFile1"" ""$testFile2"""
+			}
+
+			It "Should Return code Multiple With Quotes" {
+				$env:EDITOR = 'code'
+				Get-EditorLaunch @("""$testFile1""","""$testFile2""") | Should -Be "code ""$testFile1"" ""$testFile2"""
+			}
+		}
+	}
+}
 # CI seems to have problems on GitHub CI - timing issues?
 if ( $false ) {
 
