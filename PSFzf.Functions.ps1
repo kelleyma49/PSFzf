@@ -28,6 +28,49 @@ function script:RemovePsFzfAliases {
         Remove-Item -Path Alias:$_
     }
 }
+
+function Get-EditorLaunch() {
+    param($FileList,$LineNum=0)
+    # HACK to check to see if we're running under Visual Studio Code.
+    # If so, reuse Visual Studio Code currently open windows:
+    $editorOptions = ''
+    if (-not [string]::IsNullOrEmpty($env:PSFZF_EDITOR_OPTIONS)) {
+        $editorOptions += ' ' + $env:PSFZF_EDITOR_OPTIONS
+    }
+    if ($null -ne $env:VSCODE_PID) {
+        $editor = 'code'
+        $editorOptions += ' --reuse-window'
+    } else {
+        $editor = if($ENV:VISUAL){$ENV:VISUAL}elseif($ENV:EDITOR){$ENV:EDITOR}
+        if ($null -eq $editor) {
+            if (!$IsWindows) {
+                $editor = 'vim'
+            } else {
+                $editor = 'code'
+            }
+        }
+    }
+
+    if ($editor -eq 'code') {
+        if ($FileList -is [array] -and $FileList.length -gt 1) {
+            for ($i = 0; $i -lt $FileList.Count; $i++) {
+                $FileList[$i] = '"{0}"' -f $(Resolve-Path $FileList[$i].Trim('"'))
+            }
+            "$editor$editorOptions {0}" -f ($FileList -join ' ')
+        } else {
+            "$editor$editorOptions --goto ""{0}:{1}""" -f $(Resolve-Path $FileList.Trim('"')),$LineNum
+        }
+    } elseif ($editor -eq 'vim') {
+        if ($FileList -is [array] -and $FileList.length -gt 1) {
+            for ($i = 0; $i -lt $FileList.Count; $i++) {
+                $FileList[$i] = '"{0}"' -f $(Resolve-Path $FileList[$i].Trim('"'))
+            }
+            "$editor$editorOptions {0}" -f ($FileList -join ' ')
+        } else {
+            "$editor$editorOptions ""{0}"" +{1}" -f $(Resolve-Path $FileList.Trim('"')),$LineNum
+        }
+    }
+}
 function Invoke-FuzzyEdit()
 {
     param($Directory=".")
@@ -52,23 +95,7 @@ function Invoke-FuzzyEdit()
         }
     }
 
-    # HACK to check to see if we're running under Visual Studio Code.
-    # If so, reuse Visual Studio Code currently open windows:
-    $editorOptions = ''
-	$editorOptions += $env:PSFZF_EDITOR_OPTIONS
-    if ($null -ne $env:VSCODE_PID) {
-        $editor = 'code'
-        $editorOptions += ' --reuse-window'
-    } else {
-        $editor = if($ENV:VISUAL){$ENV:VISUAL}elseif($ENV:EDITOR){$ENV:EDITOR}
-        if ($null -eq $editor) {
-            if (!$IsWindows) {
-                $editor = 'vim'
-            } else {
-                $editor = 'code'
-            }
-        }
-    }
+
 
     if ($files.Count -gt 0) {
         try {
@@ -77,8 +104,9 @@ function Invoke-FuzzyEdit()
                 cd $Directory
             }
             # Not sure if being passed relative or absolute path
-            $fileList = '"{0}"' -f ( (Resolve-Path $files) -join '" "' )
-            Invoke-Expression -Command ("$editor $editorOptions $fileList")
+            $cmd = Get-EditorLaunch -FileList $files
+            Write-Host "Executing '$cmd'..."
+            Invoke-Expression -Command $cmd
         }
         catch {
         }
@@ -91,7 +119,7 @@ function Invoke-FuzzyEdit()
 }
 
 
-    #.ExternalHelp PSFzf.psm1-help.xml
+#.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyFasd() {
     $result = $null
     try {
@@ -263,6 +291,56 @@ function Invoke-FuzzyScoop() {
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyGitStatus() {
     Invoke-PsFzfGitFiles
+}
+
+function Invoke-PsFzfRipgrep() {
+    # this function is adapted from https://github.com/junegunn/fzf/blob/master/ADVANCED.md#switching-between-ripgrep-mode-and-fzf-mode
+    param([Parameter(Mandatory)]$SearchString)
+
+    $RG_PREFIX="rg --column --line-number --no-heading --color=always --smart-case "
+    $INITIAL_QUERY=$SearchString
+
+    $script:OverrideFzfDefaultCommand = [FzfDefaultCmd]::new('')
+    try {
+        if ($script:IsWindows) {
+            $sleepCmd = ''
+            $trueCmd = 'cd .'
+            $env:FZF_DEFAULT_COMMAND="$RG_PREFIX ""$INITIAL_QUERY"""
+        } else {
+            $sleepCmd = 'sleep 0.1;'
+            $trueCmd = 'true'
+            $env:FZF_DEFAULT_COMMAND='{0} $(printf %q "{1}")' -f  $RG_PREFIX,$INITIAL_QUERY
+        }
+
+        fzf.exe --ansi `
+            --color "hl:-1:underline,hl+:-1:underline:reverse" `
+            --disabled --query "$INITIAL_QUERY" `
+            --bind "change:reload:$sleepCmd $RG_PREFIX {q} || $trueCmd" `
+            --bind "ctrl-f:unbind(change,ctrl-f)+change-prompt(2. fzf> )+enable-search+clear-query+rebind(ctrl-r)" `
+            --bind "ctrl-r:unbind(ctrl-r)+change-prompt(1. ripgrep> )+disable-search+reload($RG_PREFIX {q} || $trueCmd)+rebind(change,ctrl-f)" `
+            --prompt '1. Ripgrep> ' `
+            --delimiter : `
+            --header '╱ CTRL-R (Ripgrep mode) ╱ CTRL-F (fzf mode) ╱' `
+            --preview 'bat --color=always {1} --highlight-line {2}' `
+            --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' | `
+            ForEach-Object { $results += $_ }
+
+        if (-not [string]::IsNullOrEmpty($results)) {
+            $split = $results.Split(':')
+            $fileList = $split[0]
+            $lineNum = $split[1]
+            $cmd = Get-EditorLaunch -FileList $fileList -LineNum $lineNum
+            Write-Host "Executing '$cmd'..."
+            Invoke-Expression -Command $cmd
+        }
+    } catch {
+        # ignore errors
+    } finally {
+        if ($script:OverrideFzfDefaultCommand) {
+            $script:OverrideFzfDefaultCommand.Restore()
+            $script:OverrideFzfDefaultCommand = $null
+        }
+    }
 }
 
 function Enable-PsFzfAliases()

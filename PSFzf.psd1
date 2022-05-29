@@ -70,6 +70,7 @@ FunctionsToExport = @(
     'Enable-PsFzfAliases',
     'Invoke-PsFzfGitFiles',
     'Invoke-PsFzfGitHashes',
+    'Invoke-PsFzfRipgrep',
     'Invoke-Fzf',
     'Invoke-FuzzyEdit',
     'Invoke-FuzzyFasd',
