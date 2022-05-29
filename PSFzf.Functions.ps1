@@ -232,20 +232,7 @@ function Invoke-FuzzyScoop() {
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyGitStatus() {
-    $result = @()
-    try {
-        $headerStrings = Get-HeaderStrings
-        $gitRoot = git rev-parse --show-toplevel
-        git status --porcelain |
-        Invoke-Fzf -Multi -Bind $headerStrings[1] -Header $headerStrings[0] | ForEach-Object {
-            $result += Join-Path $gitRoot $('{0}' -f $_.Substring('?? '.Length))
-        }
-    } catch {
-        # do nothing
-    }
-    if ($null -ne $result) {
-        $result
-    }
+    Invoke-PsFzfGitFiles
 }
 
 function Enable-PsFzfAliases()
