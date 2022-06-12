@@ -64,7 +64,7 @@ function Get-EditorLaunch() {
             "$editor$editorOptions --goto ""{0}:{1}""" -f $(Resolve-Path $FileList.Trim('"')), $LineNum
         }
     }
-    elseif ($editor -eq 'vim') {
+    elseif ($editor -match '[gn]?vi[m]?') {
         if ($FileList -is [array] -and $FileList.length -gt 1) {
             for ($i = 0; $i -lt $FileList.Count; $i++) {
                 $FileList[$i] = '"{0}"' -f $(Resolve-Path $FileList[$i].Trim('"'))
@@ -73,6 +73,17 @@ function Get-EditorLaunch() {
         }
         else {
             "$editor$editorOptions ""{0}"" +{1}" -f $(Resolve-Path $FileList.Trim('"')), $LineNum
+        }
+    }
+    elseif ($editor -eq 'nano') {
+        if ($FileList -is [array] -and $FileList.length -gt 1) {
+            for ($i = 0; $i -lt $FileList.Count; $i++) {
+                $FileList[$i] = '"{0}"' -f $(Resolve-Path $FileList[$i].Trim('"'))
+            }
+            "$editor$editorOptions {0}" -f ($FileList -join ' ')
+        }
+        else {
+            "$editor$editorOptions  +{1} {0}" -f $(Resolve-Path $FileList.Trim('"')), $LineNum
         }
     }
 }
