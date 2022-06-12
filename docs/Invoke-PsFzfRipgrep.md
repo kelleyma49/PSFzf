@@ -15,6 +15,9 @@ Invoke-PsFzfRipgrep -SearchString <string> [-NoEditor]
 ## DESCRIPTION
 Uses Ripgrep and Fzf to interactively search files.
 ## EXAMPLES
+
+### Launch Invoke-PsFzfRipgrep with search string
+
 ```PowerShell
 Invoke-PsFzfRipgrep -SearchString 'Key' # Starts search with initial ripgrep query of the string 'Key'
 ```
