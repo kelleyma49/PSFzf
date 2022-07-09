@@ -698,7 +698,7 @@ function Invoke-FzfPsReadlineHandlerProvider {
 				switch ($providerName) {
 					# Get-ChildItem is way too slow - we optimize using our own function for calling fzf directly (Invoke-FzfDefaultSystem):
 					'FileSystem'    {
-						if ([bool]$env:PSFZF_EXPERIMENTAL_CTRL_T_SPEEDUP) {
+						if (-not $script:UseFd) {
 							$result = Invoke-FzfDefaultSystem $resolvedPath.ProviderPath '--multi'
 						} else {
 							Invoke-Expression (Get-FileSystemCmd $resolvedPath.ProviderPath) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
