@@ -284,7 +284,7 @@ function script:Invoke-FzfTabCompletionInner() {
             -Layout reverse `
             -Expect $expectTrigger `
             -Query "$prefix" `
-            -Bind 'tab:down,btab:up' `
+            -Bind 'tab:down','btab:up' `
             @additionalCmd | ForEach-Object {
             $script:fzfOutput += $_
         }
