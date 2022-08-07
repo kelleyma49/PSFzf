@@ -68,21 +68,22 @@
     # Functions to export from this module
     FunctionsToExport  = @(
         'Enable-PsFzfAliases',
-        'Invoke-PsFzfGitFiles',
-        'Invoke-PsFzfGitHashes',
-        'Invoke-PsFzfRipgrep',
-        'Invoke-Fzf',
         'Invoke-FuzzyEdit',
         'Invoke-FuzzyFasd',
-        'Invoke-FuzzyZLocation',
         'Invoke-FuzzyGitStatus',
         'Invoke-FuzzyHistory',
         'Invoke-FuzzyKillProcess',
-        'Invoke-FuzzySetLocation',
         'Invoke-FuzzyScoop',
+        'Invoke-FuzzySetLocation',
+        'Invoke-FuzzyZLocation',
+        'Invoke-Fzf',
+        'Invoke-FzfTabCompletion',
+        'Invoke-PsFzfGitBranches',
+        'Invoke-PsFzfGitFiles',
+        'Invoke-PsFzfGitHashes',
+        'Invoke-PsFzfRipgrep',
         'Set-LocationFuzzyEverything',
-        'Set-PsFzfOption',
-        'Invoke-FzfTabCompletion'
+        'Set-PsFzfOption'
     )
 
     # Cmdlets to export from this module

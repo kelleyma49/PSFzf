@@ -1,6 +1,6 @@
 root = true
 
-[*.{ps1,.cs}]
+[*.{psd1, ps1,.cs}]
 indent_style = tab
 indent_size = 4
 trim_trailing_whitespace = true
