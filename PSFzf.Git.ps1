@@ -91,8 +91,7 @@ function Invoke-PsFzfGitFiles() {
         return
     }
 
-    $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitFiles-Preview.sh') + "\"" {-1}" + $(Get-ColorAlways) + " \""$pwd\"""
-    $previewCmd | out-file ~/crap.txt
+    $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitFiles-Preview.sh') + "\"" {-1}" + $(Get-ColorAlways) + " \""$($pwd.ProviderPath)\"""
     $result = @()
 
     $headerStrings = Get-HeaderStrings
