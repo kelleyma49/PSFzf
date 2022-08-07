@@ -1,32 +1,40 @@
 
 $script:GitKeyHandlers = @()
 
-$script:gitPath = $null
+$script:foundGit = $false
 $script:bashPath = $null
-$script:gitPathLong = $null
+$script:grepPath = $null
 
-function SetGitKeyBindings($enable) {
-    if ($IsLinux -or $IsMacOS) {
-        Write-Error "Failed to register git key bindings - git bindings aren't supported on non-Windows platforms"
-    }
-
-    if ($enable) {
-        if ($null -eq $gitPath) {
+function SetupGitPaths() {
+    if (-not $script:foundGit) {
+        if ($IsLinux -or $IsMacOS) {
+            # TODO: not tested on Mac
+            $script:foundGit = $null -ne $(Get-Command git -ErrorAction SilentlyContinue)
+            $script:bashPath = 'bash'
+            $script:grepPath = 'grep'
+        } else {
             $gitInfo = Get-Command git.exe -ErrorAction SilentlyContinue
-            if ($null -ne $gitInfo) {
-                $script:gitPathLong = Split-Path (Split-Path $gitInfo.Source -Parent) -Parent
-
+            $script:foundGit = $null -ne $gitInfo
+            if ($script:foundGit) {
+                $gitPathLong = Split-Path (Split-Path $gitInfo.Source -Parent) -Parent
+                # hack to get short path:
                 $a = New-Object -ComObject Scripting.FileSystemObject
-                $f = $a.GetFolder($script:gitPathLong)
-                $script:gitPath = $f.ShortPath
-                $script:bashPath = $(Join-Path $script:gitPath "bin\bash.exe")
+                $f = $a.GetFolder($gitPathLong)
+                $script:bashPath = Join-Path $f.ShortPath "bin\bash.exe"
                 $script:bashPath = Resolve-Path $script:bashPath
-            }
-            else {
-                Write-Error "Failed to register git key bindings - git executable not found"
-                return
+                $script:grepPath = Join-Path ${gitPathLong} "usr\bin\grep.exe"
             }
         }
+    }
+    return $script:foundGit
+}
+function SetGitKeyBindings($enable) {
+    if ($enable) {
+        if (-not $(SetupGitPaths)) {
+            Write-Error "Failed to register git key bindings - git executable not found"
+            return
+        }
+
         if (Get-Command Set-PSReadLineKeyHandler -ErrorAction SilentlyContinue) {
             @('ctrl+g,ctrl+f', 'Select Git files via fzf', { Invoke-PsFzfGitFiles }), `
             @('ctrl+g,ctrl+s', 'Select Git hashes via fzf', { Invoke-PsFzfGitHashes }), `
@@ -54,7 +62,7 @@ function IsInGitRepo() {
 }
 
 function Get-ColorAlways() {
-    if ($RunningInWindowsTerminal) {
+    if ($RunningInWindowsTerminal -or -not $IsWindowsCheck) {
         ' --color=always'
     }
     else {
@@ -63,7 +71,7 @@ function Get-ColorAlways() {
 }
 
 function Get-HeaderStrings() {
-    if ($RunningInWindowsTerminal) {
+    if ($RunningInWindowsTerminal -or -not $IsWindowsCheck) {
         $header = "`n`e[7mCTRL+A`e[0m Select All`t`e[7mCTRL+D`e[0m Deselect All`t`e[7mCTRL+T`e[0m Toggle All"
     }
     else {
@@ -78,7 +86,13 @@ function Invoke-PsFzfGitFiles() {
         return
     }
 
+    if (-not $(SetupGitPaths)) {
+        Write-Error "git executable could not be found"
+        return
+    }
+
     $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitFiles-Preview.sh') + "\"" {-1}" + $(Get-ColorAlways) + " \""$pwd\"""
+    $previewCmd | out-file ~/crap.txt
     $result = @()
 
     $headerStrings = Get-HeaderStrings
@@ -96,6 +110,11 @@ function Invoke-PsFzfGitFiles() {
 }
 function Invoke-PsFzfGitHashes() {
     if (-not (IsInGitRepo)) {
+        return
+    }
+
+    if (-not $(SetupGitPaths)) {
+        Write-Error "git executable could not be found"
         return
     }
 
@@ -123,9 +142,14 @@ function Invoke-PsFzfGitBranches() {
         return
     }
 
+    if (-not $(SetupGitPaths)) {
+        Write-Error "git executable could not be found"
+        return
+    }
+
     $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + "\"" {}" + $(Get-ColorAlways) + " \""$pwd\"""
     $result = @()
-    git branch -a | & "${script:gitPathLong}\usr\bin\grep.exe" -v '/HEAD\s' |
+    git branch -a | & "${script:grepPath}" -v '/HEAD\s' |
     ForEach-Object { $_.Substring('* '.Length) } | Sort-Object | `
         Invoke-Fzf -Ansi -Multi -PreviewWindow "right:70%" -Preview "$previewCmd" | ForEach-Object {
         $result += $_
@@ -137,12 +161,3 @@ function Invoke-PsFzfGitBranches() {
         [Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
     }
 }
-
-# gb() {
-#    is_in_git_repo || return
-#    git branch -a --color=always | grep -v '/HEAD\s' | sort |
-#    fzf-down --ansi --multi --tac --preview-window right:70% \
-#      --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" $(sed s/^..// <<< {} | cut -d" " -f1) | head -'$LINES |
-#    sed 's/^..//' | cut -d' ' -f1 |
-#    sed 's#^remotes/##'
-#  }
