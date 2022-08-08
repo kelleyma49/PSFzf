@@ -61,12 +61,16 @@ function IsInGitRepo() {
     return $?
 }
 
-function Get-ColorAlways() {
+function Get-ColorAlways($setting=$null) {
     if ($RunningInWindowsTerminal -or -not $IsWindowsCheck) {
-        ' --color=always'
+        if ($null -ne $setting) {
+            return $setting
+        } else {
+            return ' --color=always'
+        }
     }
     else {
-        ''
+        return ''
     }
 }
 
@@ -96,7 +100,8 @@ function Invoke-PsFzfGitFiles() {
 
     $headerStrings = Get-HeaderStrings
 
-    git status --short | `
+    $statusCmd = "git $(Get-ColorAlways '-c color.status=always') status --short"
+    Invoke-Expression "& $statusCmd" | `
         Invoke-Fzf -Multi -Ansi `
         -Preview "$previewCmd" -Header $headerStrings[0] -Bind $headerStrings[1] | foreach-object {
         $result += $_.Substring('?? '.Length)
