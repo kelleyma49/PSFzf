@@ -100,12 +100,28 @@ function Invoke-PsFzfGitFiles() {
 
     $headerStrings = Get-HeaderStrings
 
+    # add git add and reset keyboard shortcuts:
+    if ($RunningInWindowsTerminal -or -not $IsWindowsCheck) {
+        $gitCmdsHeader = "`n`e[7mALT+S`e[0m Git Add`t`e[7mALT+R`e[0m Git Reset"
+    } else {
+        $gitCmdsHeader = "`nALT+S-Git Stage`tALT+R-Git Reset"
+    }
+    $headerStr = $headerStrings[0] + $gitCmdsHeader
     $statusCmd = "git $(Get-ColorAlways '-c color.status=always') status --short"
+
+    $reloadBindCmd = "reload($statusCmd)"
+    $stageScriptPath = Join-Path $PsScriptRoot 'helpers/PsFzfGitFiles-GitAdd.sh'
+    $gitStageBind = "alt-s:execute-silent(" + "${script:bashPath} ${stageScriptPath} {+2..})+down+${reloadBindCmd}"
+    $resetScriptPath = Join-Path $PsScriptRoot 'helpers/PsFzfGitFiles-GitReset.sh'
+    $gitResetBind = "alt-r:execute-silent(" + "${script:bashPath} ${resetScriptPath} {+2..})+down+${reloadBindCmd}"
+
     Invoke-Expression "& $statusCmd" | `
         Invoke-Fzf -Multi -Ansi `
-        -Preview "$previewCmd" -Header $headerStrings[0] -Bind $headerStrings[1] | foreach-object {
-        $result += $_.Substring('?? '.Length)
-    }
+        -Preview "$previewCmd" -Header $headerStr `
+        -Bind $headerStrings[1],"""$gitStageBind""","""$gitResetBind""" | `
+        foreach-object {
+            $result += $_.Substring('?? '.Length)
+        }
     InvokePromptHack
     if ($result.Length -gt 0) {
         $result = $result -join " "
