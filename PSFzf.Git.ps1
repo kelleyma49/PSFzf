@@ -99,18 +99,33 @@ function Invoke-PsFzfGitFiles() {
     $result = @()
 
     $headerStrings = Get-HeaderStrings
-
     $statusCmd = "git $(Get-ColorAlways '-c color.status=always') status --short"
+
+    $reloadBindCmd = "reload($statusCmd)"
+    $addScriptPath = Join-Path $PsScriptRoot 'helpers/PsFzfGitFiles-GitAdd.sh'
+    $gitAddBind = "alt-s:execute-silent(" + "${script:bashPath} ${addScriptPath} {+2..})+down+${reloadBindCmd}"
+    $addScriptPath = Join-Path $PsScriptRoot 'helpers/PsFzfGitFiles-GitAdd.sh'
+    $gitResetBind = "alt-r:execute-silent(" + "${script:bashPath} ${addScriptPath} {+2..})+down+${reloadBindCmd}"
+    # $gitAddBind | out-file ~/shit.log
+    #$gitAddBind = "alt-s:execute-silent(" + "echo {+2..})+down+" + $reloadBindCmd
+    #$gitAddBind = "\""alt-s:execute-slient(echo {})+abort\"""
+
     Invoke-Expression "& $statusCmd" | `
         Invoke-Fzf -Multi -Ansi `
-        -Preview "$previewCmd" -Header $headerStrings[0] -Bind $headerStrings[1] | foreach-object {
-        $result += $_.Substring('?? '.Length)
-    }
+        -Preview "$previewCmd" -Header $headerStrings[0] `
+        -Bind """$gitAddBind""","""$gitResetBind""" | `
+        foreach-object {
+            $result += $_.Substring('?? '.Length)
+        }
     InvokePromptHack
     if ($result.Length -gt 0) {
         $result = $result -join " "
         [Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
     }
+
+    #-bind "$(lowercase "$GIT_FUZZY_STATUS_ADD_KEY"):execute-silent(git fuzzy helper status_add {+2..})+down+$RELOAD" \
+    #        --bind "$(lowercase "$GIT_FUZZY_STATUS_RESET_KEY"):execute-silent(git fuzzy helper status_reset {+2..})+down+$RELOAD" \
+    #        --bind "$(lowercase "$GIT_FUZZY_STATUS_DISCARD_KEY"):execute-silent(git fuzzy helper status_discard {+2..})+$RELOAD"
 }
 function Invoke-PsFzfGitHashes() {
     if (-not (IsInGitRepo)) {
