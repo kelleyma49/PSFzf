@@ -237,7 +237,15 @@ function script:Invoke-FzfTabCompletionInner() {
     if ($cursor -lt 0 -or [string]::IsNullOrWhiteSpace($line)) {
         return $false
     }
-    $completions = [System.Management.Automation.CommandCompletion]::CompleteInput($line, $cursor, @{})
+
+    try {
+        $completions = [System.Management.Automation.CommandCompletion]::CompleteInput($line, $cursor, @{})
+    } catch {
+        # some custom tab completions will cause CompleteInput() to throw, so we gracefully handle those cases.
+        # For example, see the issue https://github.com/kelleyma49/PSFzf/issues/95.
+        return $false
+    }
+
 
     $completionMatches = $completions.CompletionMatches
     if ($completionMatches.Count -le 0) {
