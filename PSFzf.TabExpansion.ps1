@@ -266,11 +266,8 @@ function script:Invoke-FzfTabCompletionInner() {
 
         $script:result = @()
         $script:checkCompletion = $true
-        $expectTrigger = $script:TabContinuousTrigger
-        # need to escape the key if it's a forward slash:
-        if ($expectTrigger -eq '\') {
-            $expectTrigger += $expectTrigger
-        }
+        $cancelTrigger = 'ESC'
+        $expectTriggers = "${script:TabContinuousTrigger},${cancelTrigger}"
 
         # normalize so path works correctly for Windows:
         $path = $PWD.ProviderPath.Replace('\', '/')
@@ -290,19 +287,20 @@ function script:Invoke-FzfTabCompletionInner() {
         $script:fzfOutput = @()
         $completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf `
             -Layout reverse `
-            -Expect $expectTrigger `
+            -Expect "$expectTriggers" `
             -Query "$prefix" `
             -Bind 'tab:down','btab:up' `
             @additionalCmd | ForEach-Object {
             $script:fzfOutput += $_
         }
 
-        # check if there's a selection:
-        if ($script:fzfOutput.Length -gt 1) {
+        if ($script:fzfOutput[0] -eq $cancelTrigger) {
+            InvokePromptHack
+            return $false
+        }elseif ($script:fzfOutput.Length -gt 1) {
             $script:result = $script:fzfOutput[1]
-        }
-        # or just complete with the query string:
-        else {
+        } else {
+            # or just complete with the query string:
             $script:result = $prefix
         }
 
