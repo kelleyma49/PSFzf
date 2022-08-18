@@ -262,7 +262,6 @@ function script:Invoke-FzfTabCompletionInner() {
         $helpers = New-Object PSFzf.IO.CompletionHelpers
         $ambiguous = $false
         $addSpace = $false
-        $prefix = $helpers.GetUnambiguousPrefix($completionMatches, [ref]$ambiguous)
 
         $script:result = @()
         $script:checkCompletion = $true
@@ -288,7 +287,6 @@ function script:Invoke-FzfTabCompletionInner() {
         $completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf `
             -Layout reverse `
             -Expect "$expectTriggers" `
-            -Query "$prefix" `
             -Bind 'tab:down','btab:up' `
             @additionalCmd | ForEach-Object {
             $script:fzfOutput += $_
@@ -299,9 +297,6 @@ function script:Invoke-FzfTabCompletionInner() {
             return $false
         }elseif ($script:fzfOutput.Length -gt 1) {
             $script:result = $script:fzfOutput[1]
-        } else {
-            # or just complete with the query string:
-            $script:result = $prefix
         }
 
         # check if we should continue completion:
