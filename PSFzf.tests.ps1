@@ -124,6 +124,38 @@ Describe "Add-BinaryModuleTypes" {
 	}
 }
 
+Describe "Check FixCompletionResult" {
+	InModuleScope PsFzf {
+		Context "Non-quoted Strings Should Not Change" {
+			It "Check Simple String" {
+				FixCompletionResult("not_quoted") | Should -Be "not_quoted"
+			}
+			It "Check Simple String with quote" {
+				FixCompletionResult("not_quotedwith'") | Should -Be "not_quotedwith'"
+			}
+		}
+
+		Context "Non-quoted Strings With Spaces Should Change" {
+			It "Check Simple String With Space" {
+				FixCompletionResult("with space") | Should -Be """with space"""
+			}
+			It "Check Simple String with quote" {
+				FixCompletionResult("with space, ' and with'") | Should -Be """with space, ' and with'"""
+			}
+		}
+
+		Context "Quoted Strings Should Not Change" {
+			It "Check Simple String With Space and Already Double Quoted" {
+				FixCompletionResult("""with space and already quoted""") | Should -Be """with space and already quoted"""
+			}
+
+			It "Check Simple String With Space and Already Single Quoted" {
+				FixCompletionResult("'with space and already quoted'") | Should -Be "'with space and already quoted'"
+			}
+		}
+	}
+}
+
 Describe "Check Parameters" {
 	InModuleScope PsFzf {
 		Context "Parameters Should Fail" {

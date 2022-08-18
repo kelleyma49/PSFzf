@@ -99,8 +99,19 @@ class FzfDefaultCmd {
 
 function FixCompletionResult($str)
 {
-	if ($str.Contains(" ") -or $str.Contains("`t")) {
-		return "'{0}'" -f $str.Replace("`r`n","").Trim(@('''','"'))
+	if ([string]::IsNullOrEmpty($str)) {
+		return ""
+	}
+	elseif ($str.Contains(" ") -or $str.Contains("`t")) {
+		$str = $str.Replace("`r`n","")
+		# check if already quoted
+		if (($str.StartsWith("'") -and $str.EndsWith("'")) -or `
+			($str.StartsWith("""") -and $str.EndsWith(""""))) {
+				return $str
+			} else {
+				return """{0}""" -f $str
+			}
+
 	} else {
 		return $str.Replace("`r`n","")
 	}
