@@ -359,7 +359,7 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('Border') -and $Border)												{ $arguments += '--border '}
 		if ($PSBoundParameters.ContainsKey('BorderStyle') -and ![string]::IsNullOrWhiteSpace($BorderStyle))		{ $arguments += "--border=$BorderStyle "}
 		if ($PSBoundParameters.ContainsKey('Info') -and ![string]::IsNullOrWhiteSpace($Info)) 					{ $arguments += "--info=$Info "}
-		if ($PSBoundParameters.ContainsKey('Prompt') -and ![string]::IsNullOrWhiteSpace($Prompt)) 				{ $arguments += "--prompt='$Prompt' "}
+		if ($PSBoundParameters.ContainsKey('Prompt') -and ![string]::IsNullOrWhiteSpace($Prompt)) 				{ $arguments += "--prompt=""$Prompt"" "}
 		if ($PSBoundParameters.ContainsKey('Pointer') -and ![string]::IsNullOrWhiteSpace($Pointer)) 			{ $arguments += "--pointer='$Pointer' "}
 		if ($PSBoundParameters.ContainsKey('Marker') -and ![string]::IsNullOrWhiteSpace($Marker)) 				{ $arguments += "--marker='$Marker' "}
         if ($PSBoundParameters.ContainsKey('Header') -and ![string]::IsNullOrWhiteSpace($Header)) 				{ $arguments += "--header=""$Header"" "}
