@@ -5,6 +5,12 @@ $script:foundGit = $false
 $script:bashPath = $null
 $script:grepPath = $null
 
+if ($PSVersionTable.PSEdition -eq 'Core') {
+    $script:pwshExec = "pwsh"
+} else {
+    $script:pwshExec = "powershell"
+}
+
 function Get-GitFzfArguments() {
     # take from https://github.com/junegunn/fzf-git.sh/blob/f72ebd823152fa1e9b000b96b71dd28717bc0293/fzf-git.sh#L89
     return @{
@@ -14,7 +20,7 @@ function Get-GitFzfArguments() {
         Height = '50%'
         MinHeight = 20
         Border = $true
-#        Color = 'header:italic:underline'
+        Color = 'header:italic:underline'
         PreviewWindow = 'right,50%,border-left'
         Bind = @('ctrl-/:change-preview-window(down,50%,border-top|hidden|)')
     }
@@ -130,7 +136,7 @@ function Invoke-PsFzfGitFiles() {
     $fzfArguments['Bind'] += $headerStrings[1],"""$gitStageBind""","""$gitResetBind"""
     Invoke-Expression "& $statusCmd" | `
         Invoke-Fzf @fzfArguments `
-        -Prompt '📁 Files>' `
+        -Prompt '📁 Files> ' `
         -Preview "$previewCmd" -Header $headerStr | `
         foreach-object {
             $result += $_.Substring('?? '.Length)
@@ -159,7 +165,7 @@ function Invoke-PsFzfGitHashes() {
     & git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" $(Get-ColorAlways).Trim()  | `
         Invoke-Fzf @fzfArguments -NoSort  `
         -Header 'CTRL+S-toggle sort' `
-        -Prompt '🍡 Hashes>' `
+        -Prompt '🍡 Hashes> ' `
         -Preview "$previewCmd" | ForEach-Object {
         if ($_ -match '\d\d-\d\d-\d\d\s+([a-f0-9]+)\s+') {
             $result += $Matches.1
@@ -184,14 +190,17 @@ function Invoke-PsFzfGitBranches() {
     }
 
     $fzfArguments = Get-GitFzfArguments
-
-    $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + "\"" {}" + $(Get-ColorAlways) + " \""$pwd\"""
+    $fzfArguments['PreviewWindow'] = 'down,border-top,40%'
+    $fzfArguments['Bind'] += 'ctrl-/:change-preview-window(down,70%|hidden|)'
+    $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + "\"" {}"
     $result = @()
-    git branch -a | & "${script:grepPath}" -v '/HEAD\s' |
-    ForEach-Object { $_.Substring('* '.Length) } | Sort-Object | `
-        Invoke-Fzf @fzfArguments -Preview "$previewCmd" -Prompt '🌲 Branches>' | ForEach-Object {
-        $result += $_
-    }
+    # use pwsh to prevent bash from trying to write to host output:
+    $branches = & $script:pwshExec -NoProfile -NonInteractive -Command "&  ${script:bashPath} $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches.sh') branches"
+    $branches |
+        Invoke-Fzf @fzfArguments -Preview "$previewCmd" -Prompt '🌲 Branches> ' -HeaderLines 2 -Tiebreak begin -ReverseInput | `
+        ForEach-Object {
+            $result += $($_.Substring('* '.Length) -split ' ')[0]
+        }
 
     [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
     if ($result.Length -gt 0) {

@@ -507,12 +507,10 @@ function Invoke-Fzf {
 							}
 						}
 					}
-					if (![System.String]::IsNullOrWhiteSpace($str)) {
-						try {
-							$utf8Stream.WriteLine($str)
-						} catch [System.Management.Automation.MethodInvocationException] {
-							# Possibly broken pipe. We will shutdown the pipe below.
-						}
+					try {
+						$utf8Stream.WriteLine($str)
+					} catch [System.Management.Automation.MethodInvocationException] {
+						# Possibly broken pipe. We will shutdown the pipe below.
 					}
 					& $checkProcessStatus
 				}
@@ -532,12 +530,10 @@ function Invoke-Fzf {
 						}
 					}
 				}
-				if (![System.String]::IsNullOrWhiteSpace($str)) {
-					try {
-						$utf8Stream.WriteLine($str)
-					} catch [System.Management.Automation.MethodInvocationException] {
-						# Possibly broken pipe. We will shutdown the pipe below.
-					}
+				try {
+					$utf8Stream.WriteLine($str)
+				} catch [System.Management.Automation.MethodInvocationException] {
+					# Possibly broken pipe. We will shutdown the pipe below.
 				}
 				& $checkProcessStatus
 			}
