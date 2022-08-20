@@ -253,16 +253,10 @@ function script:Invoke-FzfTabCompletionInner() {
     }
     $script:continueCompletion = $false
 
-    $addSpace = $null -ne $currentPath -and $currentPath.StartsWith(" ")
-
     if ($completionMatches.Count -eq 1) {
         $script:result = $completionMatches[0].CompletionText
     }
     elseif ($completionMatches.Count -gt 1) {
-        $helpers = New-Object PSFzf.IO.CompletionHelpers
-        $ambiguous = $false
-        $addSpace = $false
-
         $script:result = @()
         $script:checkCompletion = $true
         $cancelTrigger = 'ESC'
@@ -334,10 +328,6 @@ function script:Invoke-FzfTabCompletionInner() {
                 $str += ' '
                 $script:continueCompletion = $false
             }
-        }
-
-        if ($addSpace) {
-            $str = ' ' + $str
         }
 
         $leftCursor = $completions.ReplacementIndex
