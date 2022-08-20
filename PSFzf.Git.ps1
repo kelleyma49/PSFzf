@@ -5,6 +5,21 @@ $script:foundGit = $false
 $script:bashPath = $null
 $script:grepPath = $null
 
+function Get-GitFzfArguments() {
+    # take from https://github.com/junegunn/fzf-git.sh/blob/f72ebd823152fa1e9b000b96b71dd28717bc0293/fzf-git.sh#L89
+    return @{
+        Ansi = $true
+        Layout = "reverse"
+        Multi = $true
+        Height = '50%'
+        MinHeight = 20
+        Border = $true
+#        Color = 'header:italic:underline'
+        PreviewWindow = 'right,50%,border-left'
+        Bind = @('ctrl-/:change-preview-window(down,50%,border-top|hidden|)')
+    }
+}
+
 function SetupGitPaths() {
     if (-not $script:foundGit) {
         if ($IsLinux -or $IsMacOS) {
@@ -111,10 +126,11 @@ function Invoke-PsFzfGitFiles() {
     $resetScriptPath = Join-Path $PsScriptRoot 'helpers/PsFzfGitFiles-GitReset.sh'
     $gitResetBind = "alt-r:execute-silent(" + "${script:bashPath} ${resetScriptPath} {+2..})+down+${reloadBindCmd}"
 
+    $fzfArguments = Get-GitFzfArguments
+    $fzfArguments['Bind'] += $headerStrings[1],"""$gitStageBind""","""$gitResetBind"""
     Invoke-Expression "& $statusCmd" | `
-        Invoke-Fzf -Multi -Ansi `
-        -Preview "$previewCmd" -Header $headerStr `
-        -Bind $headerStrings[1],"""$gitStageBind""","""$gitResetBind""" | `
+        Invoke-Fzf @fzfArguments `
+        -Preview "$previewCmd" -Header $headerStr | `
         foreach-object {
             $result += $_.Substring('?? '.Length)
         }
@@ -137,8 +153,10 @@ function Invoke-PsFzfGitHashes() {
     $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitHashes-Preview.sh') + "\"" {}" + $(Get-ColorAlways) + " \""$pwd\"""
     $result = @()
 
+    $fzfArguments = Get-GitFzfArguments
+    $fzfArguments['Bind'] += 'ctrl-s:toggle-sort'
     & git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" $(Get-ColorAlways).Trim()  | `
-        Invoke-Fzf -Ansi -NoSort -Multi -Bind ctrl-s:toggle-sort `
+        Invoke-Fzf @fzfArguments -NoSort  `
         -Header 'CTRL+S-toggle sort' `
         -Preview "$previewCmd" | ForEach-Object {
         if ($_ -match '\d\d-\d\d-\d\d\s+([a-f0-9]+)\s+') {
@@ -163,11 +181,13 @@ function Invoke-PsFzfGitBranches() {
         return
     }
 
+    $fzfArguments = Get-GitFzfArguments
+
     $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + "\"" {}" + $(Get-ColorAlways) + " \""$pwd\"""
     $result = @()
     git branch -a | & "${script:grepPath}" -v '/HEAD\s' |
     ForEach-Object { $_.Substring('* '.Length) } | Sort-Object | `
-        Invoke-Fzf -Ansi -Multi -PreviewWindow "right:70%" -Preview "$previewCmd" | ForEach-Object {
+        Invoke-Fzf @fzfArguments -Preview "$previewCmd" | ForEach-Object {
         $result += $_
     }
 
