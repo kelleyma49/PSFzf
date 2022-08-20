@@ -306,6 +306,7 @@ function Invoke-Fzf {
 			# Display
 			[switch]$Ansi,
 			[int]$Tabstop = 8,
+			[string]$Color,
 			[switch]$NoBold,
 
             # History
@@ -365,6 +366,7 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('HeaderLines') -and $HeaderLines -ge 0) 		               			{ $arguments += "--header-lines=$HeaderLines "}
 		if ($PSBoundParameters.ContainsKey('Ansi') -and $Ansi)													{ $arguments += '--ansi '}
 		if ($PSBoundParameters.ContainsKey('Tabstop') -and $Tabstop -ge 0)										{ $arguments += "--tabstop=$Tabstop "}
+		if ($PSBoundParameters.ContainsKey('Color') -and ![string]::IsNullOrWhiteSpace($Color))	 				{ $arguments += "--color='$Color' "}
 		if ($PSBoundParameters.ContainsKey('NoBold') -and $NoBold)												{ $arguments += '--no-bold '}
 		if ($PSBoundParameters.ContainsKey('History') -and $History) 											{ $arguments += "--history='$History' "}
 		if ($PSBoundParameters.ContainsKey('HistorySize') -and $HistorySize -ge 1)								{ $arguments += "--history-size=$HistorySize "}
