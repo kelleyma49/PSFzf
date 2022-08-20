@@ -130,6 +130,7 @@ function Invoke-PsFzfGitFiles() {
     $fzfArguments['Bind'] += $headerStrings[1],"""$gitStageBind""","""$gitResetBind"""
     Invoke-Expression "& $statusCmd" | `
         Invoke-Fzf @fzfArguments `
+        -Prompt '📁 Files>' `
         -Preview "$previewCmd" -Header $headerStr | `
         foreach-object {
             $result += $_.Substring('?? '.Length)
@@ -158,6 +159,7 @@ function Invoke-PsFzfGitHashes() {
     & git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" $(Get-ColorAlways).Trim()  | `
         Invoke-Fzf @fzfArguments -NoSort  `
         -Header 'CTRL+S-toggle sort' `
+        -Prompt '🍡 Hashes>' `
         -Preview "$previewCmd" | ForEach-Object {
         if ($_ -match '\d\d-\d\d-\d\d\s+([a-f0-9]+)\s+') {
             $result += $Matches.1
@@ -187,7 +189,7 @@ function Invoke-PsFzfGitBranches() {
     $result = @()
     git branch -a | & "${script:grepPath}" -v '/HEAD\s' |
     ForEach-Object { $_.Substring('* '.Length) } | Sort-Object | `
-        Invoke-Fzf @fzfArguments -Preview "$previewCmd" | ForEach-Object {
+        Invoke-Fzf @fzfArguments -Preview "$previewCmd" -Prompt '🌲 Branches>' | ForEach-Object {
         $result += $_
     }
 
