@@ -61,13 +61,9 @@ function IsInGitRepo() {
     return $?
 }
 
-function Get-ColorAlways($setting=$null) {
+function Get-ColorAlways($setting=' --color=always') {
     if ($RunningInWindowsTerminal -or -not $IsWindowsCheck) {
-        if ($null -ne $setting) {
-            return $setting
-        } else {
-            return ' --color=always'
-        }
+        return $setting
     }
     else {
         return ''
