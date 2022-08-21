@@ -347,7 +347,7 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('Tiebreak') -and ![string]::IsNullOrWhiteSpace($Tiebreak))			{ $arguments += "--tiebreak=$Tiebreak "}
 		if ($PSBoundParameters.ContainsKey('Multi') -and $Multi) 												{ $arguments += '--multi '}
 		if ($PSBoundParameters.ContainsKey('NoMouse') -and $NoMouse)					 						{ $arguments += '--no-mouse '}
-        if ($PSBoundParameters.ContainsKey('Bind') -and $Bind.Length -ge 1)							    		{ $Bind | ForEach-Object { $arguments += "--bind=$_ " } }
+        if ($PSBoundParameters.ContainsKey('Bind') -and $Bind.Length -ge 1)							    		{ $Bind | ForEach-Object { $arguments += "--bind=""$_"" " } }
 		if ($PSBoundParameters.ContainsKey('Reverse') -and $Reverse)					 						{ $arguments += '--reverse '}
 		if ($PSBoundParameters.ContainsKey('Cycle') -and $Cycle)						 						{ $arguments += '--cycle '}
 		if ($PSBoundParameters.ContainsKey('KeepRight') -and $KeepRight)						 				{ $arguments += '--keep-right '}

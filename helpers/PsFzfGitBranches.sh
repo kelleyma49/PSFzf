@@ -6,11 +6,11 @@
 }
 case "$1" in
 branches)
-    echo $'CTRL-O (open in browser) / CTRL-A (show all branches)\n'
+    echo $'CTRL-A (show all branches)\n'
     branches
     ;;
 all-branches)
-    echo $'CTRL-O (open in browser)\n'
+    echo $'\n'
     branches -a
     ;;
 *) exit 1 ;;

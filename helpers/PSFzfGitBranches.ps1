@@ -17,9 +17,9 @@ function branches() {
 }
 
 if ($AllBranches) {
-    "CTRL-O (open in browser) / CTRL-A (show all branches)`n"
+    "CTRL-A (show all branches)`n"
     branches -All "-a"
 } elseif ($Branches) {
-    "CTRL-O (open in browser)`n"
+    "`n"
     branches
 }
