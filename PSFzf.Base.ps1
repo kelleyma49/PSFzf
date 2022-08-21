@@ -306,6 +306,7 @@ function Invoke-Fzf {
 			# Display
 			[switch]$Ansi,
 			[int]$Tabstop = 8,
+			[string]$Color,
 			[switch]$NoBold,
 
             # History
@@ -346,7 +347,7 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('Tiebreak') -and ![string]::IsNullOrWhiteSpace($Tiebreak))			{ $arguments += "--tiebreak=$Tiebreak "}
 		if ($PSBoundParameters.ContainsKey('Multi') -and $Multi) 												{ $arguments += '--multi '}
 		if ($PSBoundParameters.ContainsKey('NoMouse') -and $NoMouse)					 						{ $arguments += '--no-mouse '}
-        if ($PSBoundParameters.ContainsKey('Bind') -and $Bind.Length -ge 1)							    		{ $Bind | ForEach-Object { $arguments += "--bind=$_ " } }
+        if ($PSBoundParameters.ContainsKey('Bind') -and $Bind.Length -ge 1)							    		{ $Bind | ForEach-Object { $arguments += "--bind=""$_"" " } }
 		if ($PSBoundParameters.ContainsKey('Reverse') -and $Reverse)					 						{ $arguments += '--reverse '}
 		if ($PSBoundParameters.ContainsKey('Cycle') -and $Cycle)						 						{ $arguments += '--cycle '}
 		if ($PSBoundParameters.ContainsKey('KeepRight') -and $KeepRight)						 				{ $arguments += '--keep-right '}
@@ -358,15 +359,16 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('Border') -and $Border)												{ $arguments += '--border '}
 		if ($PSBoundParameters.ContainsKey('BorderStyle') -and ![string]::IsNullOrWhiteSpace($BorderStyle))		{ $arguments += "--border=$BorderStyle "}
 		if ($PSBoundParameters.ContainsKey('Info') -and ![string]::IsNullOrWhiteSpace($Info)) 					{ $arguments += "--info=$Info "}
-		if ($PSBoundParameters.ContainsKey('Prompt') -and ![string]::IsNullOrWhiteSpace($Prompt)) 				{ $arguments += "--prompt='$Prompt' "}
-		if ($PSBoundParameters.ContainsKey('Pointer') -and ![string]::IsNullOrWhiteSpace($Pointer)) 			{ $arguments += "--pointer='$Pointer' "}
-		if ($PSBoundParameters.ContainsKey('Marker') -and ![string]::IsNullOrWhiteSpace($Marker)) 				{ $arguments += "--marker='$Marker' "}
+		if ($PSBoundParameters.ContainsKey('Prompt') -and ![string]::IsNullOrWhiteSpace($Prompt)) 				{ $arguments += "--prompt=""$Prompt"" "}
+		if ($PSBoundParameters.ContainsKey('Pointer') -and ![string]::IsNullOrWhiteSpace($Pointer)) 			{ $arguments += "--pointer=""$Pointer"" "}
+		if ($PSBoundParameters.ContainsKey('Marker') -and ![string]::IsNullOrWhiteSpace($Marker)) 				{ $arguments += "--marker=""$Marker"" "}
         if ($PSBoundParameters.ContainsKey('Header') -and ![string]::IsNullOrWhiteSpace($Header)) 				{ $arguments += "--header=""$Header"" "}
 		if ($PSBoundParameters.ContainsKey('HeaderLines') -and $HeaderLines -ge 0) 		               			{ $arguments += "--header-lines=$HeaderLines "}
 		if ($PSBoundParameters.ContainsKey('Ansi') -and $Ansi)													{ $arguments += '--ansi '}
 		if ($PSBoundParameters.ContainsKey('Tabstop') -and $Tabstop -ge 0)										{ $arguments += "--tabstop=$Tabstop "}
+		if ($PSBoundParameters.ContainsKey('Color') -and ![string]::IsNullOrWhiteSpace($Color))	 				{ $arguments += "--color=""$Color"" "}
 		if ($PSBoundParameters.ContainsKey('NoBold') -and $NoBold)												{ $arguments += '--no-bold '}
-		if ($PSBoundParameters.ContainsKey('History') -and $History) 											{ $arguments += "--history='$History' "}
+		if ($PSBoundParameters.ContainsKey('History') -and $History) 											{ $arguments += "--history=""$History"" "}
 		if ($PSBoundParameters.ContainsKey('HistorySize') -and $HistorySize -ge 1)								{ $arguments += "--history-size=$HistorySize "}
         if ($PSBoundParameters.ContainsKey('Preview') -and ![string]::IsNullOrWhiteSpace($Preview)) 	    	{ $arguments += "--preview=""$Preview"" "}
         if ($PSBoundParameters.ContainsKey('PreviewWindow') -and ![string]::IsNullOrWhiteSpace($PreviewWindow)) { $arguments += "--preview-window=""$PreviewWindow"" "}
@@ -505,12 +507,10 @@ function Invoke-Fzf {
 							}
 						}
 					}
-					if (![System.String]::IsNullOrWhiteSpace($str)) {
-						try {
-							$utf8Stream.WriteLine($str)
-						} catch [System.Management.Automation.MethodInvocationException] {
-							# Possibly broken pipe. We will shutdown the pipe below.
-						}
+					try {
+						$utf8Stream.WriteLine($str)
+					} catch [System.Management.Automation.MethodInvocationException] {
+						# Possibly broken pipe. We will shutdown the pipe below.
 					}
 					& $checkProcessStatus
 				}
@@ -530,12 +530,10 @@ function Invoke-Fzf {
 						}
 					}
 				}
-				if (![System.String]::IsNullOrWhiteSpace($str)) {
-					try {
-						$utf8Stream.WriteLine($str)
-					} catch [System.Management.Automation.MethodInvocationException] {
-						# Possibly broken pipe. We will shutdown the pipe below.
-					}
+				try {
+					$utf8Stream.WriteLine($str)
+				} catch [System.Management.Automation.MethodInvocationException] {
+					# Possibly broken pipe. We will shutdown the pipe below.
 				}
 				& $checkProcessStatus
 			}

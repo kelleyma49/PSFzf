@@ -5,6 +5,27 @@ $script:foundGit = $false
 $script:bashPath = $null
 $script:grepPath = $null
 
+if ($PSVersionTable.PSEdition -eq 'Core') {
+    $script:pwshExec = "pwsh"
+} else {
+    $script:pwshExec = "powershell"
+}
+
+function Get-GitFzfArguments() {
+    # take from https://github.com/junegunn/fzf-git.sh/blob/f72ebd823152fa1e9b000b96b71dd28717bc0293/fzf-git.sh#L89
+    return @{
+        Ansi = $true
+        Layout = "reverse"
+        Multi = $true
+        Height = '50%'
+        MinHeight = 20
+        Border = $true
+        Color = 'header:italic:underline'
+        PreviewWindow = 'right,50%,border-left'
+        Bind = @('ctrl-/:change-preview-window(down,50%,border-top|hidden|)')
+    }
+}
+
 function SetupGitPaths() {
     if (-not $script:foundGit) {
         if ($IsLinux -or $IsMacOS) {
@@ -37,8 +58,11 @@ function SetGitKeyBindings($enable) {
 
         if (Get-Command Set-PSReadLineKeyHandler -ErrorAction SilentlyContinue) {
             @('ctrl+g,ctrl+f', 'Select Git files via fzf', { Invoke-PsFzfGitFiles }), `
-            @('ctrl+g,ctrl+s', 'Select Git hashes via fzf', { Invoke-PsFzfGitHashes }), `
-            @('ctrl+g,ctrl+b', 'Select Git branches via fzf', { Invoke-PsFzfGitBranches }) | ForEach-Object {
+            @('ctrl+g,ctrl+h', 'Select Git hashes via fzf', { Invoke-PsFzfGitHashes }), `
+            @('ctrl+g,ctrl+b', 'Select Git branches via fzf', { Invoke-PsFzfGitBranches }), `
+            @('ctrl+g,ctrl+t', 'Select Git tags via fzf', { Invoke-PsFzfGitTags }), `
+            @('ctrl+g,ctrl+s', 'Select Git tags via fzf', { Invoke-PsFzfGitStashes }) `
+            | ForEach-Object {
                 $script:GitKeyHandlers += $_[0]
                 Set-PSReadLineKeyHandler -Chord $_[0] -Description $_[1] -ScriptBlock $_[2]
             }
@@ -61,13 +85,9 @@ function IsInGitRepo() {
     return $?
 }
 
-function Get-ColorAlways($setting=$null) {
+function Get-ColorAlways($setting=' --color=always') {
     if ($RunningInWindowsTerminal -or -not $IsWindowsCheck) {
-        if ($null -ne $setting) {
-            return $setting
-        } else {
-            return ' --color=always'
-        }
+        return $setting
     }
     else {
         return ''
@@ -75,13 +95,7 @@ function Get-ColorAlways($setting=$null) {
 }
 
 function Get-HeaderStrings() {
-    if ($RunningInWindowsTerminal -or -not $IsWindowsCheck) {
-        $header = "`n`e[7mCTRL+A`e[0m Select All`t`e[7mCTRL+D`e[0m Deselect All`t`e[7mCTRL+T`e[0m Toggle All"
-    }
-    else {
-        $header = "`nCTRL+A-Select All`tCTRL+D-Deselect All`tCTRL+T-Toggle All"
-    }
-
+    $header = "CTRL-A (Select all) / CTRL-D (Deselect all) / CTRL-T (Toggle all)"
     $keyBinds = 'ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all'
     return $Header, $keyBinds
 }
@@ -99,14 +113,8 @@ function Invoke-PsFzfGitFiles() {
     $result = @()
 
     $headerStrings = Get-HeaderStrings
-
-    # add git add and reset keyboard shortcuts:
-    if ($RunningInWindowsTerminal -or -not $IsWindowsCheck) {
-        $gitCmdsHeader = "`n`e[7mALT+S`e[0m Git Add`t`e[7mALT+R`e[0m Git Reset"
-    } else {
-        $gitCmdsHeader = "`nALT+S-Git Stage`tALT+R-Git Reset"
-    }
-    $headerStr = $headerStrings[0] + $gitCmdsHeader
+    $gitCmdsHeader = "`nALT-S (Git add) / ALT-R (Git reset)"
+    $headerStr = $headerStrings[0] + $gitCmdsHeader + "`n`n"
     $statusCmd = "git $(Get-ColorAlways '-c color.status=always') status --short"
 
     $reloadBindCmd = "reload($statusCmd)"
@@ -115,10 +123,12 @@ function Invoke-PsFzfGitFiles() {
     $resetScriptPath = Join-Path $PsScriptRoot 'helpers/PsFzfGitFiles-GitReset.sh'
     $gitResetBind = "alt-r:execute-silent(" + "${script:bashPath} ${resetScriptPath} {+2..})+down+${reloadBindCmd}"
 
+    $fzfArguments = Get-GitFzfArguments
+    $fzfArguments['Bind'] += $headerStrings[1],$gitStageBind,$gitResetBind
     Invoke-Expression "& $statusCmd" | `
-        Invoke-Fzf -Multi -Ansi `
-        -Preview "$previewCmd" -Header $headerStr `
-        -Bind $headerStrings[1],"""$gitStageBind""","""$gitResetBind""" | `
+        Invoke-Fzf @fzfArguments `
+        -Prompt '📁 Files> ' `
+        -Preview "$previewCmd" -Header $headerStr | `
         foreach-object {
             $result += $_.Substring('?? '.Length)
         }
@@ -141,9 +151,10 @@ function Invoke-PsFzfGitHashes() {
     $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitHashes-Preview.sh') + "\"" {}" + $(Get-ColorAlways) + " \""$pwd\"""
     $result = @()
 
-    & git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" $(Get-ColorAlways).Trim()  | `
-        Invoke-Fzf -Ansi -NoSort -Multi -Bind ctrl-s:toggle-sort `
-        -Header 'CTRL+S-toggle sort' `
+    $fzfArguments = Get-GitFzfArguments
+    & git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" $(Get-ColorAlways).Trim() --graph | `
+        Invoke-Fzf @fzfArguments -NoSort  `
+        -Prompt '🍡 Hashes> ' `
         -Preview "$previewCmd" | ForEach-Object {
         if ($_ -match '\d\d-\d\d-\d\d\s+([a-f0-9]+)\s+') {
             $result += $Matches.1
@@ -167,17 +178,78 @@ function Invoke-PsFzfGitBranches() {
         return
     }
 
-    $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + "\"" {}" + $(Get-ColorAlways) + " \""$pwd\"""
+    $fzfArguments = Get-GitFzfArguments
+    $fzfArguments['PreviewWindow'] = 'down,border-top,40%'
+    $fzfArguments['Bind'] += 'ctrl-/:change-preview-window(down,70%|hidden|)'
+    $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + "\"" {}"
     $result = @()
-    git branch -a | & "${script:grepPath}" -v '/HEAD\s' |
-    ForEach-Object { $_.Substring('* '.Length) } | Sort-Object | `
-        Invoke-Fzf -Ansi -Multi -PreviewWindow "right:70%" -Preview "$previewCmd" | ForEach-Object {
-        $result += $_
-    }
+    # use pwsh to prevent bash from trying to write to host output:
+    $branches = & $script:pwshExec -NoProfile -NonInteractive -Command "&  ${script:bashPath} $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches.sh') branches"
+    $branches |
+        Invoke-Fzf @fzfArguments -Preview "$previewCmd" -Prompt '🌲 Branches> ' -HeaderLines 2 -Tiebreak begin -ReverseInput | `
+        ForEach-Object {
+            $result += $($_.Substring('* '.Length) -split ' ')[0]
+        }
 
-    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+    InvokePromptHack
     if ($result.Length -gt 0) {
         $result = $result -join " "
         [Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
+    }
+}
+
+function Invoke-PsFzfGitTags() {
+    if (-not (IsInGitRepo)) {
+        return
+    }
+
+    if (-not $(SetupGitPaths)) {
+        Write-Error "git executable could not be found"
+        return
+    }
+
+    $fzfArguments = Get-GitFzfArguments
+    $fzfArguments['PreviewWindow'] = 'right,70%'
+    $previewCmd = "git show --color=always {}"
+    $result = @()
+    git tag --sort -version:refname |
+        Invoke-Fzf @fzfArguments -Preview "$previewCmd" -Prompt '📛 Tags> ' | `
+        ForEach-Object {
+            $result += $_
+        }
+
+    InvokePromptHack
+    if ($result.Length -gt 0) {
+        $result = $result -join " "
+        [Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
+    }
+}
+
+function Invoke-PsFzfGitStashes() {
+    if (-not (IsInGitRepo)) {
+        return
+    }
+
+    if (-not $(SetupGitPaths)) {
+        Write-Error "git executable could not be found"
+        return
+    }
+
+    $fzfArguments = Get-GitFzfArguments
+    $fzfArguments['Bind'] += 'ctrl-x:execute-silent(git stash drop {1})+reload(git stash list)'
+    $header = "CTRL-X (drop stash)`n`n"
+    $previewCmd = 'git show --color=always {1}'
+
+    $result = @()
+    git stash list --color=always |
+        Invoke-Fzf @fzfArguments -Header $header -Delimiter ':' -Preview "$previewCmd" -Prompt '🥡 Stashes> ' | `
+        ForEach-Object {
+            $result += $_.Split(':')[0]
+        }
+
+    InvokePromptHack
+    if ($result.Length -gt 0) {
+        $result = $result -join " "
+        [Microsoft.PowerShell.PSConsoleReadLine]::Insert("""$result""")
     }
 }

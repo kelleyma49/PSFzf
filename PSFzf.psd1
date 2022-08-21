@@ -81,6 +81,8 @@
         'Invoke-PsFzfGitBranches',
         'Invoke-PsFzfGitFiles',
         'Invoke-PsFzfGitHashes',
+        'Invoke-PsFzfGitStashes',
+        'Invoke-PsFzfGitTags',
         'Invoke-PsFzfRipgrep',
         'Set-LocationFuzzyEverything',
         'Set-PsFzfOption'
