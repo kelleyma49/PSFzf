@@ -3,5 +3,7 @@
     "files.trimTrailingWhitespace": true,
     "[markdown]": {
         "files.trimTrailingWhitespace": false
-    }
+    },
+    "prettier.useEditorConfig": true,
+    "editor.formatOnSave": true
 }
