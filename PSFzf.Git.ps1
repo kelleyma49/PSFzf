@@ -7,22 +7,23 @@ $script:grepPath = $null
 
 if ($PSVersionTable.PSEdition -eq 'Core') {
     $script:pwshExec = "pwsh"
-} else {
+}
+else {
     $script:pwshExec = "powershell"
 }
 
 function Get-GitFzfArguments() {
     # take from https://github.com/junegunn/fzf-git.sh/blob/f72ebd823152fa1e9b000b96b71dd28717bc0293/fzf-git.sh#L89
     return @{
-        Ansi = $true
-        Layout = "reverse"
-        Multi = $true
-        Height = '50%'
-        MinHeight = 20
-        Border = $true
-        Color = 'header:italic:underline'
+        Ansi          = $true
+        Layout        = "reverse"
+        Multi         = $true
+        Height        = '50%'
+        MinHeight     = 20
+        Border        = $true
+        Color         = 'header:italic:underline'
         PreviewWindow = 'right,50%,border-left'
-        Bind = @('ctrl-/:change-preview-window(down,50%,border-top|hidden|)')
+        Bind          = @('ctrl-/:change-preview-window(down,50%,border-top|hidden|)')
     }
 }
 
@@ -33,7 +34,8 @@ function SetupGitPaths() {
             $script:foundGit = $null -ne $(Get-Command git -ErrorAction SilentlyContinue)
             $script:bashPath = 'bash'
             $script:grepPath = 'grep'
-        } else {
+        }
+        else {
             $gitInfo = Get-Command git.exe -ErrorAction SilentlyContinue
             $script:foundGit = $null -ne $gitInfo
             if ($script:foundGit) {
@@ -85,7 +87,7 @@ function IsInGitRepo() {
     return $?
 }
 
-function Get-ColorAlways($setting=' --color=always') {
+function Get-ColorAlways($setting = ' --color=always') {
     if ($RunningInWindowsTerminal -or -not $IsWindowsCheck) {
         return $setting
     }
@@ -119,19 +121,19 @@ function Invoke-PsFzfGitFiles() {
 
     $reloadBindCmd = "reload($statusCmd)"
     $stageScriptPath = Join-Path $PsScriptRoot 'helpers/PsFzfGitFiles-GitAdd.sh'
-    $gitStageBind = "alt-s:execute-silent(" + "${script:bashPath} ${stageScriptPath} {+2..})+down+${reloadBindCmd}"
+    $gitStageBind = "alt-s:execute-silent(" + """${script:bashPath}"" '${stageScriptPath}' {+2..})+down+${reloadBindCmd}"
     $resetScriptPath = Join-Path $PsScriptRoot 'helpers/PsFzfGitFiles-GitReset.sh'
-    $gitResetBind = "alt-r:execute-silent(" + "${script:bashPath} ${resetScriptPath} {+2..})+down+${reloadBindCmd}"
+    $gitResetBind = "alt-r:execute-silent(" + """${script:bashPath}"" '${resetScriptPath}' {+2..})+down+${reloadBindCmd}"
 
     $fzfArguments = Get-GitFzfArguments
-    $fzfArguments['Bind'] += $headerStrings[1],$gitStageBind,$gitResetBind
+    $fzfArguments['Bind'] += $headerStrings[1], $gitStageBind, $gitResetBind
     Invoke-Expression "& $statusCmd" | `
         Invoke-Fzf @fzfArguments `
         -Prompt '📁 Files> ' `
         -Preview "$previewCmd" -Header $headerStr | `
         foreach-object {
-            $result += $_.Substring('?? '.Length)
-        }
+        $result += $_.Substring('?? '.Length)
+    }
     InvokePromptHack
     if ($result.Length -gt 0) {
         $result = $result -join " "
@@ -184,12 +186,12 @@ function Invoke-PsFzfGitBranches() {
     $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + "\"" {}"
     $result = @()
     # use pwsh to prevent bash from trying to write to host output:
-    $branches = & $script:pwshExec -NoProfile -NonInteractive -Command "&  ${script:bashPath} $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches.sh') branches"
+    $branches = & $script:pwshExec -NoProfile -NonInteractive -Command "&  ${script:bashPath} '$(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches.sh')' branches"
     $branches |
-        Invoke-Fzf @fzfArguments -Preview "$previewCmd" -Prompt '🌲 Branches> ' -HeaderLines 2 -Tiebreak begin -ReverseInput | `
+    Invoke-Fzf @fzfArguments -Preview "$previewCmd" -Prompt '🌲 Branches> ' -HeaderLines 2 -Tiebreak begin -ReverseInput | `
         ForEach-Object {
-            $result += $($_.Substring('* '.Length) -split ' ')[0]
-        }
+        $result += $($_.Substring('* '.Length) -split ' ')[0]
+    }
 
     InvokePromptHack
     if ($result.Length -gt 0) {
@@ -213,10 +215,10 @@ function Invoke-PsFzfGitTags() {
     $previewCmd = "git show --color=always {}"
     $result = @()
     git tag --sort -version:refname |
-        Invoke-Fzf @fzfArguments -Preview "$previewCmd" -Prompt '📛 Tags> ' | `
+    Invoke-Fzf @fzfArguments -Preview "$previewCmd" -Prompt '📛 Tags> ' | `
         ForEach-Object {
-            $result += $_
-        }
+        $result += $_
+    }
 
     InvokePromptHack
     if ($result.Length -gt 0) {
@@ -242,10 +244,10 @@ function Invoke-PsFzfGitStashes() {
 
     $result = @()
     git stash list --color=always |
-        Invoke-Fzf @fzfArguments -Header $header -Delimiter ':' -Preview "$previewCmd" -Prompt '🥡 Stashes> ' | `
+    Invoke-Fzf @fzfArguments -Header $header -Delimiter ':' -Preview "$previewCmd" -Prompt '🥡 Stashes> ' | `
         ForEach-Object {
-            $result += $_.Split(':')[0]
-        }
+        $result += $_.Split(':')[0]
+    }
 
     InvokePromptHack
     if ($result.Length -gt 0) {

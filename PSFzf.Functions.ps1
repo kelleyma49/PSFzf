@@ -202,7 +202,7 @@ function GetProcessSelection() {
 
     $result = GetProcessesList | `
         Invoke-Fzf -Multi -Header $header `
-        -Bind "ctrl-r:reload($cmd)","ctrl-a:select-all","ctrl-d:deselect-all","ctrl-t:toggle-all" `
+        -Bind "ctrl-r:reload($cmd)", "ctrl-a:select-all", "ctrl-d:deselect-all", "ctrl-t:toggle-all" `
         -Preview "echo {}" -PreviewWindow """down,3,wrap""" `
         -Layout reverse -Height 80%
     $result | ForEach-Object {
