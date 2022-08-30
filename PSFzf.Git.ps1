@@ -63,7 +63,7 @@ function SetGitKeyBindings($enable) {
             @('ctrl+g,ctrl+h', 'Select Git hashes via fzf', { Invoke-PsFzfGitHashes }), `
             @('ctrl+g,ctrl+b', 'Select Git branches via fzf', { Invoke-PsFzfGitBranches }), `
             @('ctrl+g,ctrl+t', 'Select Git tags via fzf', { Invoke-PsFzfGitTags }), `
-            @('ctrl+g,ctrl+s', 'Select Git tags via fzf', { Invoke-PsFzfGitStashes }) `
+            @('ctrl+g,ctrl+s', 'Select Git stashes via fzf', { Invoke-PsFzfGitStashes }) `
             | ForEach-Object {
                 $script:GitKeyHandlers += $_[0]
                 Set-PSReadLineKeyHandler -Chord $_[0] -Description $_[1] -ScriptBlock $_[2]
