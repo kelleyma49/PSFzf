@@ -39,6 +39,15 @@ function SetupGitPaths() {
             $gitInfo = Get-Command git.exe -ErrorAction SilentlyContinue
             $script:foundGit = $null -ne $gitInfo
             if ($script:foundGit) {
+                # Detect if scoop is installed
+                $script:scoopInfo = Get-Command scoop -ErrorAction SilentlyContinue
+                if ($null -ne $script:scoopInfo) {
+                    # Detect if git is installed using scoop (using shims)
+                    if ((Split-Path $gitInfo.Source -Parent) -eq (Split-Path (Get-Command scoop).Source -Parent)) {
+                        # Get the proper git position relative to scoop shims" position
+                        $gitInfo = Get-Command "$($gitInfo.Source)\..\..\apps\git\current\bin\git.exe"
+                    }
+                }
                 $gitPathLong = Split-Path (Split-Path $gitInfo.Source -Parent) -Parent
                 # hack to get short path:
                 $a = New-Object -ComObject Scripting.FileSystemObject
