@@ -774,7 +774,7 @@ function Invoke-FzfPsReadlineHandlerHistory {
 				$fileHist.Add($_,$true)
 				$_
 			}
-		} | Invoke-Fzf -NoSort -Query "$line" -Bind ctrl-r:toggle-sort | ForEach-Object { $result = $_ }
+		} | Invoke-Fzf -Query "$line" -Bind ctrl-r:toggle-sort | ForEach-Object { $result = $_ }
 	}
 	catch
 	{
