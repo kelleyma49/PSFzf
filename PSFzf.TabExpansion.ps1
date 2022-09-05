@@ -240,7 +240,8 @@ function script:Invoke-FzfTabCompletionInner() {
 
     try {
         $completions = [System.Management.Automation.CommandCompletion]::CompleteInput($line, $cursor, @{})
-    } catch {
+    }
+    catch {
         # some custom tab completions will cause CompleteInput() to throw, so we gracefully handle those cases.
         # For example, see the issue https://github.com/kelleyma49/PSFzf/issues/95.
         return $false
@@ -281,7 +282,8 @@ function script:Invoke-FzfTabCompletionInner() {
         $completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf `
             -Layout reverse `
             -Expect "$expectTriggers" `
-            -Bind 'tab:down','btab:up' `
+            -PreviewWindow 'down:30%' `
+            -Bind 'tab:down', 'btab:up', 'ctrl-/:change-preview-window(down,right:50%,border-top|hidden|)' `
             @additionalCmd | ForEach-Object {
             $script:fzfOutput += $_
         }
@@ -289,7 +291,8 @@ function script:Invoke-FzfTabCompletionInner() {
         if ($script:fzfOutput[0] -eq $cancelTrigger) {
             InvokePromptHack
             return $false
-        }elseif ($script:fzfOutput.Length -gt 1) {
+        }
+        elseif ($script:fzfOutput.Length -gt 1) {
             $script:result = $script:fzfOutput[1]
         }
 
