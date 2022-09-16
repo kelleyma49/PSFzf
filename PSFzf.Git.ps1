@@ -68,11 +68,11 @@ function SetGitKeyBindings($enable) {
         }
 
         if (Get-Command Set-PSReadLineKeyHandler -ErrorAction SilentlyContinue) {
-            @('ctrl+g,ctrl+f', 'Select Git files via fzf', { Invoke-PsFzfGitFiles }), `
-            @('ctrl+g,ctrl+h', 'Select Git hashes via fzf', { Invoke-PsFzfGitHashes }), `
-            @('ctrl+g,ctrl+b', 'Select Git branches via fzf', { Invoke-PsFzfGitBranches }), `
-            @('ctrl+g,ctrl+t', 'Select Git tags via fzf', { Invoke-PsFzfGitTags }), `
-            @('ctrl+g,ctrl+s', 'Select Git stashes via fzf', { Invoke-PsFzfGitStashes }) `
+            @('ctrl+g,ctrl+f', 'Select Git files via fzf', { Update-CmdLine $(Invoke-PsFzfGitFiles) }), `
+            @('ctrl+g,ctrl+h', 'Select Git hashes via fzf', { Update-CmdLine $(Invoke-PsFzfGitHashes) }), `
+            @('ctrl+g,ctrl+b', 'Select Git branches via fzf', { Update-CmdLine $(Invoke-PsFzfGitBranches) }), `
+            @('ctrl+g,ctrl+t', 'Select Git tags via fzf', { Update-CmdLine $(Invoke-PsFzfGitTags) }), `
+            @('ctrl+g,ctrl+s', 'Select Git stashes via fzf', { Update-CmdLine $(Invoke-PsFzfGitStashes) }) `
             | ForEach-Object {
                 $script:GitKeyHandlers += $_[0]
                 Set-PSReadLineKeyHandler -Chord $_[0] -Description $_[1] -ScriptBlock $_[2]
@@ -110,6 +110,14 @@ function Get-HeaderStrings() {
     $keyBinds = 'ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all'
     return $Header, $keyBinds
 }
+
+function Update-CmdLine($result) {
+    InvokePromptHack
+    if ($result.Length -gt 0) {
+        $result = $result -join " "
+        [Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
+    }
+}
 function Invoke-PsFzfGitFiles() {
     if (-not (IsInGitRepo)) {
         return
@@ -143,11 +151,8 @@ function Invoke-PsFzfGitFiles() {
         foreach-object {
         $result += $_.Substring('?? '.Length)
     }
-    InvokePromptHack
-    if ($result.Length -gt 0) {
-        $result = $result -join " "
-        [Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
-    }
+
+    $result
 }
 function Invoke-PsFzfGitHashes() {
     if (-not (IsInGitRepo)) {
@@ -172,11 +177,7 @@ function Invoke-PsFzfGitHashes() {
         }
     }
 
-    InvokePromptHack
-    if ($result.Length -gt 0) {
-        $result = $result -join " "
-        [Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
-    }
+    $result
 }
 
 function Invoke-PsFzfGitBranches() {
@@ -202,11 +203,7 @@ function Invoke-PsFzfGitBranches() {
         $result += $($_.Substring('* '.Length) -split ' ')[0]
     }
 
-    InvokePromptHack
-    if ($result.Length -gt 0) {
-        $result = $result -join " "
-        [Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
-    }
+    $result
 }
 
 function Invoke-PsFzfGitTags() {
@@ -229,11 +226,7 @@ function Invoke-PsFzfGitTags() {
         $result += $_
     }
 
-    InvokePromptHack
-    if ($result.Length -gt 0) {
-        $result = $result -join " "
-        [Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
-    }
+    $result
 }
 
 function Invoke-PsFzfGitStashes() {
@@ -258,9 +251,5 @@ function Invoke-PsFzfGitStashes() {
         $result += $_.Split(':')[0]
     }
 
-    InvokePromptHack
-    if ($result.Length -gt 0) {
-        $result = $result -join " "
-        [Microsoft.PowerShell.PSConsoleReadLine]::Insert("""$result""")
-    }
+    $result
 }
