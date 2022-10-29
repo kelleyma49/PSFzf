@@ -123,7 +123,9 @@ function Invoke-FuzzyEdit() {
             # Not sure if being passed relative or absolute path
             $cmd = Get-EditorLaunch -FileList $files
             Write-Host "Executing '$cmd'..."
-            Invoke-Expression -Command $cmd
+			($Editor,$Arguments) = $cmd.Split(' ')
+			Start-Process $Editor -ArgumentList $Arguments -Wait -NoNewWindow
+            # Invoke-Expression -Command $cmd
         }
         catch {
         }
