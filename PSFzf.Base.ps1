@@ -752,6 +752,9 @@ function Invoke-FzfPsReadlineHandlerProvider {
 		if ($rightCursor -eq 0 -and $leftCursor -eq 0) {
 			[Microsoft.PowerShell.PSConsoleReadLine]::Insert($str)
 		} else {
+			if($resolvedPath) {
+				$str = join-path $resolvedPath $str
+			}
 			[Microsoft.PowerShell.PSConsoleReadLine]::Replace($leftCursor,$replaceLen+1,$str)
 		}
 	}
