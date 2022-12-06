@@ -295,6 +295,11 @@ function Invoke-FuzzyScoop() {
 
     $result = $null
     $scoopexists = Get-Command scoop -ErrorAction Ignore
+	if (-not $scoopexists.Path) {
+		Write-Host "yes"
+		$scoopexists = Get-Command scoop.cmd -ErrorAction Ignore
+	}
+
     if ($scoopexists) {
         $apps = New-Object System.Collections.ArrayList
         Get-ChildItem "$(Split-Path $scoopexists.Path)\..\buckets" | ForEach-Object {
