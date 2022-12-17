@@ -88,7 +88,8 @@ function Get-EditorLaunch() {
     }
 }
 function Invoke-FuzzyEdit() {
-    param($Directory = ".", [switch]$Wait)
+    param($Directory = ".", [switch]$Wait=[System.Boolean]$ENV:PSFZF_EDITOR_WAIT)
+
 
     $files = @()
     try {
