@@ -192,11 +192,14 @@ function Invoke-PsFzfGitBranches() {
 
     $fzfArguments = Get-GitFzfArguments
     $fzfArguments['PreviewWindow'] = 'down,border-top,40%'
-    $fzfArguments['Bind'] += 'ctrl-/:change-preview-window(down,70%|hidden|)'
+    $gitBranchesHelperPath = Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches.sh'
+    $ShortcutBranchesAll = "ctrl-a:change-prompt(🌳 All branches> )+reload(" + """${script:bashPath}"" '${gitBranchesHelperPath}' all-branches)"
+    $fzfArguments['Bind'] += 'ctrl-/:change-preview-window(down,70%|hidden|)', $ShortcutBranchesAll
+
     $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + "\"" {}"
     $result = @()
     # use pwsh to prevent bash from trying to write to host output:
-    $branches = & $script:pwshExec -NoProfile -NonInteractive -Command "&  ${script:bashPath} '$(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches.sh')' branches"
+    $branches = & $script:pwshExec -NoProfile -NonInteractive -Command "&  ${script:bashPath} '$gitBranchesHelperPath' branches"
     $branches |
     Invoke-Fzf @fzfArguments -Preview "$previewCmd" -Prompt '🌲 Branches> ' -HeaderLines 2 -Tiebreak begin -ReverseInput | `
         ForEach-Object {
