@@ -31,16 +31,16 @@ function SetupGitPaths() {
     if (-not $script:foundGit) {
         if ($IsLinux -or $IsMacOS) {
             # TODO: not tested on Mac
-            $script:foundGit = $null -ne $(Get-Command git -ErrorAction SilentlyContinue)
+            $script:foundGit = $null -ne $(Get-Command git -ErrorAction Ignore)
             $script:bashPath = 'bash'
             $script:grepPath = 'grep'
         }
         else {
-            $gitInfo = Get-Command git.exe -ErrorAction SilentlyContinue
+            $gitInfo = Get-Command git.exe -ErrorAction Ignore
             $script:foundGit = $null -ne $gitInfo
             if ($script:foundGit) {
                 # Detect if scoop is installed
-                $script:scoopInfo = Get-Command scoop -ErrorAction SilentlyContinue
+                $script:scoopInfo = Get-Command scoop -ErrorAction Ignore
                 if ($null -ne $script:scoopInfo) {
                     # Detect if git is installed using scoop (using shims)
                     if ((Split-Path $gitInfo.Source -Parent) -eq (Split-Path $script:scoopInfo.Source -Parent)) {
@@ -67,7 +67,7 @@ function SetGitKeyBindings($enable) {
             return
         }
 
-        if (Get-Command Set-PSReadLineKeyHandler -ErrorAction SilentlyContinue) {
+        if (Get-Command Set-PSReadLineKeyHandler -ErrorAction Ignore) {
             @('ctrl+g,ctrl+f', 'Select Git files via fzf', { Update-CmdLine $(Invoke-PsFzfGitFiles) }), `
             @('ctrl+g,ctrl+h', 'Select Git hashes via fzf', { Update-CmdLine $(Invoke-PsFzfGitHashes) }), `
             @('ctrl+g,ctrl+b', 'Select Git branches via fzf', { Update-CmdLine $(Invoke-PsFzfGitBranches) }), `

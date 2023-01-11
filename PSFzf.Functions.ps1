@@ -160,7 +160,7 @@ function Invoke-FuzzyFasd() {
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyHistory() {
-    if (Get-Command Get-PSReadLineOption -ErrorAction SilentlyContinue) {
+    if (Get-Command Get-PSReadLineOption -ErrorAction Ignore) {
         $result = Get-Content (Get-PSReadLineOption).HistorySavePath | Invoke-Fzf -Reverse -NoSort
     }
     else {
