@@ -33,7 +33,7 @@ if (Test-Path $path -PathType Container) {
 # is file?
 elseif (Test-Path $path -PathType leaf) {
     # use bat (https://github.com/sharkdp/bat) if it's available:
-    if ($ansiCompatible -and $(Get-Command bat -ErrorAction SilentlyContinue)) {
+    if ($ansiCompatible -and $(Get-Command bat -ErrorAction Ignore)) {
         bat "--style=numbers,changes" --color always $path
     }
     else {
@@ -41,7 +41,7 @@ elseif (Test-Path $path -PathType leaf) {
     }
 }
 # PowerShell command?
-elseif (($cmdResults = Get-Command $Item -ErrorAction SilentlyContinue)) {
+elseif (($cmdResults = Get-Command $Item -ErrorAction Ignore)) {
     if ($cmdResults) {
         if ($cmdResults.CommandType -ne 'Application') {
             Get-Help $Item

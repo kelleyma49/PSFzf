@@ -908,7 +908,7 @@ function FindFzf()
     $script:FzfLocation = $null
     $AppNames | ForEach-Object {
         if ($null -eq $script:FzfLocation) {
-            $result = Get-Command $_ -ErrorAction SilentlyContinue
+            $result = Get-Command $_ -ErrorAction Ignore
             $result | ForEach-Object {
                 $script:FzfLocation = Resolve-Path $_.Source
             }
