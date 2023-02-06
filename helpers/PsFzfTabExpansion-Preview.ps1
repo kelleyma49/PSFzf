@@ -17,18 +17,21 @@ else {
 }
 # is directory?
 if (Test-Path $path -PathType Container) {
-
-    # don't output anything if not a git repo
-    Push-Location $path
-    if ($ansiCompatible) {
-        git log --color=always -1 2> $null
+    # if .git folder, try to show the output of 'git log'
+    if ((Get-Item $path).Name -eq '.git') {
+        if ((Get-Command git -ErrorAction Ignore)) {
+            Push-Location $path/..
+            if ($ansiCompatible) {
+                git log --color=always -1 2> $null
+            }
+            else {
+                git log -1 2> $null
+            }
+            Pop-Location
+        }
+    } else {
+        Get-ChildItem $path
     }
-    else {
-        git log -1 2> $null
-    }
-    Pop-Location
-
-    Get-ChildItem $path
 }
 # is file?
 elseif (Test-Path $path -PathType leaf) {
