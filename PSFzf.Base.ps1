@@ -656,7 +656,7 @@ function Invoke-FzfDefaultSystem {
 		Get-Event -SourceIdentifier $stdOutEventId | `
 			Sort-Object -Property TimeGenerated | `
 			Where-Object { $null -ne $_.SourceEventArgs.Data } | ForEach-Object {
-				$result += $_.SourceEventArgs.Data
+				$result += [System.IO.Path]::Join($ProviderPath, $_.SourceEventArgs.Data)
 				Remove-Event -EventIdentifier $_.EventIdentifier
 			}
 		Remove-Event -SourceIdentifier $stdOutEventId
