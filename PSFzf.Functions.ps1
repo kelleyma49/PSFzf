@@ -170,17 +170,19 @@ function Invoke-FuzzyFasd() {
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyHistory() {
     if (Get-Command Get-PSReadLineOption -ErrorAction Ignore) {
-        $result = Get-Content (Get-PSReadLineOption).HistorySavePath | Invoke-Fzf -Reverse -Scheme history
+        $history = Get-Content (Get-PSReadLineOption).HistorySavePath
     }
     else {
-        $result = Get-History | ForEach-Object { $_.CommandLine } | Invoke-Fzf -Reverse -Scheme history
+        $history = Get-History | ForEach-Object { $_.CommandLine }
     }
+
+    $result = $history | Sort-Object -Unique | Invoke-Fzf -Reverse -NoSort -Scheme history
+
     if ($null -ne $result) {
         Write-Output "Invoking '$result'`n"
         Invoke-Expression "$result" -Verbose
     }
 }
-
 
 # needs to match helpers/GetProcessesList.ps1
 function GetProcessesList() {
