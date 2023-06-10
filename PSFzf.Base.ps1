@@ -885,6 +885,9 @@ function SetPsReadlineShortcut($Chord,[switch]$Override,$BriefDesc,$Desc,[script
 		return $false
 	} else {
 		Set-PSReadlineKeyHandler -Key $Chord -Description $Desc -BriefDescription $BriefDesc -ScriptBlock $scriptBlock
+		if ($(Get-PSReadLineOption).EditMode -eq [Microsoft.PowerShell.EditMode]::Vi) {
+			Set-PSReadlineKeyHandler -Key $Chord -ViMode Command -Description $Desc -BriefDescription $BriefDesc -ScriptBlock $scriptBlock
+		}
 		return $true
 	}
 }
