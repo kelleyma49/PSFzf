@@ -146,7 +146,7 @@ function Invoke-PsFzfGitFiles() {
     $fzfArguments['Bind'] += $headerStrings[1], $gitStageBind, $gitResetBind
     Invoke-Expression "& $statusCmd" | `
         Invoke-Fzf @fzfArguments `
-        -Prompt '📁 Files> ' `
+        -BorderLabel '📁 Files' `
         -Preview "$previewCmd" -Header $headerStr | `
         foreach-object {
         $result += $_.Substring('?? '.Length)
@@ -170,7 +170,7 @@ function Invoke-PsFzfGitHashes() {
     $fzfArguments = Get-GitFzfArguments
     & git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" $(Get-ColorAlways).Trim() --graph | `
         Invoke-Fzf @fzfArguments -NoSort  `
-        -Prompt '🍡 Hashes> ' `
+        -BorderLabel '🍡 Hashes' `
         -Preview "$previewCmd" | ForEach-Object {
         if ($_ -match '\d\d-\d\d-\d\d\s+([a-f0-9]+)\s+') {
             $result += $Matches.1
@@ -201,7 +201,7 @@ function Invoke-PsFzfGitBranches() {
     # use pwsh to prevent bash from trying to write to host output:
     $branches = & $script:pwshExec -NoProfile -NonInteractive -Command "&  ${script:bashPath} '$gitBranchesHelperPath' branches"
     $branches |
-    Invoke-Fzf @fzfArguments -Preview "$previewCmd" -Prompt '🌲 Branches> ' -HeaderLines 2 -Tiebreak begin -ReverseInput | `
+    Invoke-Fzf @fzfArguments -Preview "$previewCmd" -BorderLabel '🌲 Branches' -HeaderLines 2 -Tiebreak begin -ReverseInput | `
         ForEach-Object {
         $result += $($_.Substring('* '.Length) -split ' ')[0]
     }
@@ -224,7 +224,7 @@ function Invoke-PsFzfGitTags() {
     $previewCmd = "git show --color=always {}"
     $result = @()
     git tag --sort -version:refname |
-    Invoke-Fzf @fzfArguments -Preview "$previewCmd" -Prompt '📛 Tags> ' | `
+    Invoke-Fzf @fzfArguments -Preview "$previewCmd" -BorderLabel '📛 Tags' | `
         ForEach-Object {
         $result += $_
     }
@@ -249,7 +249,7 @@ function Invoke-PsFzfGitStashes() {
 
     $result = @()
     git stash list --color=always |
-    Invoke-Fzf @fzfArguments -Header $header -Delimiter ':' -Preview "$previewCmd" -Prompt '🥡 Stashes> ' | `
+    Invoke-Fzf @fzfArguments -Header $header -Delimiter ':' -Preview "$previewCmd" -BorderLabel '🥡 Stashes' | `
         ForEach-Object {
         $result += $_.Split(':')[0]
     }
