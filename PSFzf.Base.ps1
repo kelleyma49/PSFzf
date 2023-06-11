@@ -293,8 +293,9 @@ function Invoke-Fzf {
 			[ValidateSet('default','reverse','reverse-list')]
 			[string]$Layout = $null,
 			[switch]$Border,
-			[ValidateSet('rounded','sharp','horizontal')]
+			[ValidateSet('rounded', 'sharp', 'bold', 'block', 'double', 'horizontal', 'vertical', 'top', 'bottom', 'left', 'right', 'none')]
 			[string]$BorderStyle,
+			[string]$BorderLabel,
 			[ValidateSet('default','inline','hidden')]
 			[string]$Info = $null,
 			[string]$Prompt,
@@ -357,6 +358,7 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('MinHeight') -and $MinHeight -ge 0)									{ $arguments += "--min-height=$MinHeight "}
 		if ($PSBoundParameters.ContainsKey('Layout') -and ![string]::IsNullOrWhiteSpace($Layout))				{ $arguments += "--layout=$Layout "}
 		if ($PSBoundParameters.ContainsKey('Border') -and $Border)												{ $arguments += '--border '}
+		if ($PSBoundParameters.ContainsKey('BorderLabel') -and ![string]::IsNullOrWhiteSpace($BorderLabel))		{ $arguments += "--border-label=""$BorderLabel"" "}
 		if ($PSBoundParameters.ContainsKey('BorderStyle') -and ![string]::IsNullOrWhiteSpace($BorderStyle))		{ $arguments += "--border=$BorderStyle "}
 		if ($PSBoundParameters.ContainsKey('Info') -and ![string]::IsNullOrWhiteSpace($Info)) 					{ $arguments += "--info=$Info "}
 		if ($PSBoundParameters.ContainsKey('Prompt') -and ![string]::IsNullOrWhiteSpace($Prompt)) 				{ $arguments += "--prompt=""$Prompt"" "}
