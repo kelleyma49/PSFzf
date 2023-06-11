@@ -265,6 +265,9 @@ function Invoke-Fzf {
 			[Alias('i')]
 		  	[switch]$CaseInsensitive,
 		  	[switch]$CaseSensitive,
+			[ValidateSet('default','path','history')]
+		  	[string]
+		  	$Scheme = $null,
 		  	[Alias('d')]
 		  	[string]$Delimiter,
 		  	[switch]$NoSort,
@@ -341,6 +344,7 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('Exact') -and $Exact) 			        							{ $arguments += '--exact '}
 		if ($PSBoundParameters.ContainsKey('CaseInsensitive') -and $CaseInsensitive) 							{ $arguments += '-i '}
 		if ($PSBoundParameters.ContainsKey('CaseSensitive') -and $CaseSensitive) 								{ $arguments += '+i '}
+		if ($PSBoundParameters.ContainsKey('Scheme') -and ![string]::IsNullOrWhiteSpace($Scheme)) 				{ $arguments += "--scheme=$Scheme "}
 		if ($PSBoundParameters.ContainsKey('Delimiter') -and ![string]::IsNullOrWhiteSpace($Delimiter)) 		{ $arguments += "--delimiter=$Delimiter "}
 		if ($PSBoundParameters.ContainsKey('NoSort') -and $NoSort) 												{ $arguments += '--no-sort '}
 		if ($PSBoundParameters.ContainsKey('ReverseInput') -and $ReverseInput) 									{ $arguments += '--tac '}
@@ -776,7 +780,7 @@ function Invoke-FzfPsReadlineHandlerHistory {
 				$fileHist.Add($_,$true)
 				$_
 			}
-		} | Invoke-Fzf -Query "$line" -Bind ctrl-r:toggle-sort | ForEach-Object { $result = $_ }
+		} | Invoke-Fzf -Query "$line" -NoSort -Bind ctrl-r:toggle-sort -Scheme history | ForEach-Object { $result = $_ }
 	}
 	catch
 	{
