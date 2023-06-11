@@ -18,17 +18,19 @@ else {
 # is directory?
 if (Test-Path $path -PathType Container) {
 
-    # don't output anything if not a git repo
-    Push-Location $path
-    if ($ansiCompatible) {
-        git log --color=always -1 2> $null
-    }
-    else {
-        git log -1 2> $null
-    }
-    Pop-Location
-
     Get-ChildItem $path
+
+    if (Get-Command git -ErrorAction Ignore) {
+        Write-Output "" # extra separator before git status
+        Push-Location $path
+        if ($ansiCompatible -and $(Get-Command bat -ErrorAction Ignore)) {
+            git log -1 2> $null | bat "--style=changes" --color always
+        }
+        else {
+            git log -1 2> $null
+        }
+        Pop-Location
+    }
 }
 # is file?
 elseif (Test-Path $path -PathType leaf) {
