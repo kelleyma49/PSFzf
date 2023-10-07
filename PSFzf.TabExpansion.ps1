@@ -81,7 +81,13 @@ function SetTabExpansion($enable) {
 
             RegisterBuiltinCompleters
 
-            Register-ArgumentCompleter -CommandName git, tgit, gitk -Native -ScriptBlock {
+            # borrowed from https://github.com/dahlbyk/posh-git/blob/70e44dc0c2cdaf10c0cc8eb9ef5a9ca65ab63dcf/src/GitTabExpansion.ps1#L544C58-L544C58
+            $cmdNames = "git", "tgit", "gitk"
+            # Create regex pattern from $cmdNames: ^(git|git\.exe|tgit|tgit\.exe|gitk|gitk\.exe)$
+            $cmdNamesPattern = "^($($cmdNames -join '|'))(\.exe)?$"
+            $cmdNames += Get-Alias | Where-Object { $_.Definition -match $cmdNamesPattern } | Foreach-Object Name
+
+            Register-ArgumentCompleter -CommandName $cmdNames -Native -ScriptBlock {
                 param($wordToComplete, $commandAst, $cursorPosition)
 
                 # The PowerShell completion has a habit of stripping the trailing space when completing:
