@@ -229,12 +229,7 @@ function Invoke-FuzzySetLocation() {
     if ($null -eq $Directory) { $Directory = $PWD.ProviderPath }
     $result = $null
     try {
-        if ([string]::IsNullOrWhiteSpace($env:FZF_DEFAULT_COMMAND)) {
-            Get-ChildItem $Directory -Recurse -ErrorAction Ignore | Where-Object { $_.PSIsContainer } | Invoke-Fzf | ForEach-Object { $result = $_ }
-        }
-        else {
-            Invoke-Fzf | ForEach-Object { $result = $_ }
-        }
+        Get-ChildItem $Directory -Recurse -ErrorAction Ignore | Where-Object { $_.PSIsContainer } | Invoke-Fzf | ForEach-Object { $result = $_ }
     }
     catch {
 
