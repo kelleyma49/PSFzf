@@ -693,18 +693,20 @@ function Invoke-FzfPsReadlineHandlerProvider {
 	if ([String]::IsNullOrWhitespace($currentPath) -or !(Test-Path $currentPath)) {
 		$currentPath = $PWD
 	}
+	$isUsingPath = -not [string]::IsNullOrWhiteSpace($currentPath)
 
-    $result = @()
-    try
-    {
+	$result = @()
+	try {
 		$script:OverrideFzfDefaults = [FzfDefaultOpts]::new($env:FZF_CTRL_T_OPTS)
 
 		if (-not [System.String]::IsNullOrWhiteSpace($env:FZF_CTRL_T_COMMAND)) {
 			Invoke-Expression ($env:FZF_CTRL_T_COMMAND) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
-		} else {
-			if ([string]::IsNullOrWhiteSpace($currentPath)) {
+		}
+		else {
+			if (-not $isUsingPath) {
 				Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
-			} else {
+			}
+			else {
 				$resolvedPath = Resolve-Path $currentPath -ErrorAction SilentlyContinue
 				$providerName = $null
 				if ($null -ne $resolvedPath) {
@@ -712,26 +714,25 @@ function Invoke-FzfPsReadlineHandlerProvider {
 				}
 				switch ($providerName) {
 					# Get-ChildItem is way too slow - we optimize using our own function for calling fzf directly (Invoke-FzfDefaultSystem):
-					'FileSystem'    {
+					'FileSystem' {
 						if (-not $script:UseFd) {
 							$result = Invoke-FzfDefaultSystem $resolvedPath.ProviderPath '--multi'
-						} else {
+						}
+						else {
 							Invoke-Expression (Get-FileSystemCmd $resolvedPath.ProviderPath) | Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
 						}
 					}
-					'Registry'      { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object Name -ExpandProperty Name | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
-					$null           { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object FullName -ExpandProperty FullName | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
-					Default         {}
+					'Registry' { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object Name -ExpandProperty Name | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
+					$null { Get-ChildItem $currentPath -Recurse -ErrorAction SilentlyContinue | Select-Object FullName -ExpandProperty FullName | Invoke-Fzf -Multi | ForEach-Object { $result += $_ } }
+					Default {}
 				}
 			}
 		}
-    }
-    catch
-    {
-        # catch custom exception
 	}
-	finally
-	{
+	catch {
+		# catch custom exception
+	}
+	finally {
 		if ($script:OverrideFzfDefaults) {
 			$script:OverrideFzfDefaults.Restore()
 			$script:OverrideFzfDefaults = $null
@@ -743,10 +744,20 @@ function Invoke-FzfPsReadlineHandlerProvider {
 	if ($null -ne $result) {
 		# quote strings if we need to:
 		if ($result -is [system.array]) {
-			for ($i = 0;$i -lt $result.Length;$i++) {
-				$result[$i] = FixCompletionResult $result[$i]
+			for ($i = 0; $i -lt $result.Length; $i++) {
+				if ($isUsingPath) {
+					$resultFull = Join-Path $currentPath $result[$i]
+				}
+				else {
+					$resultFull = $result[$i]
+				}
+				$result[$i] = FixCompletionResult $resultFull
 			}
-		} else {
+		}
+		else {
+			if ($isUsingPath) {
+				$result = Join-Path $currentPath $result
+			}
 			$result = FixCompletionResult $result
 		}
 
