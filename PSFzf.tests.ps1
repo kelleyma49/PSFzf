@@ -86,26 +86,15 @@ Describe "Find-CurrentPath" {
 				$rightCursor | Should -Be ($line.Length - 1)
 			}
 
-			It "Should Return Path With Quotes Cursor at Beginning" {
-				'"', "'" | ForEach-Object {
-					$quote = $_
-					$line = $quote + 'C:\Program Files\' + $quote ; $cursor = 0
-					$leftCursor = $rightCursor = $null
-					Find-CurrentPath $line $cursor ([ref]$leftCursor) ([ref]$rightCursor) | Should -Be 'C:\Program Files\'
-					$leftCursor | Should -Be 0
-					$rightCursor | Should -Be ($line.Length - 1)
-				}
-			}
-
-			It "Should Return Path With Quotes Cursor at End" {
-				'"', "'" | ForEach-Object {
-					$quote = $_
-					$line = $quote + 'C:\Program Files\' + $quote ; $cursor = 0
-					$leftCursor = $rightCursor = $null
-					Find-CurrentPath $line $cursor ([ref]$leftCursor) ([ref]$rightCursor) | Should -Be 'C:\Program Files\'
-					$leftCursor | Should -Be 0
-					$rightCursor | Should -Be ($line.Length - 1)
-				}
+			It "Should Return Path With Quotes Cursor at Beginning" -ForEach @(
+				@{ Quote = '"' }
+				@{ Quote = "'" }
+			) {
+				$line = $quote + 'C:\Program Files\' + $quote ; $cursor = 0
+				$leftCursor = $rightCursor = $null
+				Find-CurrentPath $line $cursor ([ref]$leftCursor) ([ref]$rightCursor) | Should -Be 'C:\Program Files\'
+				$leftCursor | Should -Be 0
+				$rightCursor | Should -Be ($line.Length - 1)
 			}
 		}
 	}
