@@ -39,6 +39,15 @@ $script:AltCCommand = [ScriptBlock]{
 function Get-FileSystemCmd {
 	param($dir, [switch]$dirOnly = $false)
 
+	$dirPPath = (Resolve-Path $dir).ProviderPath
+	$IsUnc = ([uri]$dirPPath).IsUnc
+	# For UNC paths, cmd requires a pushd to create the virtual directory.
+	# Initial Push-Location in case $pwd is a UNC path to avoid warning message.
+	# Second "pushd" is inside the cmd.exe shell.
+	$poshPrefixUnc = 'try { Push-Location $HOME;' 
+	$poshPostfixUnc = '} catch { } finally { Pop-Location }'
+	$DefaultFileSystemCmdUncPrefix = 'pushd "{0}" `&`&'	
+	
 	# Note that there is no way to know how to list only directories using
 	# FZF_DEFAULT_COMMAND, so we never use it in that case.
 	if ($dirOnly -or [string]::IsNullOrWhiteSpace($env:FZF_DEFAULT_COMMAND)) {
@@ -53,10 +62,16 @@ function Get-FileSystemCmd {
 			if ($dirOnly) {
 				$cmd = $script:DefaultFileSystemCmdDirOnly
 			}
-			$script:ShellCmd -f ($cmd -f $dir)
+			$cmdUnc = "$DefaultFileSystemCmdUncPrefix $cmd"
+			if ($IsUnc) { "$poshPrefixUnc $($script:ShellCmd -f ($cmdUnc -f $dirPPath)) $poshPostfixUnc" }
+			else { $script:ShellCmd -f ($cmd -f $dir) }
 		}
 	} else {
-		$script:ShellCmd -f ($env:FZF_DEFAULT_COMMAND -f $dir)
+		if ($IsUnc) { 
+			$fzfDefUncCmd = "$DefaultFileSystemCmdUncPrefix $env:FZF_DEFAULT_COMMAND"
+			"$poshPrefixUnc $($script:ShellCmd -f ( $fzfDefUncCmd -f $dirPPath)) $poshPostfixUnc" 			
+		}
+		else { $script:ShellCmd -f ($env:FZF_DEFAULT_COMMAND -f $dir) }
 	}
 }
 

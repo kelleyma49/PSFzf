@@ -56,34 +56,34 @@ function Get-EditorLaunch() {
     if ($editor -eq 'code') {
         if ($FileList -is [array] -and $FileList.length -gt 1) {
             for ($i = 0; $i -lt $FileList.Count; $i++) {
-                $FileList[$i] = '"{0}"' -f $(Resolve-Path $FileList[$i].Trim('"'))
+                $FileList[$i] = '"{0}"' -f $((Resolve-Path $FileList[$i].Trim('"')).ProviderPath)
             }
             "$editor$editorOptions {0}" -f ($FileList -join ' ')
         }
         else {
-            "$editor$editorOptions --goto ""{0}:{1}""" -f $(Resolve-Path $FileList.Trim('"')), $LineNum
+            "$editor$editorOptions --goto ""{0}:{1}""" -f $((Resolve-Path $FileList.Trim('"')).ProviderPath), $LineNum
         }
     }
     elseif ($editor -match '[gn]?vi[m]?') {
         if ($FileList -is [array] -and $FileList.length -gt 1) {
             for ($i = 0; $i -lt $FileList.Count; $i++) {
-                $FileList[$i] = '"{0}"' -f $(Resolve-Path $FileList[$i].Trim('"'))
+                $FileList[$i] = '"{0}"' -f $((Resolve-Path $FileList[$i].Trim('"')).ProviderPath)
             }
             "$editor$editorOptions {0}" -f ($FileList -join ' ')
         }
         else {
-            "$editor$editorOptions ""{0}"" +{1}" -f $(Resolve-Path $FileList.Trim('"')), $LineNum
+            "$editor$editorOptions ""{0}"" +{1}" -f $((Resolve-Path $FileList.Trim('"')).ProviderPath), $LineNum
         }
     }
     elseif ($editor -eq 'nano') {
         if ($FileList -is [array] -and $FileList.length -gt 1) {
             for ($i = 0; $i -lt $FileList.Count; $i++) {
-                $FileList[$i] = '"{0}"' -f $(Resolve-Path $FileList[$i].Trim('"'))
+                $FileList[$i] = '"{0}"' -f $((Resolve-Path $FileList[$i].Trim('"')).ProviderPath)
             }
             "$editor$editorOptions {0}" -f ($FileList -join ' ')
         }
         else {
-            "$editor$editorOptions  +{1} {0}" -f $(Resolve-Path $FileList.Trim('"')), $LineNum
+            "$editor$editorOptions  +{1} {0}" -f $((Resolve-Path $FileList.Trim('"')).ProviderPath), $LineNum
         }
     }
 }
@@ -124,6 +124,10 @@ function Invoke-FuzzyEdit() {
             $cmd = Get-EditorLaunch -FileList $files
             Write-Host "Executing '$cmd'..."
             ($Editor, $Arguments) = $cmd.Split(' ')
+            # Avoids code.cmd "error" message by not calling cmd.exe from a UNC $PWD
+            if( ([uri]$PWD.ProviderPath).IsUnc ) {             
+                cd $HOME
+            }
             Start-Process $Editor -ArgumentList $Arguments -Wait:$Wait -NoNewWindow
         }
         catch {
