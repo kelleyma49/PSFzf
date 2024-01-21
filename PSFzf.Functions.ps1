@@ -83,7 +83,7 @@ function Get-EditorLaunch() {
             "$editor$editorOptions {0}" -f ($FileList -join ' ')
         }
         else {
-            "$editor$editorOptions  +{1} {0}" -f $(Resolve-Path $FileList.Trim('"')), $LineNum
+            "$editor$editorOptions  +{1} ""{0}""" -f $(Resolve-Path $FileList.Trim('"')), $LineNum
         }
     }
 }
