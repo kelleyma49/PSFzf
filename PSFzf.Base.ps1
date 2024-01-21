@@ -791,7 +791,7 @@ function Invoke-FzfPsReadlineHandlerHistory {
 				$fileHist.Add($_,$true)
 				$_
 			}
-		} | Invoke-Fzf -Query "$line" -NoSort -Bind ctrl-r:toggle-sort -Scheme history | ForEach-Object { $result = $_ }
+		} | Invoke-Fzf -Query "$line" -Bind ctrl-r:toggle-sort, ctrl-z:ignore -Scheme history | ForEach-Object { $result = $_ }
 	}
 	catch
 	{
@@ -836,7 +836,7 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 		} | Where-Object {$_.type -eq "commandargument" -or $_.type -eq "string"} |
 				ForEach-Object {
 					if (!$contentTable.ContainsKey($_.Content)) { $_.Content ; $contentTable[$_.Content] = $true }
-				} | Invoke-Fzf -NoSort -Multi | ForEach-Object { $result += $_ }
+				} | Invoke-Fzf -Multi | ForEach-Object { $result += $_ }
 	}
 	catch
 	{
