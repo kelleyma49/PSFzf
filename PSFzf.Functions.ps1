@@ -86,6 +86,15 @@ function Get-EditorLaunch() {
             "$editor$editorOptions  +{1} ""{0}""" -f $(Resolve-Path $FileList.Trim('"')), $LineNum
         }
     }
+    else {
+        # select the first file as we don't know if the editor supports opening multiple files from the cmd line
+        if ($FileList -is [array] -and $FileList.length -gt 1) {
+            "$editor$editorOptions ""{0}""" -f $(Resolve-Path $FileList[0].Trim('"'))
+        }
+        else {
+            "$editor$editorOptions ""{0}""" -f $(Resolve-Path $FileList.Trim('"'))
+        }
+    }
 }
 function Invoke-FuzzyEdit() {
     param($Directory = ".", [switch]$Wait)
