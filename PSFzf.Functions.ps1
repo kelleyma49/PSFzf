@@ -53,7 +53,7 @@ function Get-EditorLaunch() {
         }
     }
 
-    if ($editor -eq 'code') {
+    if ($editor -eq 'code' -or $editor -eq 'code-insiders' -or $editor -eq 'codium') {
         if ($FileList -is [array] -and $FileList.length -gt 1) {
             for ($i = 0; $i -lt $FileList.Count; $i++) {
                 $FileList[$i] = '"{0}"' -f $(Resolve-Path $FileList[$i].Trim('"'))
