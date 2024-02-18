@@ -60,6 +60,7 @@ function SetupGitPaths() {
     }
     return $script:foundGit
 }
+
 function SetGitKeyBindings($enable) {
     if ($enable) {
         if (-not $(SetupGitPaths)) {
@@ -68,11 +69,12 @@ function SetGitKeyBindings($enable) {
         }
 
         if (Get-Command Set-PSReadLineKeyHandler -ErrorAction Ignore) {
+            @('ctrl+g,ctrl+b', 'Select Git branches via fzf', { Update-CmdLine $(Invoke-PsFzfGitBranches) }), `
             @('ctrl+g,ctrl+f', 'Select Git files via fzf', { Update-CmdLine $(Invoke-PsFzfGitFiles) }), `
             @('ctrl+g,ctrl+h', 'Select Git hashes via fzf', { Update-CmdLine $(Invoke-PsFzfGitHashes) }), `
-            @('ctrl+g,ctrl+b', 'Select Git branches via fzf', { Update-CmdLine $(Invoke-PsFzfGitBranches) }), `
-            @('ctrl+g,ctrl+t', 'Select Git tags via fzf', { Update-CmdLine $(Invoke-PsFzfGitTags) }), `
-            @('ctrl+g,ctrl+s', 'Select Git stashes via fzf', { Update-CmdLine $(Invoke-PsFzfGitStashes) }) `
+            @('ctrl+g,ctrl+p', 'Select Git pull requests via fzf', { Update-CmdLine $(Invoke-PsFzfGitPulLRequests) }), `
+            @('ctrl+g,ctrl+s', 'Select Git stashes via fzf', { Update-CmdLine $(Invoke-PsFzfGitStashes) }), `
+            @('ctrl+g,ctrl+t', 'Select Git tags via fzf', { Update-CmdLine $(Invoke-PsFzfGitTags) }) `
             | ForEach-Object {
                 $script:GitKeyHandlers += $_[0]
                 Set-PSReadLineKeyHandler -Chord $_[0] -Description $_[1] -ScriptBlock $_[2]
@@ -252,6 +254,69 @@ function Invoke-PsFzfGitStashes() {
     Invoke-Fzf @fzfArguments -Header $header -Delimiter ':' -Preview "$previewCmd" -BorderLabel '🥡 Stashes' | `
         ForEach-Object {
         $result += $_.Split(':')[0]
+    }
+
+    $result
+}
+
+function Invoke-PsFzfGitPullRequests() {
+    if (-not (IsInGitRepo)) {
+        return
+    }
+
+    if (-not $(SetupGitPaths)) {
+        Write-Error "git executable could not be found"
+        return
+    }
+    # find the repo remote URL
+    $remoteUrl = git config --get remote.origin.url
+
+    # use gh, if available:
+    if ($remoteUrl -match 'github.com') {
+        $script:ghCmdInfo = Get-Command gh -ErrorAction Ignore
+        if ($null -ne $script:ghCmdInfo) {
+            $listAllPrsCmdJson = Invoke-Expression "gh pr list --json id,author,title,number"
+            $objs = $listAllPrsCmdJson | ConvertFrom-Json | ForEach-Object {
+                [PSCustomObject]@{
+                    PR      = "$($PSStyle.Foreground.Green)" + $_.number
+                    Title   = "$($PSStyle.Foreground.Magenta)" + $_.title
+                    Creator = "$($PSStyle.Foreground.Yellow)" + $_.author.login
+                }
+            }
+        }
+        else {
+            Write-Error "gh command not found"
+            return
+        }
+    }
+    # TODO: add support for Azure DevOps
+    #else if ($remoteUrl -match 'dev.azure.com') {
+    #    az repos pr list --status "active" --query "[].{Title: title, Id: pullRequestId, Creator: creator}"
+    #}
+
+
+    $fzfArguments = Get-GitFzfArguments
+    $fzfArguments['Bind'] += 'ctrl-o:execute-silent(gh pr view {1} --web)'
+    $header = "CTRL-O (open in browser)`n`n"
+    $previewCmd = 'gh pr view {1} && echo && gh pr diff {1}'
+
+    $prevCLICOLOR_FORCE = $env:CLICOLOR_FORCE
+    $prevOutputRendering = $PSStyle.OutputRendering
+
+    $env:CLICOLOR_FORCE = 1 # make gh show keep colors
+    $PSStyle.OutputRendering = 'Ansi'
+
+    try {
+        $result = @()
+        $objs | out-string -Stream  | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | `
+            Invoke-Fzf @fzfArguments -Header $header -Preview "$previewCmd" -HeaderLines 2 -BorderLabel '🆕 Pull Requests' | `
+            ForEach-Object {
+            $result += $_.Split(' ')[0]
+        }
+    }
+    finally {
+        $env:CLICOLOR_FORCE = $prevCLICOLOR_FORCE
+        $PSStyle.OutputRendering = $prevOutputRendering
     }
 
     $result
