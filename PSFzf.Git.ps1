@@ -271,7 +271,7 @@ function Invoke-PsFzfGitPullRequests() {
     # find the repo remote URL
     $remoteUrl = git config --get remote.origin.url
 
-    # use gh, if available:
+    # GitHub
     if ($remoteUrl -match 'github.com') {
         $script:ghCmdInfo = Get-Command gh -ErrorAction Ignore
         if ($null -ne $script:ghCmdInfo) {
@@ -285,20 +285,36 @@ function Invoke-PsFzfGitPullRequests() {
             }
         }
         else {
-            Write-Error "gh command not found"
+            Write-Error "Repo is a GitHub repo and gh command not found"
             return
         }
+        $webCmd = 'gh pr view {1} --web'
+        $previewCmd = 'gh pr view {1} && gh pr diff {1}'
     }
-    # TODO: add support for Azure DevOps
-    #else if ($remoteUrl -match 'dev.azure.com') {
-    #    az repos pr list --status "active" --query "[].{Title: title, Id: pullRequestId, Creator: creator}"
-    #}
-
+    # Azure DevOps
+    elseif ($remoteUrl -match 'dev.azure.com') {
+        $script:azCmdInfo = Get-Command az -ErrorAction Ignore
+        if ($null -ne $script:azCmdInfo) {
+            $listAllPrsCmdJson = Invoke-Expression 'az repos pr list --status "active" --query "[].{title: title, number: pullRequestId, creator: createdBy.uniqueName}"'
+            $objs = $listAllPrsCmdJson | ConvertFrom-Json | ForEach-Object {
+                [PSCustomObject]@{
+                    PR      = "$($PSStyle.Foreground.Green)" + $_.number
+                    Title   = "$($PSStyle.Foreground.Magenta)" + $_.title
+                    Creator = "$($PSStyle.Foreground.Yellow)" + $_.creator
+                }
+            }
+        }
+        else {
+            Write-Error "Repo is an Azure DevOps repo and az command not found"
+            return
+        }
+        $webCmd = 'az repos pr show --id {1} --open --output none'
+        $previewCmd = 'az repos pr show --id {1} --query "{Created:creationDate, Closed:closedDate, Creator:createdBy.displayName, PR:codeReviewId, Title:title, Repo:repository.name, Reviewers:join('', '',reviewers[].displayName), Source:sourceRefName, Target:targetRefName}" --output yamlc'
+    }
 
     $fzfArguments = Get-GitFzfArguments
-    $fzfArguments['Bind'] += 'ctrl-o:execute-silent(gh pr view {1} --web)'
+    $fzfArguments['Bind'] += 'ctrl-o:execute-silent(' + $webCmd + ')'
     $header = "CTRL-O (open in browser)`n`n"
-    $previewCmd = 'gh pr view {1} && echo && gh pr diff {1}'
 
     $prevCLICOLOR_FORCE = $env:CLICOLOR_FORCE
     $prevOutputRendering = $PSStyle.OutputRendering
