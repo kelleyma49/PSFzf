@@ -60,6 +60,7 @@ function SetupGitPaths() {
     }
     return $script:foundGit
 }
+
 function SetGitKeyBindings($enable) {
     if ($enable) {
         if (-not $(SetupGitPaths)) {
@@ -68,11 +69,12 @@ function SetGitKeyBindings($enable) {
         }
 
         if (Get-Command Set-PSReadLineKeyHandler -ErrorAction Ignore) {
+            @('ctrl+g,ctrl+b', 'Select Git branches via fzf', { Update-CmdLine $(Invoke-PsFzfGitBranches) }), `
             @('ctrl+g,ctrl+f', 'Select Git files via fzf', { Update-CmdLine $(Invoke-PsFzfGitFiles) }), `
             @('ctrl+g,ctrl+h', 'Select Git hashes via fzf', { Update-CmdLine $(Invoke-PsFzfGitHashes) }), `
-            @('ctrl+g,ctrl+b', 'Select Git branches via fzf', { Update-CmdLine $(Invoke-PsFzfGitBranches) }), `
-            @('ctrl+g,ctrl+t', 'Select Git tags via fzf', { Update-CmdLine $(Invoke-PsFzfGitTags) }), `
-            @('ctrl+g,ctrl+s', 'Select Git stashes via fzf', { Update-CmdLine $(Invoke-PsFzfGitStashes) }) `
+            @('ctrl+g,ctrl+p', 'Select Git pull requests via fzf', { Update-CmdLine $(Invoke-PsFzfGitPulLRequests) }), `
+            @('ctrl+g,ctrl+s', 'Select Git stashes via fzf', { Update-CmdLine $(Invoke-PsFzfGitStashes) }), `
+            @('ctrl+g,ctrl+t', 'Select Git tags via fzf', { Update-CmdLine $(Invoke-PsFzfGitTags) }) `
             | ForEach-Object {
                 $script:GitKeyHandlers += $_[0]
                 Set-PSReadLineKeyHandler -Chord $_[0] -Description $_[1] -ScriptBlock $_[2]
@@ -252,6 +254,87 @@ function Invoke-PsFzfGitStashes() {
     Invoke-Fzf @fzfArguments -Header $header -Delimiter ':' -Preview "$previewCmd" -BorderLabel '🥡 Stashes' | `
         ForEach-Object {
         $result += $_.Split(':')[0]
+    }
+
+    $result
+}
+
+function Invoke-PsFzfGitPullRequests() {
+    if (-not (IsInGitRepo)) {
+        return
+    }
+
+    if (-not $(SetupGitPaths)) {
+        Write-Error "git executable could not be found"
+        return
+    }
+    # find the repo remote URL
+    $remoteUrl = git config --get remote.origin.url
+
+    # GitHub
+    if ($remoteUrl -match 'github.com') {
+        $script:ghCmdInfo = Get-Command gh -ErrorAction Ignore
+        if ($null -ne $script:ghCmdInfo) {
+            $listAllPrsCmdJson = Invoke-Expression "gh pr list --json id,author,title,number"
+            $objs = $listAllPrsCmdJson | ConvertFrom-Json | ForEach-Object {
+                [PSCustomObject]@{
+                    PR      = "$($PSStyle.Foreground.Green)" + $_.number
+                    Title   = "$($PSStyle.Foreground.Magenta)" + $_.title
+                    Creator = "$($PSStyle.Foreground.Yellow)" + $_.author.login
+                }
+            }
+        }
+        else {
+            Write-Error "Repo is a GitHub repo and gh command not found"
+            return
+        }
+        $webCmd = 'gh pr view {1} --web'
+        $previewCmd = 'gh pr view {1} && gh pr diff {1}'
+    }
+    # Azure DevOps
+    elseif ($remoteUrl -match 'dev.azure.com|visualstudio.com') {
+        $script:azCmdInfo = Get-Command az -ErrorAction Ignore
+        if ($null -ne $script:azCmdInfo) {
+            $listAllPrsCmdJson = Invoke-Expression 'az repos pr list --status "active" --query "[].{title: title, number: pullRequestId, creator: createdBy.uniqueName}"'
+            $objs = $listAllPrsCmdJson | ConvertFrom-Json | ForEach-Object {
+                [PSCustomObject]@{
+                    PR      = "$($PSStyle.Foreground.Green)" + $_.number
+                    Title   = "$($PSStyle.Foreground.Magenta)" + $_.title
+                    Creator = "$($PSStyle.Foreground.Yellow)" + $_.creator
+                }
+            }
+        }
+        else {
+            Write-Error "Repo is an Azure DevOps repo and az command not found"
+            return
+        }
+        $webCmd = 'az repos pr show --id {1} --open --output none'
+        # currently errors on query. Need to fix instead of output everything
+        #$previewCmd = 'az repos pr show --id {1} --query "{Created:creationDate, Closed:closedDate, Creator:createdBy.displayName, PR:codeReviewId, Title:title, Repo:repository.name, Reviewers:join('', '',reviewers[].displayName), Source:sourceRefName, Target:targetRefName}" --output yamlc'
+        $previewCmd = 'az repos pr show --id {1} --output yamlc'
+    }
+
+    $fzfArguments = Get-GitFzfArguments
+    $fzfArguments['Bind'] += 'ctrl-o:execute-silent(' + $webCmd + ')'
+    $header = "CTRL-O (open in browser)`n`n"
+
+    $prevCLICOLOR_FORCE = $env:CLICOLOR_FORCE
+    $prevOutputRendering = $PSStyle.OutputRendering
+
+    $env:CLICOLOR_FORCE = 1 # make gh show keep colors
+    $PSStyle.OutputRendering = 'Ansi'
+
+    try {
+        $result = @()
+        $objs | out-string -Stream  | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | `
+            Invoke-Fzf @fzfArguments -Header $header -Preview "$previewCmd" -HeaderLines 2 -BorderLabel '🆕 Pull Requests' | `
+            ForEach-Object {
+            $result += $_.Split(' ')[0] # get the PR ID
+        }
+    }
+    finally {
+        $env:CLICOLOR_FORCE = $prevCLICOLOR_FORCE
+        $PSStyle.OutputRendering = $prevOutputRendering
     }
 
     $result
