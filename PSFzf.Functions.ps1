@@ -169,12 +169,7 @@ function Invoke-FuzzyFasd() {
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyHistory() {
-    if (Get-Command Get-PSReadLineOption -ErrorAction Ignore) {
-        $result = Get-Content (Get-PSReadLineOption).HistorySavePath | Invoke-Fzf -Reverse -Scheme history
-    }
-    else {
-        $result = Get-History | ForEach-Object { $_.CommandLine } | Invoke-Fzf -Reverse -Scheme history
-    }
+    $result = Get-PickedHistory -UsePSReadLineHistory:$($null -ne $(Get-Command Get-PSReadLineOption -ErrorAction Ignore))
     if ($null -ne $result) {
         Write-Output "Invoking '$result'`n"
         Invoke-Expression "$result" -Verbose
