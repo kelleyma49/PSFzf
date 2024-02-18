@@ -768,50 +768,67 @@ function Invoke-FzfPsReadlineHandlerProvider {
 		$replaceLen = $rightCursor - $leftCursor
 		if ($rightCursor -eq 0 -and $leftCursor -eq 0) {
 			[Microsoft.PowerShell.PSConsoleReadLine]::Insert($str)
-		} else {
-			[Microsoft.PowerShell.PSConsoleReadLine]::Replace($leftCursor,$replaceLen+1,$str)
+		}
+		else {
+			[Microsoft.PowerShell.PSConsoleReadLine]::Replace($leftCursor, $replaceLen + 1, $str)
 		}
 	}
 }
-function Invoke-FzfPsReadlineHandlerHistory {
-	$result = $null
-	try
-	{
+
+function Get-PickedHistory($Query = '', [switch]$UsePSReadLineHistory) {
+	try {
 		$script:OverrideFzfDefaults = [FzfDefaultOpts]::new($env:FZF_CTRL_R_OPTS)
 
-		$line = $null
-		$cursor = $null
-		[Microsoft.PowerShell.PSConsoleReadline]::GetBufferState([ref]$line, [ref]$cursor)
-
-		$reader = New-Object PSFzf.IO.ReverseLineReader -ArgumentList $((Get-PSReadlineOption).HistorySavePath)
-
 		$fileHist = @{}
-		$reader.GetEnumerator() | ForEach-Object {
-			if (-not $fileHist.ContainsKey($_)) {
-				$fileHist.Add($_,$true)
-				$_
-			}
-		} | Invoke-Fzf -Query "$line" -Bind ctrl-r:toggle-sort, ctrl-z:ignore -Scheme history | ForEach-Object { $result = $_ }
+		if ($UsePSReadLineHistory) {
+			$reader = New-Object PSFzf.IO.ReverseLineReader -ArgumentList $((Get-PSReadlineOption).HistorySavePath)
+
+			$result = $reader.GetEnumerator() | ForEach-Object {
+				if (-not $fileHist.ContainsKey($_)) {
+					$fileHist.Add($_, $true)
+					$_
+				}
+			} | Invoke-Fzf -Query "$Query" -Bind ctrl-r:toggle-sort, ctrl-z:ignore -Scheme history
+		}
+		else {
+			$result = Get-History | ForEach-Object { $_.CommandLine } | ForEach-Object {
+				if (-not $fileHist.ContainsKey($_)) {
+					$fileHist.Add($_, $true)
+					$_
+				}
+			} | Invoke-Fzf -Query "$Query" -Reverse -Scheme history
+		}
+
 	}
-	catch
-	{
+	catch {
 		# catch custom exception
 	}
-	finally
-	{
+	finally {
 		if ($script:OverrideFzfDefaults) {
 			$script:OverrideFzfDefaults.Restore()
 			$script:OverrideFzfDefaults = $null
 		}
 
 		# ensure that stream is closed:
-		$reader.Dispose()
+		if ($reader) {
+			$reader.Dispose()
+		}
 	}
+
+	$result
+}
+function Invoke-FzfPsReadlineHandlerHistory {
+	$result = $null
+	$line = $null
+	$cursor = $null
+	[Microsoft.PowerShell.PSConsoleReadline]::GetBufferState([ref]$line, [ref]$cursor)
+
+	$result = Get-PickedHistory -Query $line -UsePSReadLineHistory
 
 	InvokePromptHack
 
 	if (-not [string]::IsNullOrEmpty($result)) {
-		[Microsoft.PowerShell.PSConsoleReadLine]::Replace(0,$line.Length,$result)
+		[Microsoft.PowerShell.PSConsoleReadLine]::Replace(0, $line.Length, $result)
 	}
 }
 
