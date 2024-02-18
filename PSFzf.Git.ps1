@@ -292,7 +292,7 @@ function Invoke-PsFzfGitPullRequests() {
         $previewCmd = 'gh pr view {1} && gh pr diff {1}'
     }
     # Azure DevOps
-    elseif ($remoteUrl -match 'dev.azure.com') {
+    elseif ($remoteUrl -match 'dev.azure.com|visualstudio.com') {
         $script:azCmdInfo = Get-Command az -ErrorAction Ignore
         if ($null -ne $script:azCmdInfo) {
             $listAllPrsCmdJson = Invoke-Expression 'az repos pr list --status "active" --query "[].{title: title, number: pullRequestId, creator: createdBy.uniqueName}"'
@@ -309,7 +309,9 @@ function Invoke-PsFzfGitPullRequests() {
             return
         }
         $webCmd = 'az repos pr show --id {1} --open --output none'
-        $previewCmd = 'az repos pr show --id {1} --query "{Created:creationDate, Closed:closedDate, Creator:createdBy.displayName, PR:codeReviewId, Title:title, Repo:repository.name, Reviewers:join('', '',reviewers[].displayName), Source:sourceRefName, Target:targetRefName}" --output yamlc'
+        # currently errors on query. Need to fix instead of output everything
+        #$previewCmd = 'az repos pr show --id {1} --query "{Created:creationDate, Closed:closedDate, Creator:createdBy.displayName, PR:codeReviewId, Title:title, Repo:repository.name, Reviewers:join('', '',reviewers[].displayName), Source:sourceRefName, Target:targetRefName}" --output yamlc'
+        $previewCmd = 'az repos pr show --id {1} --output yamlc'
     }
 
     $fzfArguments = Get-GitFzfArguments
@@ -327,7 +329,7 @@ function Invoke-PsFzfGitPullRequests() {
         $objs | out-string -Stream  | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | `
             Invoke-Fzf @fzfArguments -Header $header -Preview "$previewCmd" -HeaderLines 2 -BorderLabel '🆕 Pull Requests' | `
             ForEach-Object {
-            $result += $_.Split(' ')[0]
+            $result += $_.Split(' ')[0] # get the PR ID
         }
     }
     finally {
