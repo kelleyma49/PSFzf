@@ -304,6 +304,7 @@ function Invoke-PsFzfGitPullRequests() {
             }
             $webCmd = 'gh pr view {1} --web'
             $previewCmd = 'gh pr view {1} && gh pr diff {1}'
+            $checkoutCmd = 'gh pr checkout {0}'
         }
         # Azure DevOps
         elseif ($remoteUrl -match 'dev.azure.com|visualstudio.com') {
@@ -334,11 +335,12 @@ function Invoke-PsFzfGitPullRequests() {
             # currently errors on query. Need to fix instead of output everything
             #$previewCmd = 'az repos pr show --id {1} --query "{Created:creationDate, Closed:closedDate, Creator:createdBy.displayName, PR:codeReviewId, Title:title, Repo:repository.name, Reviewers:join('', '',reviewers[].displayName), Source:sourceRefName, Target:targetRefName}" --output yamlc'
             $previewCmd = 'az repos pr show --id {1} --output yamlc'
+            $checkoutCmd = 'az repos pr checkout --id {0}'
         }
 
         $fzfArguments = Get-GitFzfArguments
         $fzfArguments['Bind'] += 'ctrl-o:execute-silent(' + $webCmd + ')'
-        $header = "CTRL-O (open in browser) / CTRL-X (checks) / CTRL+U (toggle user filter)`n`n"
+        $header = "CTRL-O (open in browser) / CTRL-X (checks) / CTRL+U (toggle user filter) / CTRL+P (checkout PR)`n`n"
 
         $prevCLICOLOR_FORCE = $env:CLICOLOR_FORCE
         if ($PSStyle) {
@@ -358,14 +360,22 @@ function Invoke-PsFzfGitPullRequests() {
             }
             $result = $objs | out-string -Stream  | `
                 Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | `
-                Invoke-Fzf @fzfArguments -Expect "ctrl-x,ctrl-u" -Header $header -Preview "$previewCmd" -HeaderLines 2 -BorderLabel $borderLabel
+                Invoke-Fzf @fzfArguments -Expect "ctrl-x,ctrl-u,ctrl-p" -Header $header -Preview "$previewCmd" -HeaderLines 2 -BorderLabel $borderLabel
 
             $prId = $result.Split(' ')[1] # get the PR ID
             $reloadPrList = $result[0] -eq 'ctrl-u' # reload if user filter toggled
             $checks = $null
+
+            # reload with user filter toggled:
             if ($reloadPrList) {
                 $filterCurrentUser = -not $filterCurrentUser
             }
+            # checkout PR:
+            elseif ($result[0] -eq 'ctrl-p') {
+                Write-Warning "Checking out PR $prId into $($(Get-Location).Path) ..."
+                Invoke-Expression ($checkoutCmd -f $prId)
+            }
+            # open checks for PR:
             elseif ($result[0] -eq 'ctrl-x') {
                 if ($remoteUrl -match 'github.com') {
                     $env:CLICOLOR_FORCE = $prevCLICOLOR_FORCE
