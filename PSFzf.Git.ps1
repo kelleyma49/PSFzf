@@ -362,8 +362,18 @@ function Invoke-PsFzfGitPullRequests() {
                 Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | `
                 Invoke-Fzf @fzfArguments -Expect "ctrl-x,ctrl-u,ctrl-p" -Header $header -Preview "$previewCmd" -HeaderLines 2 -BorderLabel $borderLabel
 
-            $prId = $result.Split(' ')[1] # get the PR ID
-            $reloadPrList = $result[0] -eq 'ctrl-u' # reload if user filter toggled
+            if ($result -is [array]) {
+                if ($result.Length -ge 2) {
+                    $prId = $result[1].Split(' ') # get the PR ID
+                }
+                else {
+                    $prId = $null
+                }
+                $reloadPrList = $result[0] -eq 'ctrl-u' # reload if user filter toggled
+            }
+            else {
+                $reloadPrList = $result -eq 'ctrl-u' # reload if user filter toggled
+            }
             $checks = $null
 
             # reload with user filter toggled:
