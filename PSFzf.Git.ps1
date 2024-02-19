@@ -427,9 +427,12 @@ function Invoke-PsFzfGitPullRequests() {
                 switch ($type.displayName) {
                 'Build' {
                     $check = $settings.displayName
+                    if ([string]::IsNullOrWhiteSpace($check)) {
+                        $check = $context.buildDefinitionName
+                    }
                     if ($context) {
                         $buildId = $context.buildId
-                                    $link = $remoteUrl.split('/_git/')[0],"_build/results?buildId=$buildId" -join '/'
+                        $link = $remoteUrl.split('/_git/')[0],"_build/results?buildId=$buildId" -join '/'
                     }
                 }
                 'Status' {
@@ -469,10 +472,12 @@ function Invoke-PsFzfGitPullRequests() {
                     Invoke-Fzf @fzfArguments -Header $header -HeaderLines 2 -BorderLabel '✅ Checks'
 
                 if ($runCheckCmd -and $result[0] -eq 'ctrl-r') {
-                    $cmd = $($runCheckCmd + $($result[1] -split ' ')[0])
-                    $cmd
-                    Write-Warning "Running check using command '$cmd'..."
-                    Invoke-Expression $cmd
+                    $result = $result[1..($result.Length - 1)]
+                    $result | ForEach-Object {
+                        $cmd = $($runCheckCmd + $($_ -split ' ')[0])
+                        Write-Warning "Running check using command '$cmd'..."
+                        Invoke-Expression $cmd
+                    }
                 }
             }
         }
