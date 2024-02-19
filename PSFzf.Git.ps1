@@ -148,7 +148,7 @@ function Invoke-PsFzfGitFiles() {
     $fzfArguments['Bind'] += $headerStrings[1], $gitStageBind, $gitResetBind
     Invoke-Expression "& $statusCmd" | `
         Invoke-Fzf @fzfArguments `
-        -BorderLabel '📁 Files' `
+        -BorderLabel '?? Files' `
         -Preview "$previewCmd" -Header $headerStr | `
         foreach-object {
         $result += $_.Substring('?? '.Length)
@@ -172,7 +172,7 @@ function Invoke-PsFzfGitHashes() {
     $fzfArguments = Get-GitFzfArguments
     & git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" $(Get-ColorAlways).Trim() --graph | `
         Invoke-Fzf @fzfArguments -NoSort  `
-        -BorderLabel '🍡 Hashes' `
+        -BorderLabel '?? Hashes' `
         -Preview "$previewCmd" | ForEach-Object {
         if ($_ -match '\d\d-\d\d-\d\d\s+([a-f0-9]+)\s+') {
             $result += $Matches.1
@@ -195,7 +195,7 @@ function Invoke-PsFzfGitBranches() {
     $fzfArguments = Get-GitFzfArguments
     $fzfArguments['PreviewWindow'] = 'down,border-top,40%'
     $gitBranchesHelperPath = Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches.sh'
-    $ShortcutBranchesAll = "ctrl-a:change-prompt(🌳 All branches> )+reload(" + """${script:bashPath}"" '${gitBranchesHelperPath}' all-branches)"
+    $ShortcutBranchesAll = "ctrl-a:change-prompt(?? All branches> )+reload(" + """${script:bashPath}"" '${gitBranchesHelperPath}' all-branches)"
     $fzfArguments['Bind'] += 'ctrl-/:change-preview-window(down,70%|hidden|)', $ShortcutBranchesAll
 
     $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + "\"" {}"
@@ -203,7 +203,7 @@ function Invoke-PsFzfGitBranches() {
     # use pwsh to prevent bash from trying to write to host output:
     $branches = & $script:pwshExec -NoProfile -NonInteractive -Command "&  ${script:bashPath} '$gitBranchesHelperPath' branches"
     $branches |
-    Invoke-Fzf @fzfArguments -Preview "$previewCmd" -BorderLabel '🌲 Branches' -HeaderLines 2 -Tiebreak begin -ReverseInput | `
+    Invoke-Fzf @fzfArguments -Preview "$previewCmd" -BorderLabel '?? Branches' -HeaderLines 2 -Tiebreak begin -ReverseInput | `
         ForEach-Object {
         $result += $($_.Substring('* '.Length) -split ' ')[0]
     }
@@ -226,7 +226,7 @@ function Invoke-PsFzfGitTags() {
     $previewCmd = "git show --color=always {}"
     $result = @()
     git tag --sort -version:refname |
-    Invoke-Fzf @fzfArguments -Preview "$previewCmd" -BorderLabel '📛 Tags' | `
+    Invoke-Fzf @fzfArguments -Preview "$previewCmd" -BorderLabel '?? Tags' | `
         ForEach-Object {
         $result += $_
     }
@@ -251,7 +251,7 @@ function Invoke-PsFzfGitStashes() {
 
     $result = @()
     git stash list --color=always |
-    Invoke-Fzf @fzfArguments -Header $header -Delimiter ':' -Preview "$previewCmd" -BorderLabel '🥡 Stashes' | `
+    Invoke-Fzf @fzfArguments -Header $header -Delimiter ':' -Preview "$previewCmd" -BorderLabel '?? Stashes' | `
         ForEach-Object {
         $result += $_.Split(':')[0]
     }
@@ -273,8 +273,7 @@ function Invoke-PsFzfGitPullRequests() {
     $reloadPrList = $false
 
     # loop due to requesting possibly selecting current user
-    do
-    {
+    do {
         # find the repo remote URL
         $remoteUrl = git config --get remote.origin.url
 
@@ -285,7 +284,8 @@ function Invoke-PsFzfGitPullRequests() {
                 if ($filterCurrentUser) {
                     $currentUser = Invoke-Expression "gh api user --jq '.login'"
                     $listAllPrsCmdJson = Invoke-Expression "gh pr list --json id,author,title,number --author $currentUser"
-                } else {
+                }
+                else {
                     $currentUser = $null
                     $listAllPrsCmdJson = Invoke-Expression "gh pr list --json id,author,title,number"
                 }
@@ -312,7 +312,8 @@ function Invoke-PsFzfGitPullRequests() {
                 if ($filterCurrentUser) {
                     $currentUser = Invoke-Expression "az account show --query user.name --output tsv"
                     $listAllPrsCmdJson = Invoke-Expression $('az repos pr list --status "active" --query "[].{title: title, number: pullRequestId, creator: createdBy.uniqueName}"' + "--creator $currentUser")
-                } else {
+                }
+                else {
                     $currentUser = $null
                     $listAllPrsCmdJson = Invoke-Expression 'az repos pr list --status "active" --query "[].{title: title, number: pullRequestId, creator: createdBy.uniqueName}"'
                 }
@@ -340,13 +341,18 @@ function Invoke-PsFzfGitPullRequests() {
         $header = "CTRL-O (open in browser) / CTRL-X (checks) / CTRL+U (toggle user filter)`n`n"
 
         $prevCLICOLOR_FORCE = $env:CLICOLOR_FORCE
-        $prevOutputRendering = $PSStyle.OutputRendering
+        if ($PSStyle) {
+            $prevOutputRendering = $PSStyle.OutputRendering
+        }
+
 
         $env:CLICOLOR_FORCE = 1 # make gh show keep colors
-        $PSStyle.OutputRendering = 'Ansi'
+        if ($PSStyle) {
+            $PSStyle.OutputRendering = 'Ansi'
+        }
 
         try {
-            $borderLabel = "🆕 Pull Requests"
+            $borderLabel = "?? Pull Requests"
             if ($currentUser) {
                 $borderLabel += " by $currentUser"
             }
@@ -369,14 +375,14 @@ function Invoke-PsFzfGitPullRequests() {
                     $checks = $checksJson.statusCheckRollup | ForEach-Object {
                         if ($_.status -eq 'COMPLETED') {
                             if ($_.conclusion -eq 'SUCCESS') {
-                                $status = "$($PSStyle.Foreground.Green)" + "✅ Success"
+                                $status = "$($PSStyle.Foreground.Green)" + '? Success'
                             }
                             else {
-                                $status = "$($PSStyle.Foreground.Red)" + "⛔ Failed"
+                                $status = "$($PSStyle.Foreground.Red)" + '? Failed'
                             }
                         }
                         else {
-                            $status = "$($PSStyle.Foreground.Yellow)" + "⏳"
+                            $status = "$($PSStyle.Foreground.Yellow)" + '?'
                         }
                         [PSCustomObject]@{
                             Status = $status
@@ -395,58 +401,58 @@ function Invoke-PsFzfGitPullRequests() {
                     # only worried about blocking checks, for now:
                     $checks = $checksJson | Where-Object { $_.configuration.isBlocking } | ForEach-Object {
                         $context = $_.context
-                $settings = $_.configuration.settings
-                    $type = $_.configuration.type
-                        $link = $remoteUrl,"pullrequest/$($prId)" -join '/' # default to opening PR in browser
+                        $settings = $_.configuration.settings
+                        $type = $_.configuration.type
+                        $link = $remoteUrl, "pullrequest/$($prId)" -join '/' # default to opening PR in browser
 
-                # find check status:
+                        # find check status:
                         switch ($_.status) {
                             'approved' {
-                                $status = "$($PSStyle.Foreground.Green)" + "✅ Approved"
+                                $status = "$($PSStyle.Foreground.Green)" + '? Approved'
                             }
                             'rejected' {
-                                $status = "$($PSStyle.Foreground.Red)" + "⛔ Rejected"
+                                $status = "$($PSStyle.Foreground.Red)" + '? Rejected'
                             }
                             'queued' {
                                 if ($context -and $context.IsExpired) {
-                                    $status = "$($PSStyle.Foreground.Red)" + "⌚ Expired"
+                                    $status = "$($PSStyle.Foreground.Red)" + '? Expired'
                                 }
                                 else {
-                                    $status = "$($PSStyle.Foreground.BrightBlue)" + "🔵 Queued"
+                                    $status = "$($PSStyle.Foreground.BrightBlue)" + '?? Queued'
                                 }
                             }
-                'running' {
-                    $status = "$($PSStyle.Foreground.BrightBlue)" + "⏳ Running"
-                }
+                            'running' {
+                                $status = "$($PSStyle.Foreground.BrightBlue)" + '? Running'
+                            }
                             default {
-                                $status =  $_.status # unknown status
+                                $status = $_.status # unknown status
                             }
                         }
 
-                # find check name and build link:
-                switch ($type.displayName) {
-                'Build' {
-                    $check = $settings.displayName
-                    if ([string]::IsNullOrWhiteSpace($check)) {
-                        $check = $context.buildDefinitionName
-                    }
-                    if ($context) {
-                        $buildId = $context.buildId
-                        $link = $remoteUrl.split('/_git/')[0],"_build/results?buildId=$buildId" -join '/'
-                    }
-                }
-                'Status' {
-                    $check = $settings.defaultDisplayName
-                }
-                default {
-                    $check = $type.displayName
-                }
-                }
+                        # find check name and build link:
+                        switch ($type.displayName) {
+                            'Build' {
+                                $check = $settings.displayName
+                                if ([string]::IsNullOrWhiteSpace($check)) {
+                                    $check = $context.buildDefinitionName
+                                }
+                                if ($context) {
+                                    $buildId = $context.buildId
+                                    $link = $remoteUrl.split('/_git/')[0], "_build/results?buildId=$buildId" -join '/'
+                                }
+                            }
+                            'Status' {
+                                $check = $settings.defaultDisplayName
+                            }
+                            default {
+                                $check = $type.displayName
+                            }
+                        }
                         [PSCustomObject]@{
                             EvaluationId = "$($PSStyle.Foreground.Blue)" + $_.evaluationId
-                            Status = $status
-                            Check  = "$($PSStyle.Foreground.Magenta)" + $check
-                            Link   = $link
+                            Status       = $status
+                            Check        = "$($PSStyle.Foreground.Magenta)" + $check
+                            Link         = $link
                         }
                     }
 
@@ -460,16 +466,19 @@ function Invoke-PsFzfGitPullRequests() {
                 #$fzfArguments['Bind'] += 'ctrl-r:execute(' + $runCheckCmd + ')'
                 if ($runCheckCmd) {
                     $fzfArguments['Expect'] = "ctrl-r"
-                    $header = "CTRL-R (run selected check)`n`n"
-                } else {
+                    $header = "CTRL-R (run selected checks)`n`n"
+                }
+                else {
                     $header = "`n"
                 }
                 $env:CLICOLOR_FORCE = 1 # make gh show keep colors
-                $PSStyle.OutputRendering = 'Ansi'
+                if ($PSStyle) {
+                    $PSStyle.OutputRendering = 'Ansi'
+                }
 
                 $result = $checks | out-string -Stream  | `
                     Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | `
-                    Invoke-Fzf @fzfArguments -Header $header -HeaderLines 2 -BorderLabel '✅ Checks'
+                    Invoke-Fzf @fzfArguments -Header $header -HeaderLines 2 -BorderLabel $('? Checks' + " for PR $prId")
 
                 if ($runCheckCmd -and $result[0] -eq 'ctrl-r') {
                     $result = $result[1..($result.Length - 1)]
@@ -483,7 +492,9 @@ function Invoke-PsFzfGitPullRequests() {
         }
         finally {
             $env:CLICOLOR_FORCE = $prevCLICOLOR_FORCE
-            $PSStyle.OutputRendering = $prevOutputRendering
+            if ($PSStyle) {
+                $PSStyle.OutputRendering = $prevOutputRendering
+            }
         }
     } while ($reloadPrList)
 
