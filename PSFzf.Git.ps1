@@ -364,7 +364,7 @@ function Invoke-PsFzfGitPullRequests() {
 
             if ($result -is [array]) {
                 if ($result.Length -ge 2) {
-                    $prId = $result[1].Split(' ') # get the PR ID
+                    $prId = $result[1].Split(' ')[1] # get the PR ID
                 }
                 else {
                     $prId = $null
