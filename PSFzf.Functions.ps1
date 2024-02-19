@@ -341,9 +341,9 @@ function Invoke-PsFzfRipgrep() {
             --color "hl:-1:underline,hl+:-1:underline:reverse" `
             --disabled --query "$INITIAL_QUERY" `
             --bind "change:reload:$sleepCmd $RG_PREFIX {q} || $trueCmd" `
-            --bind "ctrl-f:unbind(change,ctrl-f)+change-prompt(2. fzf> )+enable-search+clear-query+rebind(ctrl-r)" `
-            --bind "ctrl-r:unbind(ctrl-r)+change-prompt(1. ripgrep> )+disable-search+reload($RG_PREFIX {q} || $trueCmd)+rebind(change,ctrl-f)" `
-            --prompt '1. Ripgrep> ' `
+            --bind "ctrl-f:unbind(change,ctrl-f)+change-prompt" + '( +✅ fzf> )' + "+enable-search+clear-query+rebind(ctrl-r)" `
+            --bind "ctrl-r:unbind(ctrl-r)+change-prompt" + '(🔎 ripgrep> )' + "+disable-search+reload($RG_PREFIX {q} || $trueCmd)+rebind(change,ctrl-f)" `
+            --prompt '🔎 ripgrep> ' `
             --delimiter : `
             --header '╱ CTRL-R (Ripgrep mode) ╱ CTRL-F (fzf mode) ╱' `
             --preview 'bat --color=always {1} --highlight-line {2}' `
