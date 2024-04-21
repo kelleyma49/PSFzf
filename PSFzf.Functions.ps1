@@ -349,6 +349,11 @@ function Invoke-PsFzfRipgrep() {
             --preview 'bat --color=always {1} --highlight-line {2}' `
             --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' | `
             ForEach-Object { $results += $_ }
+        # we need this here to prevent the editor launch from inherting FZF_DEFAULT_COMMAND from being overwritten (see #267):
+        if ($script:OverrideFzfDefaultCommand) {
+            $script:OverrideFzfDefaultCommand.Restore()
+            $script:OverrideFzfDefaultCommand = $null
+        }
 
         if (-not [string]::IsNullOrEmpty($results)) {
             $split = $results.Split(':')
