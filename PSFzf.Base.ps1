@@ -631,6 +631,9 @@ function Invoke-FzfDefaultSystem {
 	if ($script:UseFd -and $script:RunningInWindowsTerminal -and -not $script:OverrideFzfDefaultOpts.Get().Contains('--ansi')) {
 		$arguments += "--ansi "
 	}
+	if ($script:UseWalker) {
+		$arguments += "--walker=file,dir "
+	}
 
 	$script:OverrideFzfDefaultCommand = [FzfDefaultCmd]::new('')
 	try {
@@ -1005,7 +1008,10 @@ try
 	$script:UseHeightOption = $fzfVersion.length -ge 2 -and `
 							  ([int]$fzfVersion[0] -gt 0 -or `
 							  [int]$fzfVersion[1] -ge 21) -and `
-							  $script:RunningInWindowsTerminal
+							  $script:RunningInWindowsTerminald
+	$script:UseWalker = $fzfVersion.length -ge 2 -and `
+						([int]$fzfVersion[0] -gt 0 -or `
+						[int]$fzfVersion[1] -ge 48)
 }
 catch
 {
