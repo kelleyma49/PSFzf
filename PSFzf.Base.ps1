@@ -193,9 +193,7 @@ function Set-PsFzfOption{
 		[switch]
 		$EnableFd,
 		[ScriptBlock]
-		$AltCCommand,
-		[switch]
-		$EnableGitCommitInPreview
+		$AltCCommand
 	)
 	if ($PSBoundParameters.ContainsKey('TabExpansion')) {
 		SetTabExpansion $TabExpansion
@@ -241,10 +239,6 @@ function Set-PsFzfOption{
 
 	if ($PSBoundParameters.ContainsKey('AltCCommand')) {
 		$script:AltCCommand = $AltCCommand
-	}
-
-	if ($PSBoundParameters.ContainsKey('EnableGitCommitInPreview')) {
-		$script:EnableGitCommitInPreview = $EnableGitCommitInPreview
 	}
 }
 

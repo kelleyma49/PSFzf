@@ -20,16 +20,18 @@ if (Test-Path $path -PathType Container) {
 
     Get-ChildItem $path
 
-    if (Get-Command git -ErrorAction Ignore -and $script:EnableGitCommitInPreview) {
-        Write-Output "" # extra separator before git status
-        Push-Location $path
-        if ($ansiCompatible -and $(Get-Command bat -ErrorAction Ignore)) {
-            git log -1 2> $null | bat "--style=changes" --color always
+    if (Get-Command git -ErrorAction Ignore) {
+        if ([string]::IsNullOrWhiteSpace($env:_PSFZF_DISABLE_GIT_COMMIT_IN_PREVIEW)) {
+            Write-Output "" # extra separator before git status
+            Push-Location $path
+            if ($ansiCompatible -and $(Get-Command bat -ErrorAction Ignore)) {
+                git log -1 2> $null | bat "--style=changes" --color always
+            }
+            else {
+                git log -1 2> $null
+            }
+            Pop-Location
         }
-        else {
-            git log -1 2> $null
-        }
-        Pop-Location
     }
 }
 # is file?
