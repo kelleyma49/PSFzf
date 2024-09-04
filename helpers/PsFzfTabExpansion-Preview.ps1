@@ -20,7 +20,7 @@ if (Test-Path $path -PathType Container) {
 
     Get-ChildItem $path
 
-    if (Get-Command git -ErrorAction Ignore) {
+    if (Get-Command git -ErrorAction Ignore -and $script:EnableGitCommitInPreview) {
         Write-Output "" # extra separator before git status
         Push-Location $path
         if ($ansiCompatible -and $(Get-Command bat -ErrorAction Ignore)) {
