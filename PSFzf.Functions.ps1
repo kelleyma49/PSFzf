@@ -336,19 +336,25 @@ function Invoke-PsFzfRipgrep() {
             $trueCmd = 'true'
             $env:FZF_DEFAULT_COMMAND = '{0} $(printf %q "{1}")' -f $RG_PREFIX, $INITIAL_QUERY
         }
+        $fzfArguments = @{
+            Ansi = $true
+            Disabled = $true
+            Color = "hl:-1:underline,hl+:-1:underline:reverse"
+            Query = $INITIAL_QUERY
+            Prompt = 'ripgrep> '
+            Delimiter = ':'
+            Header = '? CTRL-R (Ripgrep mode) ? CTRL -F (fzf mode) ?'
+            Preview = 'bat --color=always {1} --highlight-line {2}'
+            PreviewWindow = 'up,60%,border-bottom,+{2}+3/3,~3'
+        }
+        $Bind = @(
+                'ctrl-r:unbind(change,ctrl-r)+change-prompt(ripgrep> )' + "+disable-search+reload($RG_PREFIX {q} || $trueCmd)+rebind(change,ctrl-f)"
+        )
+        $Bind += 'ctrl-f:unbind(change,ctrl-f)+change-prompt(fzf> )+enable-search+clear-query+rebind(ctrl-r)'
+        $Bind += "change:reload:$sleepCmd $RG_PREFIX {q} || $trueCmd"
 
-        & $script:FzfLocation --ansi `
-            --color "hl:-1:underline,hl+:-1:underline:reverse" `
-            --disabled --query "$INITIAL_QUERY" `
-            --bind "change:reload:$sleepCmd $RG_PREFIX {q} || $trueCmd" `
-            --bind "ctrl-f:unbind(change,ctrl-f)+change-prompt" + '( +✅ fzf> )' + "+enable-search+clear-query+rebind(ctrl-r)" `
-            --bind "ctrl-r:unbind(ctrl-r)+change-prompt" + '(🔎 ripgrep> )' + "+disable-search+reload($RG_PREFIX {q} || $trueCmd)+rebind(change,ctrl-f)" `
-            --prompt '🔎 ripgrep> ' `
-            --delimiter : `
-            --header '╱ CTRL-R (Ripgrep mode) ╱ CTRL-F (fzf mode) ╱' `
-            --preview 'bat --color=always {1} --highlight-line {2}' `
-            --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' | `
-            ForEach-Object { $results += $_ }
+        Invoke-Fzf @fzfArguments -Bind $Bind | ForEach-Object { $results += $_ }
+
         # we need this here to prevent the editor launch from inherting FZF_DEFAULT_COMMAND from being overwritten (see #267):
         if ($script:OverrideFzfDefaultCommand) {
             $script:OverrideFzfDefaultCommand.Restore()
