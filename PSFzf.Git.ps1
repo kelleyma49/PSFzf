@@ -12,6 +12,25 @@ else {
     $script:pwshExec = "powershell"
 }
 
+$script:IsWindowsCheck = ($PSVersionTable.PSVersion.Major -le 5) -or $IsWindows
+
+if ($RunningInWindowsTerminal -or -not $script:IsWindowsCheck) {
+    $script:filesString = '📁 Files'
+    $script:hashesString = '🍡 Hashes'
+    $script:allBranchesString = '🌳 All branches'
+    $script:branchesString = '🌲 Branches'
+    $script:tagsString = '📛 Tags'
+    $script:stashesString = '🥡 Stashes'
+}
+else {
+    $script:filesString = 'Files'
+    $script:hashesString = 'Hashes'
+    $script:allBranchesString = 'All branches'
+    $script:branchesString = 'Branches'
+    $script:tagsString = 'Tags'
+    $script:stashesString = 'Stashes'
+}
+
 function Get-GitFzfArguments() {
     # take from https://github.com/junegunn/fzf-git.sh/blob/f72ebd823152fa1e9b000b96b71dd28717bc0293/fzf-git.sh#L89
     return @{
@@ -148,7 +167,7 @@ function Invoke-PsFzfGitFiles() {
     $fzfArguments['Bind'] += $headerStrings[1], $gitStageBind, $gitResetBind
     Invoke-Expression "& $statusCmd" | `
         Invoke-Fzf @fzfArguments `
-        -BorderLabel '?? Files' `
+        -BorderLabel "$script:filesString" `
         -Preview "$previewCmd" -Header $headerStr | `
         foreach-object {
         $result += $_.Substring('?? '.Length)
@@ -172,8 +191,8 @@ function Invoke-PsFzfGitHashes() {
     $fzfArguments = Get-GitFzfArguments
     & git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" $(Get-ColorAlways).Trim() --graph | `
         Invoke-Fzf @fzfArguments -NoSort  `
-        -BorderLabel '?? Hashes' `
-        -Preview "$previewCmd" | ForEach-Object {
+        -BorderLabel "$script:hashesString"
+    -Preview "$previewCmd" | ForEach-Object {
         if ($_ -match '\d\d-\d\d-\d\d\s+([a-f0-9]+)\s+') {
             $result += $Matches.1
         }
@@ -195,7 +214,7 @@ function Invoke-PsFzfGitBranches() {
     $fzfArguments = Get-GitFzfArguments
     $fzfArguments['PreviewWindow'] = 'down,border-top,40%'
     $gitBranchesHelperPath = Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches.sh'
-    $ShortcutBranchesAll = "ctrl-a:change-prompt(?? All branches> )+reload(" + """${script:bashPath}"" '${gitBranchesHelperPath}' all-branches)"
+    $ShortcutBranchesAll = "ctrl-a:change-prompt" + "($script:allBranchesString> )+reload(" + """${script:bashPath}"" '${gitBranchesHelperPath}' all-branches)"
     $fzfArguments['Bind'] += 'ctrl-/:change-preview-window(down,70%|hidden|)', $ShortcutBranchesAll
 
     $previewCmd = "${script:bashPath} \""" + $(Join-Path $PsScriptRoot 'helpers/PsFzfGitBranches-Preview.sh') + "\"" {}"
@@ -203,7 +222,7 @@ function Invoke-PsFzfGitBranches() {
     # use pwsh to prevent bash from trying to write to host output:
     $branches = & $script:pwshExec -NoProfile -NonInteractive -Command "&  ${script:bashPath} '$gitBranchesHelperPath' branches"
     $branches |
-    Invoke-Fzf @fzfArguments -Preview "$previewCmd" -BorderLabel '?? Branches' -HeaderLines 2 -Tiebreak begin -ReverseInput | `
+    Invoke-Fzf @fzfArguments -Preview "$previewCmd" -BorderLabel "$script:branchesString" -HeaderLines 2 -Tiebreak begin -ReverseInput | `
         ForEach-Object {
         $result += $($_.Substring('* '.Length) -split ' ')[0]
     }
@@ -226,7 +245,7 @@ function Invoke-PsFzfGitTags() {
     $previewCmd = "git show --color=always {}"
     $result = @()
     git tag --sort -version:refname |
-    Invoke-Fzf @fzfArguments -Preview "$previewCmd" -BorderLabel '?? Tags' | `
+    Invoke-Fzf @fzfArguments -Preview "$previewCmd" -BorderLabel "$script:tagsString" | `
         ForEach-Object {
         $result += $_
     }
@@ -251,7 +270,7 @@ function Invoke-PsFzfGitStashes() {
 
     $result = @()
     git stash list --color=always |
-    Invoke-Fzf @fzfArguments -Header $header -Delimiter ':' -Preview "$previewCmd" -BorderLabel '?? Stashes' | `
+    Invoke-Fzf @fzfArguments -Header $header -Delimiter ':' -Preview "$previewCmd" -BorderLabel "$script:stashesString" | `
         ForEach-Object {
         $result += $_.Split(':')[0]
     }
@@ -354,7 +373,7 @@ function Invoke-PsFzfGitPullRequests() {
         }
 
         try {
-            $borderLabel = "?? Pull Requests"
+            $borderLabel = "Pull Requests"
             if ($currentUser) {
                 $borderLabel += " by $currentUser"
             }

@@ -224,7 +224,7 @@ function Set-PsFzfOption{
 	if ($EnableAliasFuzzySetLocation) 	{ SetPsFzfAlias "fd"      Invoke-FuzzySetLocation }
 	if ($EnableAliasFuzzyZLocation) 	{ SetPsFzfAlias "fz"      Invoke-FuzzyZLocation }
 	if ($EnableAliasFuzzyGitStatus) 	{ SetPsFzfAlias "fgs"     Invoke-FuzzyGitStatus }
-	if ($EnableAliasFuzzyScoop) 	{ SetPsFzfAlias "fs"     Invoke-FuzzyScoop }
+	if ($EnableAliasFuzzyScoop) 		{ SetPsFzfAlias "fs"      Invoke-FuzzyScoop }
 	if ($EnableAliasFuzzySetEverything) {
         if (${function:Set-LocationFuzzyEverything}) {
             SetPsFzfAlias "cde" Set-LocationFuzzyEverything
@@ -277,6 +277,7 @@ function Invoke-Fzf {
 		  	[ValidateSet('length','begin','end','index')]
 		  	[string]
 		  	$Tiebreak = $null,
+			[switch]$Disabled,
 
             # Interface
 			[Alias('m')]
@@ -350,6 +351,7 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('ReverseInput') -and $ReverseInput) 									{ $arguments += '--tac '}
 		if ($PSBoundParameters.ContainsKey('Phony') -and $Phony)												{ $arguments += '--phony '}
 		if ($PSBoundParameters.ContainsKey('Tiebreak') -and ![string]::IsNullOrWhiteSpace($Tiebreak))			{ $arguments += "--tiebreak=$Tiebreak "}
+		if ($PSBoundParameters.ContainsKey('Disabled') -and $Disabled) 											{ $arguments += '--disabled '}
 		if ($PSBoundParameters.ContainsKey('Multi') -and $Multi) 												{ $arguments += '--multi '}
 		if ($PSBoundParameters.ContainsKey('NoMouse') -and $NoMouse)					 						{ $arguments += '--no-mouse '}
         if ($PSBoundParameters.ContainsKey('Bind') -and $Bind.Length -ge 1)							    		{ $Bind | ForEach-Object { $arguments += "--bind=""$_"" " } }
@@ -385,6 +387,8 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('PrintQuery') -and $PrintQuery)										{ $arguments += '--print-query '}
 		if ($PSBoundParameters.ContainsKey('Expect') -and ![string]::IsNullOrWhiteSpace($Expect)) 	   			{ $arguments += "--expect=""$Expect"" "}
 
+		#$arguments | Out-File C:\github\crap.txt
+		$Bind | Out-File c:\github\crap.txt -Append
 		if (!$script:OverrideFzfDefaults) {
 			$script:OverrideFzfDefaults = [FzfDefaultOpts]::new("")
 		}
