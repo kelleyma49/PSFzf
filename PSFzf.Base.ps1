@@ -387,8 +387,6 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('PrintQuery') -and $PrintQuery)										{ $arguments += '--print-query '}
 		if ($PSBoundParameters.ContainsKey('Expect') -and ![string]::IsNullOrWhiteSpace($Expect)) 	   			{ $arguments += "--expect=""$Expect"" "}
 
-		#$arguments | Out-File C:\github\crap.txt
-		$Bind | Out-File c:\github\crap.txt -Append
 		if (!$script:OverrideFzfDefaults) {
 			$script:OverrideFzfDefaults = [FzfDefaultOpts]::new("")
 		}

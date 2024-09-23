@@ -353,10 +353,8 @@ function Invoke-PsFzfRipgrep() {
         $Bind += 'ctrl-f:unbind(change,ctrl-f)+change-prompt(fzf> )+enable-search+clear-query+rebind(ctrl-r)'
         $Bind += "change:reload:$sleepCmd $RG_PREFIX {q} || $trueCmd"
 
-            $fzfArguments | Out-File C:\github\crap.txt
+        Invoke-Fzf @fzfArguments -Bind $Bind | ForEach-Object { $results += $_ }
 
-            Invoke-Fzf @fzfArguments -Bind $Bind | `
-            ForEach-Object { $results += $_ }
         # we need this here to prevent the editor launch from inherting FZF_DEFAULT_COMMAND from being overwritten (see #267):
         if ($script:OverrideFzfDefaultCommand) {
             $script:OverrideFzfDefaultCommand.Restore()
