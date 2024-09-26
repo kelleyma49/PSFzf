@@ -62,7 +62,7 @@ function SetupGitPaths() {
                 $script:scoopInfo = Get-Command scoop -ErrorAction Ignore
                 if ($null -ne $script:scoopInfo) {
                     # Detect if git is installed using scoop (using shims)
-                    if ((Split-Path $gitInfo.Source -Parent) -eq (Split-Path $script:scoopInfo.Source -Parent)) {
+                    if ($gitInfo.Source -match 'scoop[\\/]shims') {
                         # Get the proper git position relative to scoop shims" position
                         $gitInfo = Get-Command "$($gitInfo.Source)\..\..\apps\git\current\bin\git.exe"
                     }
