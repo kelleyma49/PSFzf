@@ -633,7 +633,7 @@ function Invoke-FzfDefaultSystem {
 	if ($script:UseFd -and $script:RunningInWindowsTerminal -and -not $script:OverrideFzfDefaultOpts.Get().Contains('--ansi')) {
 		$arguments += "--ansi "
 	}
-	if ($script:UseWalker) {
+	if ($script:UseWalker -and -not $script:OverrideFzfDefaultOpts.Get().Contains('--walker')) {
 		$arguments += "--walker=file,dir "
 	}
 
