@@ -337,23 +337,25 @@ function Invoke-PsFzfRipgrep() {
             $env:FZF_DEFAULT_COMMAND = '{0} $(printf %q "{1}")' -f $RG_PREFIX, $INITIAL_QUERY
         }
         $fzfArguments = @{
-            Ansi = $true
-            Disabled = $true
-            Color = "hl:-1:underline,hl+:-1:underline:reverse"
-            Query = $INITIAL_QUERY
-            Prompt = 'ripgrep> '
-            Delimiter = ':'
-            Header = '? CTRL-R (Ripgrep mode) ? CTRL -F (fzf mode) ?'
-            Preview = 'bat --color=always {1} --highlight-line {2}'
-            PreviewWindow = 'up,60%,border-bottom,+{2}+3/3,~3'
+            color            = "hl:-1:underline,hl+:-1:underline:reverse"
+            query            = $INITIAL_QUERY
+            prompt           = 'ripgrep> '
+            delimiter        = ':'
+            header           = '? CTRL-R (Ripgrep mode) ? CTRL -F (fzf mode) ?'
+            preview          = 'bat --color=always {1} --highlight-line {2}'
+            'preview-window' = 'up,60%,border-bottom,+{2}+3/3,~3'
         }
+
+        $fzfArgs = ($fzfArguments.GetEnumerator() | foreach-object { "--{0}=""{1}""" -f $_.Key, $_.Value }) -join ' '
+
         $Bind = @(
-                'ctrl-r:unbind(change,ctrl-r)+change-prompt(ripgrep> )' + "+disable-search+reload($RG_PREFIX {q} || $trueCmd)+rebind(change,ctrl-f)"
+            'ctrl-r:unbind(change,ctrl-r)+change-prompt(ripgrep> )' + "+disable-search+reload($RG_PREFIX {q} || $trueCmd)+rebind(change,ctrl-f)"
         )
         $Bind += 'ctrl-f:unbind(change,ctrl-f)+change-prompt(fzf> )+enable-search+clear-query+rebind(ctrl-r)'
         $Bind += "change:reload:$sleepCmd $RG_PREFIX {q} || $trueCmd"
+        $fzfArgs += ' --ansi --disabled ' + ($Bind | foreach-object { "--bind=""{0}""" -f $_ }) -join ' '
 
-        Invoke-Fzf @fzfArguments -Bind $Bind | ForEach-Object { $results += $_ }
+        Invoke-Expression -Command $('{0} {1}' -f $script:FzfLocation, $fzfArgs) | ForEach-Object { $results += $_ }
 
         # we need this here to prevent the editor launch from inherting FZF_DEFAULT_COMMAND from being overwritten (see #267):
         if ($script:OverrideFzfDefaultCommand) {
