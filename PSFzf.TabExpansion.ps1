@@ -321,22 +321,20 @@ function script:Invoke-FzfTabCompletionInner() {
             $str = FixCompletionResult $result
         }
 
-        if ($script:continueCompletion) {
-            $isQuoted = $str.EndsWith("'")
-            $resultTrimmed = $str.Trim(@('''', '"'))
-            if (Test-Path "$resultTrimmed"  -PathType Container) {
-                if ($isQuoted) {
-                    $str = "'{0}{1}'" -f "$resultTrimmed", $script:TabContinuousTrigger
-                }
-                else {
-                    $str = "$resultTrimmed" + $script:TabContinuousTrigger
-                }
+        $isQuoted = $str.EndsWith("'")
+        $resultTrimmed = $str.Trim(@('''', '"'))
+        if (Test-Path "$resultTrimmed"  -PathType Container) {
+            if ($isQuoted) {
+                $str = "'{0}{1}'" -f "$resultTrimmed", $script:TabContinuousTrigger
             }
             else {
-                # no more paths to complete, so let's stop completion:
-                $str += ' '
-                $script:continueCompletion = $false
+                $str = "$resultTrimmed" + $script:TabContinuousTrigger
             }
+        }
+        else {
+            # no more paths to complete, so let's stop completion:
+            $str += ' '
+            $script:continueCompletion = $false
         }
 
         $leftCursor = $completions.ReplacementIndex
