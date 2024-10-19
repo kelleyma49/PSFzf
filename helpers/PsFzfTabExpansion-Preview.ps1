@@ -17,7 +17,6 @@ else {
 }
 # is directory?
 if (Test-Path $path -PathType Container) {
-
     Get-ChildItem $path
 
     if (Get-Command git -ErrorAction Ignore) {
@@ -46,7 +45,13 @@ elseif (Test-Path $path -PathType leaf) {
 elseif (($cmdResults = Get-Command $Item -ErrorAction Ignore)) {
     if ($cmdResults) {
         if ($cmdResults.CommandType -ne 'Application') {
-            Get-Help $Item
+            if ($ansiCompatible -and $(Get-Command bat -ErrorAction Ignore)) {
+                Get-Help $Item | bat --language=markdown --color always --style=plain
+            }
+            else {
+
+            }
+
         }
         else {
             # just output application location:
