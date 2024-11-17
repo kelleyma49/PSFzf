@@ -68,6 +68,10 @@
     # Functions to export from this module
     FunctionsToExport  = @(
         'Enable-PsFzfAliases',
+        'Invoke-FzfPsReadlineHandlerProvider',
+        'Invoke-FzfPsReadlineHandlerHistory',
+        'Invoke-FzfPsReadlineHandlerSetLocation',
+        'Invoke-FzfPsReadlineHandlerHistoryArgs',
         'Invoke-FuzzyEdit',
         'Invoke-FuzzyFasd',
         'Invoke-FuzzyGitStatus',
