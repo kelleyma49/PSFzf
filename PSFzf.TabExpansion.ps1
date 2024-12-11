@@ -284,12 +284,33 @@ function script:Invoke-FzfTabCompletionInner() {
             $additionalCmd = @{ Preview = $($script:PowershellCmd + " -NoProfile -NonInteractive -File \""$previewScript\"" \""" + $path + "\"" {}") }
         }
 
+        $previewWindow = 'down:30%'
+        $altPreviewWindow = 'right:50%'
+
+        if (([string]::IsNullOrWhiteSpace($env:_PSFZF_FZF_TAB_PREVIEW_DEFAULT)) -or ($env:_PSFZF_FZF_TAB_PREVIEW_DEFAULT -eq 'down') ) {
+            $previewWindow = 'down:30%'
+            $altPreviewWindow = 'right:50%'
+        }
+        elseif ($env:_PSFZF_FZF_TAB_PREVIEW_DEFAULT -eq 'right') {
+            $previewWindow = 'right:50%'
+            $altPreviewWindow = 'down:30%'
+        }
+        elseif ($env:_PSFZF_FZF_TAB_PREVIEW_DEFAULT -eq 'left') {
+            $previewWindow = 'left:50%'
+            $altPreviewWindow = 'down:30%'
+        }
+        elseif ($env:_PSFZF_FZF_TAB_PREVIEW_DEFAULT -eq 'top') {
+            $previewWindow = 'top:50%'
+            $altPreviewWindow = 'left:50%'
+        }
+        $changePreviewWindow = "$previewWindow,$altPreviewWindow,border-rounded|hidden|"
+
         $script:fzfOutput = @()
         $completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf `
             -Layout reverse `
             -Expect "$expectTriggers" `
-            -PreviewWindow 'down:30%' `
-            -Bind 'tab:down', 'btab:up', 'ctrl-/:change-preview-window(down,right:50%,border-top|hidden|)' `
+            -PreviewWindow "$previewWindow" `
+            -Bind 'tab:down', 'btab:up', "ctrl-/:change-preview-window($changePreviewWindow)" `
             @additionalCmd | ForEach-Object {
             $script:fzfOutput += $_
         }
