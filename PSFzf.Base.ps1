@@ -192,6 +192,8 @@ function Set-PsFzfOption{
 		$EnableAliasFuzzyGitStatus,
 		[switch]
 		$EnableFd,
+		[string]
+		$TabContinuousTrigger,
 		[ScriptBlock]
 		$AltCCommand
 	)
