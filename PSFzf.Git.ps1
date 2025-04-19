@@ -192,7 +192,7 @@ function Invoke-PsFzfGitHashes() {
     & git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" $(Get-ColorAlways).Trim() --graph | `
         Invoke-Fzf @fzfArguments -NoSort  `
         -BorderLabel "$script:hashesString" `
-    -Preview "$previewCmd" | ForEach-Object {
+        -Preview "$previewCmd" | ForEach-Object {
         if ($_ -match '\d\d-\d\d-\d\d\s+([a-f0-9]+)\s+') {
             $result += $Matches.1
         }
@@ -224,7 +224,7 @@ function Invoke-PsFzfGitBranches() {
     $branches |
     Invoke-Fzf @fzfArguments -Preview "$previewCmd" -BorderLabel "$script:branchesString" -HeaderLines 2 -Tiebreak begin -ReverseInput | `
         ForEach-Object {
-        $result += $($_.Substring('* '.Length) -split ' ')[0]
+        $result += $($_ -split ' ')[0]
     }
 
     $result
