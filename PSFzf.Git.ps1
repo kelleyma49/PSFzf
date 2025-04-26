@@ -12,9 +12,9 @@ else {
     $script:pwshExec = "powershell"
 }
 
-$script:IsWindowsCheck = ($PSVersionTable.PSVersion.Major -le 5) -or $IsWindows
+$script:IsPSWindows = ($PSVersionTable.PSVersion.Major -le 5)
 
-if ($RunningInWindowsTerminal -or -not $script:IsWindowsCheck) {
+if ($script:AnsiCompatible -or -not $script:IsPSWindows) {
     $script:filesString = '📁 Files'
     $script:hashesString = '🍡 Hashes'
     $script:allBranchesString = '🌳 All branches'
@@ -118,7 +118,7 @@ function IsInGitRepo() {
 }
 
 function Get-ColorAlways($setting = ' --color=always') {
-    if ($RunningInWindowsTerminal -or -not $IsWindowsCheck) {
+    if ($script:AnsiCompatible -or -not $IsPSWindows) {
         return $setting
     }
     else {
