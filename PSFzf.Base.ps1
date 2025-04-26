@@ -1012,7 +1012,7 @@ try
 	$script:UseHeightOption = $fzfVersion.length -ge 2 -and `
 							  ([int]$fzfVersion[0] -gt 0 -or `
 							  [int]$fzfVersion[1] -ge 21) -and `
-							  $script:RunningInWindowsTerminald
+							  $script:RunningInWindowsTerminal
 	$script:UseWalker = $fzfVersion.length -ge 2 -and `
 						([int]$fzfVersion[0] -gt 0 -or `
 						[int]$fzfVersion[1] -ge 48)
