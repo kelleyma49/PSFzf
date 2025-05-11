@@ -292,6 +292,7 @@ function Invoke-Fzf {
 		# Interface
 		[Alias('m')]
 		[switch]$Multi,
+		[switch]$HighlightLine,
 		[switch]$NoMouse,
 		[string[]]$Bind,
 		[switch]$Cycle,
@@ -319,6 +320,7 @@ function Invoke-Fzf {
 		[int]$HeaderLines = -1,
 
 		# Display
+		[switch]$Read0,
 		[switch]$Ansi,
 		[int]$Tabstop = 8,
 		[string]$Color,
@@ -351,6 +353,7 @@ function Invoke-Fzf {
 	Begin {
 		# process parameters:
 		$arguments = ''
+		$WriteLine = $true
 		if ($PSBoundParameters.ContainsKey('Extended') -and $Extended) { $arguments += '--extended ' }
 		if ($PSBoundParameters.ContainsKey('Exact') -and $Exact) { $arguments += '--exact ' }
 		if ($PSBoundParameters.ContainsKey('CaseInsensitive') -and $CaseInsensitive) { $arguments += '-i ' }
@@ -363,6 +366,7 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('Tiebreak') -and ![string]::IsNullOrWhiteSpace($Tiebreak)) { $arguments += "--tiebreak=$Tiebreak " }
 		if ($PSBoundParameters.ContainsKey('Disabled') -and $Disabled) { $arguments += '--disabled ' }
 		if ($PSBoundParameters.ContainsKey('Multi') -and $Multi) { $arguments += '--multi ' }
+		if ($PSBoundParameters.ContainsKey('Highlightline') -and $Highlightline) { $arguments += '--highlight-line ' }
 		if ($PSBoundParameters.ContainsKey('NoMouse') -and $NoMouse) { $arguments += '--no-mouse ' }
 		if ($PSBoundParameters.ContainsKey('Bind') -and $Bind.Length -ge 1) { $Bind | ForEach-Object { $arguments += "--bind=""$_"" " } }
 		if ($PSBoundParameters.ContainsKey('Reverse') -and $Reverse) { $arguments += '--reverse ' }
@@ -382,6 +386,7 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('Marker') -and ![string]::IsNullOrWhiteSpace($Marker)) { $arguments += "--marker=""$Marker"" " }
 		if ($PSBoundParameters.ContainsKey('Header') -and ![string]::IsNullOrWhiteSpace($Header)) { $arguments += "--header=""$Header"" " }
 		if ($PSBoundParameters.ContainsKey('HeaderLines') -and $HeaderLines -ge 0) { $arguments += "--header-lines=$HeaderLines " }
+		if ($PSBoundParameters.ContainsKey('Read0') -and $Read0) { $arguments += '--read0 ' ; $WriteLine = $false }
 		if ($PSBoundParameters.ContainsKey('Ansi') -and $Ansi) { $arguments += '--ansi ' }
 		if ($PSBoundParameters.ContainsKey('Tabstop') -and $Tabstop -ge 0) { $arguments += "--tabstop=$Tabstop " }
 		if ($PSBoundParameters.ContainsKey('Color') -and ![string]::IsNullOrWhiteSpace($Color)) { $arguments += "--color=""$Color"" " }
@@ -504,7 +509,12 @@ function Invoke-Fzf {
 			if ($PWD.Provider.Name -eq 'FileSystem') {
 				Invoke-Expression (Get-FileSystemCmd $PWD.ProviderPath) | ForEach-Object {
 					try {
-						$utf8Stream.WriteLine($_)
+						if ($WriteLine) {
+							$utf8Stream.WriteLine($_)
+						}
+						else {
+							$utf8Stream.Write($_)
+						}
 					}
 					catch [System.Management.Automation.MethodInvocationException] {
 						# Possibly broken pipe. Next clause will handle graceful shutdown.
@@ -531,7 +541,12 @@ function Invoke-Fzf {
 						}
 					}
 					try {
-						$utf8Stream.WriteLine($str)
+						if ($WriteLine) {
+							$utf8Stream.WriteLine($str)
+						}
+						else {
+							$utf8Stream.Write($str)
+						}
 					}
 					catch [System.Management.Automation.MethodInvocationException] {
 						# Possibly broken pipe. We will shutdown the pipe below.
@@ -557,7 +572,12 @@ function Invoke-Fzf {
 					}
 				}
 				try {
-					$utf8Stream.WriteLine($str)
+					if ($WriteLine) {
+						$utf8Stream.WriteLine($str)
+					}
+					else {
+						$utf8Stream.Write($str)
+					}
 				}
 				catch [System.Management.Automation.MethodInvocationException] {
 					# Possibly broken pipe. We will shutdown the pipe below.
@@ -812,12 +832,47 @@ function Get-PickedHistory($Query = '', [switch]$UsePSReadLineHistory) {
 		if ($UsePSReadLineHistory) {
 			$reader = New-Object PSFzf.IO.ReverseLineReader -ArgumentList $((Get-PSReadlineOption).HistorySavePath)
 
-			$result = $reader.GetEnumerator() | ForEach-Object {
-				if (-not $fileHist.ContainsKey($_)) {
-					$fileHist.Add($_, $true)
-					$_
+			$result = $reader.GetEnumerator() | ForEach-Object `
+				-Begin { $lines = @() } `
+				-Process {
+				if ([string]::IsNullOrWhiteSpace($_)) {
+					# do nothing
 				}
-			} | Invoke-Fzf -Query "$Query" -Bind ctrl-r:toggle-sort, ctrl-z:ignore -Scheme history
+				elseif ($lines.Count -eq 0) {
+					$lines = @($_) # start collecting lines
+				}
+				elseif ($_.EndsWith('`')) {
+					$lines += $_.TrimEnd("`n").TrimEnd('`') # continue collecting lines with backtick
+				}
+				else {
+					if ($lines.Length -eq 1) {
+						$lines = $lines[0]
+					}
+					else {
+						$lines = $lines[-1.. - ($lines.Length)] -join "`n"
+					}
+					# found a new line, so emit and start over:
+					if (-not $fileHist.ContainsKey($lines)) {
+						$fileHist.Add($lines, $true)
+						$lines + [char]0
+					}
+
+					$lines = @($_)
+				}
+			} `
+				-End {
+				if ($lines.Length -eq 1) {
+					$lines = $lines[0]
+				}
+				else {
+					$lines = $lines[-1.. - ($lines.Length)] -join "`n"
+				}
+				# found a new line, so emit and start over:
+				if (-not $fileHist.ContainsKey($lines)) {
+					$fileHist.Add($lines, $true)
+					$lines + [char]0
+				}
+			} | Invoke-Fzf -Query "$Query" -Bind ctrl-r:toggle-sort, ctrl-z:ignore -Scheme history -Read0 -HighlightLine
 		}
 		else {
 			$result = Get-History | ForEach-Object { $_.CommandLine } | ForEach-Object {
@@ -931,7 +986,7 @@ function Invoke-FzfPsReadlineHandlerSetLocation {
 		& $script:AltCCommand -Location $result
 		[Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 	}
- else {
+	else {
 		InvokePromptHack
 	}
 }
@@ -943,7 +998,7 @@ function SetPsReadlineShortcut($Chord, [switch]$Override, $BriefDesc, $Desc, [sc
 	if ((Get-PSReadlineKeyHandler -Bound | Where-Object { $_.Key.ToLower() -eq $Chord }) -and -not $Override) {
 		return $false
 	}
- else {
+	else {
 		Set-PSReadlineKeyHandler -Key $Chord -Description $Desc -BriefDescription $BriefDesc -ScriptBlock $scriptBlock
 		if ($(Get-PSReadLineOption).EditMode -eq [Microsoft.PowerShell.EditMode]::Vi) {
 			Set-PSReadlineKeyHandler -Key $Chord -ViMode Command -Description $Desc -BriefDescription $BriefDesc -ScriptBlock $scriptBlock
@@ -957,7 +1012,7 @@ function FindFzf() {
 	if ($script:IsWindows) {
 		$AppNames = @('fzf-*-windows_*.exe', 'fzf.exe')
 	}
- else {
+	else {
 		if ($IsMacOS) {
 			$AppNames = @('fzf-*-darwin_*', 'fzf')
 		}
@@ -991,31 +1046,31 @@ $PsReadlineShortcuts = @{
 		'BriefDesc'   = 'Fzf Provider Select'
 		'Desc'        = 'Run fzf for current provider based on current token'
 		'ScriptBlock' = { Invoke-FzfPsReadlineHandlerProvider }
- };
+	};
 	PSReadlineChordReverseHistory     = [PsCustomObject]@{
 		'Chord'       = "$PSReadlineChordReverseHistory"
 		'BriefDesc'   = 'Fzf Reverse History Select'
 		'Desc'        = 'Run fzf to search through PSReadline history'
 		'ScriptBlock' = { Invoke-FzfPsReadlineHandlerHistory }
- };
+	};
 	PSReadlineChordSetLocation        = @{
 		'Chord'       = "$PSReadlineChordSetLocation"
 		'BriefDesc'   = 'Fzf Set Location'
 		'Desc'        = 'Run fzf to select directory to set current location'
 		'ScriptBlock' = { Invoke-FzfPsReadlineHandlerSetLocation }
- };
+	};
 	PSReadlineChordReverseHistoryArgs = @{
 		'Chord'       = "$PSReadlineChordReverseHistoryArgs"
 		'BriefDesc'   = 'Fzf Reverse History Arg Select'
 		'Desc'        = 'Run fzf to search through command line arguments in PSReadline history'
 		'ScriptBlock' = { Invoke-FzfPsReadlineHandlerHistoryArgs }
- };
+	};
 	PSReadlineChordTabCompletion      = [PSCustomObject]@{
 		'Chord'       = "Tab"
 		'BriefDesc'   = 'Fzf Tab Completion'
 		'Desc'        = 'Invoke Fzf for tab completion'
 		'ScriptBlock' = { Invoke-TabCompletion }
- };
+	};
 }
 if (Get-Module -ListAvailable -Name PSReadline) {
 	$PsReadlineShortcuts.GetEnumerator() | ForEach-Object {
