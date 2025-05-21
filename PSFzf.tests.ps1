@@ -100,6 +100,197 @@ Describe "Find-CurrentPath" {
 	}
 }
 
+# Initialize call trackers for Invoke-FuzzyZLocation tests
+$script:setLocationCalls = [System.Collections.Generic.List[string]]::new()
+$script:invokeFzfCalls = [System.Collections.Generic.List[hashtable]]::new()
+$script:writeWarningCalls = [System.Collections.Generic.List[string]]::new()
+
+Describe "Invoke-FuzzyZLocation" {
+    InModuleScope PsFzf {
+        BeforeEach {
+            $script:setLocationCalls.Clear()
+            $script:invokeFzfCalls.Clear()
+            $script:writeWarningCalls.Clear()
+
+            # Default Mocks
+            Mock Get-ZLocation { return @{'/path/defaultA' = 1; '/path/defaultB' = 2} } -Global | Out-Null
+            Mock Set-Location { param($Path) $script:setLocationCalls.Add($Path) } -Global | Out-Null
+            
+            Mock Invoke-Fzf {
+                param(
+                    [Parameter(ValueFromPipeline)]
+                    $InputObject,
+                    $Query,
+                    $NoSort
+                )
+                begin { $collectedInput = @() }
+                process { if ($null -ne $InputObject) { $collectedInput += $InputObject } }
+                end {
+                    $script:invokeFzfCalls.Add(@{ Query = $Query; NoSort = $NoSort; InputPassedToFzf = $collectedInput })
+                    # Default: return first item from collected input if any, to simulate selection
+                    if ($collectedInput.Count -gt 0) {
+                        return $collectedInput[0]
+                    }
+                    return $null
+                }
+            } -ModuleName PSFzf | Out-Null
+            
+            Mock Write-Warning { param($Message) $script:writeWarningCalls.Add($Message) } -Global | Out-Null
+        }
+
+        Context "When no query is provided" {
+            It "should call Invoke-Fzf without a query, with sorted paths, and Set-Location with the result" {
+                Mock Get-ZLocation { return @{'/path/low_freq' = 5; '/path/high_freq' = 10; '/path/mid_freq' = 7} } -Global | Out-Null
+                # Invoke-Fzf mock will by default return '/path/high_freq' (first after sort by value desc)
+                
+                Invoke-FuzzyZLocation
+                
+                $script:invokeFzfCalls.Count | Should -Be 1
+                $script:invokeFzfCalls[0].Query | Should -BeNullOrEmpty
+                $script:invokeFzfCalls[0].NoSort | Should -BeTrue # Verify -NoSort is passed
+                
+                # Expected input to Invoke-Fzf based on sorting by value (frequency/recency)
+                $expectedFzfInput = @('/path/high_freq', '/path/mid_freq', '/path/low_freq') 
+                $script:invokeFzfCalls[0].InputPassedToFzf | Should -BeExactly $expectedFzfInput
+                
+                $script:setLocationCalls.Count | Should -Be 1
+                $script:setLocationCalls[0] | Should -Be '/path/high_freq' # Because Invoke-Fzf mock returns the first item
+            }
+        }
+
+        Context "When a query is provided" {
+            It "navigates directly if the query uniquely matches a path" {
+                Mock Get-ZLocation { return @{'/home/user/projectUnique' = 10; '/tmp/another' = 5; '/home/user/anotherUnique' = 1 } } -Global | Out-Null
+                
+                Invoke-FuzzyZLocation -Query "projectUnique"
+                
+                $script:setLocationCalls.Count | Should -Be 1
+                $script:setLocationCalls[0] | Should -Be '/home/user/projectUnique'
+                $script:invokeFzfCalls.Count | Should -Be 0
+            }
+
+            It "calls Invoke-Fzf with the query if multiple paths match" {
+                $zLocationData = @{
+                    '/user/work/projectA' = 10
+                    '/user/dev/projectB' = 5
+                    '/opt/other' = 1
+                    '/root/projectC' = 12 # Highest frequency, but Invoke-Fzf mock below will return projectA
+                }
+                Mock Get-ZLocation { return $zLocationData } -Global | Out-Null
+                
+                # Specific mock for Invoke-Fzf for this test to control its return value
+                Mock Invoke-Fzf {
+                    param(
+                        [Parameter(ValueFromPipeline)]
+                        $InputObject,
+                        $Query,
+                        $NoSort
+                    )
+                    begin { $collectedInput = @() }
+                    process { if ($null -ne $InputObject) { $collectedInput += $InputObject } }
+                    end {
+                        $script:invokeFzfCalls.Add(@{ Query = $Query; NoSort = $NoSort; InputPassedToFzf = $collectedInput })
+                        if ($Query -eq "project") { return '/user/work/projectA' } # Simulate selection
+                        return $null
+                    }
+                } -ModuleName PSFzf | Out-Null
+
+                Invoke-FuzzyZLocation -Query "project"
+
+                $script:invokeFzfCalls.Count | Should -Be 1
+                $script:invokeFzfCalls[0].Query | Should -Be "project"
+                $script:invokeFzfCalls[0].NoSort | Should -BeTrue
+                
+                # Input to FZF should still be all paths from ZLocation, sorted by value
+                $expectedFzfInput = @('/root/projectC', '/user/work/projectA', '/user/dev/projectB', '/opt/other')
+                $script:invokeFzfCalls[0].InputPassedToFzf | Should -BeExactly $expectedFzfInput
+
+                $script:setLocationCalls.Count | Should -Be 1
+                $script:setLocationCalls[0] | Should -Be '/user/work/projectA'
+            }
+            
+            It "calls Invoke-Fzf with the query if no paths match" {
+                Mock Get-ZLocation { return @{'/user/work/projectA' = 10; '/user/dev/projectB' = 5} } -Global | Out-Null
+                # Specific mock for Invoke-Fzf to return null (user cancels)
+                Mock Invoke-Fzf {
+                    param(
+                        [Parameter(ValueFromPipeline)]
+                        $InputObject,
+                        $Query,
+                        $NoSort
+                    )
+                    begin { $collectedInput = @() }
+                    process { if ($null -ne $InputObject) { $collectedInput += $InputObject } }
+                    end {
+                        $script:invokeFzfCalls.Add(@{ Query = $Query; NoSort = $NoSort; InputPassedToFzf = $collectedInput })
+                        return $null 
+                    }
+                } -ModuleName PSFzf | Out-Null
+
+                Invoke-FuzzyZLocation -Query "nonexistent"
+
+                $script:invokeFzfCalls.Count | Should -Be 1
+                $script:invokeFzfCalls[0].Query | Should -Be "nonexistent"
+                
+                # Input to FZF should still be all paths from ZLocation, sorted
+                $expectedFzfInput = @('/user/work/projectA', '/user/dev/projectB')
+                $script:invokeFzfCalls[0].InputPassedToFzf | Should -BeExactly $expectedFzfInput
+
+                $script:setLocationCalls.Count | Should -Be 0
+            }
+
+            It "navigates directly for unique match with spaces in path and query" {
+                Mock Get-ZLocation { return @{'/home/my documents/project Alpha' = 10; '/tmp/another' = 5; '/home/my documents/project Beta' = 1} } -Global | Out-Null
+                
+                Invoke-FuzzyZLocation -Query "project Alpha" # Query itself might have spaces
+                
+                $script:setLocationCalls.Count | Should -Be 1
+                $script:setLocationCalls[0] | Should -Be '/home/my documents/project Alpha'
+                $script:invokeFzfCalls.Count | Should -Be 0
+            }
+        }
+        
+        Context "Error Handling" {
+            It "should write a warning if Get-ZLocation throws an error" {
+                Mock Get-ZLocation { throw "ZLocation Database Error" } -Global | Out-Null
+                
+                Invoke-FuzzyZLocation -Query "anyquery" # Query or no query, error should be caught
+                
+                $script:writeWarningCalls.Count | Should -Be 1
+                $script:writeWarningCalls[0] | Should -Match "An error occurred in Invoke-FuzzyZLocation: ZLocation Database Error"
+                
+                # Ensure no navigation attempt was made
+                $script:setLocationCalls.Count | Should -Be 0
+                $script:invokeFzfCalls.Count | Should -Be 0 
+            }
+
+            It "should write a warning if Set-Location throws an error during direct navigation" {
+                Mock Get-ZLocation { return @{'/home/user/projectUnique' = 10} } -Global | Out-Null
+                Mock Set-Location { param($Path) throw "Set-Location Failed for $Path" } -Global | Out-Null
+
+                Invoke-FuzzyZLocation -Query "projectUnique"
+
+                $script:writeWarningCalls.Count | Should -Be 1
+                $script:writeWarningCalls[0] | Should -Match "An error occurred in Invoke-FuzzyZLocation: Set-Location Failed for /home/user/projectUnique"
+                $script:setLocationCalls.Count | Should -Be 0 # Set-Location mock throws, so it won't add to list
+                $script:invokeFzfCalls.Count | Should -Be 0
+            }
+
+            It "should write a warning if Set-Location throws an error after FZF selection" {
+                Mock Get-ZLocation { return @{'/path/selected' = 10} } -Global | Out-Null
+                Mock Invoke-Fzf { param($Query, $NoSort, [Parameter(ValueFromPipeline)]$InputObject) return '/path/selected' } -ModuleName PSFzf | Out-Null
+                Mock Set-Location { param($Path) throw "Set-Location Failed for $Path" } -Global | Out-Null
+
+                Invoke-FuzzyZLocation # No query, FZF selects '/path/selected'
+
+                $script:writeWarningCalls.Count | Should -Be 1
+                $script:writeWarningCalls[0] | Should -Match "An error occurred in Invoke-FuzzyZLocation: Set-Location Failed for /path/selected"
+                $script:setLocationCalls.Count | Should -Be 0
+            }
+        }
+    }
+}
+
 Describe "Add-BinaryModuleTypes" {
 	InModuleScope PsFzf {
 		Context "Module Loaded" {

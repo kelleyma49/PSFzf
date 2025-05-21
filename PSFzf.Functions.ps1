@@ -278,16 +278,51 @@ if ((-not $IsLinux) -and (-not $IsMacOS)) {
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyZLocation() {
+    param([string]$Query)
+
     $result = $null
     try {
-        (Get-ZLocation).GetEnumerator() | Sort-Object { $_.Value } -Descending | ForEach-Object { $_.Key } | Invoke-Fzf -NoSort | ForEach-Object { $result = $_ }
+        if (-not [string]::IsNullOrEmpty($Query)) {
+            $allPaths = (Get-ZLocation).Keys # Assuming Get-ZLocation is available and returns a Hashtable or similar
+            # Ensure $allPaths is a collection of strings for Where-Object
+            if ($allPaths -isnot [System.Collections.IEnumerable] -or $allPaths -is [string]) {
+                # Handle cases where Get-ZLocation might not return a collection as expected
+                # This is defensive coding. If Get-ZLocation always returns a hashtable, .Keys is fine.
+                $allPaths = @($allPaths) 
+            }
+
+            $matchingPaths = $allPaths | Where-Object { $_ -like "*$Query*" }
+            
+            # Measure-Object can return null if $matchingPaths is empty or $null
+            $matchCount = 0
+            if ($null -ne $matchingPaths) {
+                $matchCount = ($matchingPaths | Measure-Object).Count
+            }
+
+            if ($matchCount -eq 1) {
+                # If $matchingPaths was originally a single string, Where-Object returns it as is.
+                # If it was a collection, Measure-Object.Count is reliable.
+                # To be safe, if it's a collection, take the first. If it's a single string, use it.
+                $targetPath = if ($matchingPaths -is [System.Array]) { $matchingPaths[0] } else { $matchingPaths }
+                Set-Location $targetPath
+                return # Successfully navigated, exit function
+            }
+            else {
+                # 0 or multiple matches, proceed to FZF
+                (Get-ZLocation).GetEnumerator() | Sort-Object { $_.Value } -Descending | ForEach-Object { $_.Key } | Invoke-Fzf -NoSort -Query $Query | ForEach-Object { $result = $_ }
+            }
+        }
+        else {
+            # No query provided, original behavior
+            (Get-ZLocation).GetEnumerator() | Sort-Object { $_.Value } -Descending | ForEach-Object { $_.Key } | Invoke-Fzf -NoSort | ForEach-Object { $result = $_ }
+        }
     }
     catch {
-
+        Write-Warning "An error occurred in Invoke-FuzzyZLocation: $($_.Exception.Message)"
     }
+
     if ($null -ne $result) {
-        # use cd in case it's aliased to something else:
-        cd $result
+        Set-Location $result
     }
 }
 
