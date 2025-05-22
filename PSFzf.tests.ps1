@@ -133,7 +133,7 @@ Describe "Invoke-FuzzyZLocation" {
                     }
                     return $null
                 }
-            } -ModuleName PSFzf | Out-Null
+            } -Global | Out-Null # Changed from -ModuleName PSFzf to -Global
             
             Mock Write-Warning { param($Message) $script:writeWarningCalls.Add($Message) } -Global | Out-Null
         }
@@ -193,7 +193,7 @@ Describe "Invoke-FuzzyZLocation" {
                         if ($Query -eq "project") { return '/user/work/projectA' } # Simulate selection
                         return $null
                     }
-                } -ModuleName PSFzf | Out-Null
+                } -Global | Out-Null # Changed from -ModuleName PSFzf to -Global
 
                 Invoke-FuzzyZLocation -Query "project"
 
@@ -225,7 +225,7 @@ Describe "Invoke-FuzzyZLocation" {
                         $script:invokeFzfCalls.Add(@{ Query = $Query; NoSort = $NoSort; InputPassedToFzf = $collectedInput })
                         return $null 
                     }
-                } -ModuleName PSFzf | Out-Null
+                } -Global | Out-Null # Changed from -ModuleName PSFzf to -Global
 
                 Invoke-FuzzyZLocation -Query "nonexistent"
 
@@ -278,7 +278,7 @@ Describe "Invoke-FuzzyZLocation" {
 
             It "should write a warning if Set-Location throws an error after FZF selection" {
                 Mock Get-ZLocation { return @{'/path/selected' = 10} } -Global | Out-Null
-                Mock Invoke-Fzf { param($Query, $NoSort, [Parameter(ValueFromPipeline)]$InputObject) return '/path/selected' } -ModuleName PSFzf | Out-Null
+                Mock Invoke-Fzf { param($Query, $NoSort, [Parameter(ValueFromPipeline)]$InputObject) return '/path/selected' } -Global | Out-Null # Changed from -ModuleName PSFzf to -Global
                 Mock Set-Location { param($Path) throw "Set-Location Failed for $Path" } -Global | Out-Null
 
                 Invoke-FuzzyZLocation # No query, FZF selects '/path/selected'
