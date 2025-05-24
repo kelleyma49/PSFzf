@@ -113,8 +113,8 @@ Describe "Invoke-FuzzyZLocation" {
             $script:writeWarningCalls = @()
 
             # Default Mocks
-            Mock Get-ZLocation { return @{'/path/defaultA' = 1; '/path/defaultB' = 2} } -Global | Out-Null
-            Mock Set-Location { param($Path) $script:setLocationCalls += $Path } -Global | Out-Null
+            Mock Get-ZLocation { return @{'/path/defaultA' = 1; '/path/defaultB' = 2} } | Out-Null
+            Mock Set-Location { param($Path) $script:setLocationCalls += $Path } | Out-Null
             
             Mock Invoke-Fzf {
                 param(
@@ -133,14 +133,14 @@ Describe "Invoke-FuzzyZLocation" {
                     }
                     return $null
                 }
-            } -Global | Out-Null # Changed from -ModuleName PSFzf to -Global
+            } -ModuleName PSFzf | Out-Null # Reverted from -Global to -ModuleName PSFzf
             
-            Mock Write-Warning { param($Message) $script:writeWarningCalls += $Message } -Global | Out-Null
+            Mock Write-Warning { param($Message) $script:writeWarningCalls += $Message } | Out-Null
         }
 
         Context "When no query is provided" {
             It "should call Invoke-Fzf without a query, with sorted paths, and Set-Location with the result" {
-                Mock Get-ZLocation { return @{'/path/low_freq' = 5; '/path/high_freq' = 10; '/path/mid_freq' = 7} } -Global | Out-Null
+                Mock Get-ZLocation { return @{'/path/low_freq' = 5; '/path/high_freq' = 10; '/path/mid_freq' = 7} } | Out-Null
                 # Invoke-Fzf mock will by default return '/path/high_freq' (first after sort by value desc)
                 
                 Invoke-FuzzyZLocation
@@ -160,7 +160,7 @@ Describe "Invoke-FuzzyZLocation" {
 
         Context "When a query is provided" {
             It "navigates directly if the query uniquely matches a path" {
-                Mock Get-ZLocation { return @{'/home/user/projectUnique' = 10; '/tmp/another' = 5; '/home/user/anotherUnique' = 1 } } -Global | Out-Null
+                Mock Get-ZLocation { return @{'/home/user/projectUnique' = 10; '/tmp/another' = 5; '/home/user/anotherUnique' = 1 } } | Out-Null
                 
                 Invoke-FuzzyZLocation -Query "projectUnique"
                 
@@ -176,7 +176,7 @@ Describe "Invoke-FuzzyZLocation" {
                     '/opt/other' = 1
                     '/root/projectC' = 12 # Highest frequency, but Invoke-Fzf mock below will return projectA
                 }
-                Mock Get-ZLocation { return $zLocationData } -Global | Out-Null
+                Mock Get-ZLocation { return $zLocationData } | Out-Null
                 
                 # Specific mock for Invoke-Fzf for this test to control its return value
                 Mock Invoke-Fzf {
@@ -193,7 +193,7 @@ Describe "Invoke-FuzzyZLocation" {
                         if ($Query -eq "project") { return '/user/work/projectA' } # Simulate selection
                         return $null
                     }
-                } -Global | Out-Null # Changed from -ModuleName PSFzf to -Global
+                } -ModuleName PSFzf | Out-Null # Reverted from -Global to -ModuleName PSFzf
 
                 Invoke-FuzzyZLocation -Query "project"
 
@@ -210,7 +210,7 @@ Describe "Invoke-FuzzyZLocation" {
             }
             
             It "calls Invoke-Fzf with the query if no paths match" {
-                Mock Get-ZLocation { return @{'/user/work/projectA' = 10; '/user/dev/projectB' = 5} } -Global | Out-Null
+                Mock Get-ZLocation { return @{'/user/work/projectA' = 10; '/user/dev/projectB' = 5} } | Out-Null
                 # Specific mock for Invoke-Fzf to return null (user cancels)
                 Mock Invoke-Fzf {
                     param(
@@ -225,7 +225,7 @@ Describe "Invoke-FuzzyZLocation" {
                     $script:invokeFzfCalls += @{ Query = $Query; NoSort = $NoSort; InputPassedToFzf = $collectedInput }
                         return $null 
                     }
-                } -Global | Out-Null # Changed from -ModuleName PSFzf to -Global
+                } -ModuleName PSFzf | Out-Null # Reverted from -Global to -ModuleName PSFzf
 
                 Invoke-FuzzyZLocation -Query "nonexistent"
 
@@ -240,7 +240,7 @@ Describe "Invoke-FuzzyZLocation" {
             }
 
             It "navigates directly for unique match with spaces in path and query" {
-                Mock Get-ZLocation { return @{'/home/my documents/project Alpha' = 10; '/tmp/another' = 5; '/home/my documents/project Beta' = 1} } -Global | Out-Null
+                Mock Get-ZLocation { return @{'/home/my documents/project Alpha' = 10; '/tmp/another' = 5; '/home/my documents/project Beta' = 1} } | Out-Null
                 
                 Invoke-FuzzyZLocation -Query "project Alpha" # Query itself might have spaces
                 
@@ -252,7 +252,7 @@ Describe "Invoke-FuzzyZLocation" {
         
         Context "Error Handling" {
             It "should write a warning if Get-ZLocation throws an error" {
-                Mock Get-ZLocation { throw "ZLocation Database Error" } -Global | Out-Null
+                Mock Get-ZLocation { throw "ZLocation Database Error" } | Out-Null
                 
                 Invoke-FuzzyZLocation -Query "anyquery" # Query or no query, error should be caught
                 
@@ -265,8 +265,8 @@ Describe "Invoke-FuzzyZLocation" {
             }
 
             It "should write a warning if Set-Location throws an error during direct navigation" {
-                Mock Get-ZLocation { return @{'/home/user/projectUnique' = 10} } -Global | Out-Null
-                Mock Set-Location { param($Path) throw "Set-Location Failed for $Path" } -Global | Out-Null
+                Mock Get-ZLocation { return @{'/home/user/projectUnique' = 10} } | Out-Null
+                Mock Set-Location { param($Path) throw "Set-Location Failed for $Path" } | Out-Null
 
                 Invoke-FuzzyZLocation -Query "projectUnique"
 
@@ -277,9 +277,9 @@ Describe "Invoke-FuzzyZLocation" {
             }
 
             It "should write a warning if Set-Location throws an error after FZF selection" {
-                Mock Get-ZLocation { return @{'/path/selected' = 10} } -Global | Out-Null
-                Mock Invoke-Fzf { param($Query, $NoSort, [Parameter(ValueFromPipeline)]$InputObject) return '/path/selected' } -Global | Out-Null # Changed from -ModuleName PSFzf to -Global
-                Mock Set-Location { param($Path) throw "Set-Location Failed for $Path" } -Global | Out-Null
+                Mock Get-ZLocation { return @{'/path/selected' = 10} } | Out-Null
+                Mock Invoke-Fzf { param($Query, $NoSort, [Parameter(ValueFromPipeline)]$InputObject) return '/path/selected' } -ModuleName PSFzf | Out-Null # Reverted from -Global to -ModuleName PSFzf
+                Mock Set-Location { param($Path) throw "Set-Location Failed for $Path" } | Out-Null
 
                 Invoke-FuzzyZLocation # No query, FZF selects '/path/selected'
 
