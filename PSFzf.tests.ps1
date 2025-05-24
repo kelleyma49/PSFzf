@@ -101,20 +101,20 @@ Describe "Find-CurrentPath" {
 }
 
 # Initialize call trackers for Invoke-FuzzyZLocation tests
-$script:setLocationCalls = [System.Collections.Generic.List[string]]::new()
-$script:invokeFzfCalls = [System.Collections.Generic.List[hashtable]]::new()
-$script:writeWarningCalls = [System.Collections.Generic.List[string]]::new()
+$script:setLocationCalls = @()
+$script:invokeFzfCalls = @()
+$script:writeWarningCalls = @()
 
 Describe "Invoke-FuzzyZLocation" {
     InModuleScope PsFzf {
         BeforeEach {
-            $script:setLocationCalls.Clear()
-            $script:invokeFzfCalls.Clear()
-            $script:writeWarningCalls.Clear()
+            $script:setLocationCalls = @()
+            $script:invokeFzfCalls = @()
+            $script:writeWarningCalls = @()
 
             # Default Mocks
             Mock Get-ZLocation { return @{'/path/defaultA' = 1; '/path/defaultB' = 2} } -Global | Out-Null
-            Mock Set-Location { param($Path) $script:setLocationCalls.Add($Path) } -Global | Out-Null
+            Mock Set-Location { param($Path) $script:setLocationCalls += $Path } -Global | Out-Null
             
             Mock Invoke-Fzf {
                 param(
@@ -126,7 +126,7 @@ Describe "Invoke-FuzzyZLocation" {
                 begin { $collectedInput = @() }
                 process { if ($null -ne $InputObject) { $collectedInput += $InputObject } }
                 end {
-                    $script:invokeFzfCalls.Add(@{ Query = $Query; NoSort = $NoSort; InputPassedToFzf = $collectedInput })
+                    $script:invokeFzfCalls += @{ Query = $Query; NoSort = $NoSort; InputPassedToFzf = $collectedInput }
                     # Default: return first item from collected input if any, to simulate selection
                     if ($collectedInput.Count -gt 0) {
                         return $collectedInput[0]
@@ -135,7 +135,7 @@ Describe "Invoke-FuzzyZLocation" {
                 }
             } -Global | Out-Null # Changed from -ModuleName PSFzf to -Global
             
-            Mock Write-Warning { param($Message) $script:writeWarningCalls.Add($Message) } -Global | Out-Null
+            Mock Write-Warning { param($Message) $script:writeWarningCalls += $Message } -Global | Out-Null
         }
 
         Context "When no query is provided" {
@@ -189,7 +189,7 @@ Describe "Invoke-FuzzyZLocation" {
                     begin { $collectedInput = @() }
                     process { if ($null -ne $InputObject) { $collectedInput += $InputObject } }
                     end {
-                        $script:invokeFzfCalls.Add(@{ Query = $Query; NoSort = $NoSort; InputPassedToFzf = $collectedInput })
+                    $script:invokeFzfCalls += @{ Query = $Query; NoSort = $NoSort; InputPassedToFzf = $collectedInput }
                         if ($Query -eq "project") { return '/user/work/projectA' } # Simulate selection
                         return $null
                     }
@@ -222,7 +222,7 @@ Describe "Invoke-FuzzyZLocation" {
                     begin { $collectedInput = @() }
                     process { if ($null -ne $InputObject) { $collectedInput += $InputObject } }
                     end {
-                        $script:invokeFzfCalls.Add(@{ Query = $Query; NoSort = $NoSort; InputPassedToFzf = $collectedInput })
+                    $script:invokeFzfCalls += @{ Query = $Query; NoSort = $NoSort; InputPassedToFzf = $collectedInput }
                         return $null 
                     }
                 } -Global | Out-Null # Changed from -ModuleName PSFzf to -Global
