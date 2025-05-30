@@ -23,7 +23,7 @@ if (Test-Path $path -PathType Container) {
         Write-Output "" # extra separator before git status
         Push-Location $path
         if ($ansiCompatible -and $(Get-Command bat -ErrorAction Ignore)) {
-            git log -1 2> $null | bat "--style=changes" --color always
+            git log -1 2> $null | bat --no-config "--style=changes" --color always
         }
         else {
             git log -1 2> $null
@@ -35,7 +35,7 @@ if (Test-Path $path -PathType Container) {
 elseif (Test-Path $path -PathType leaf) {
     # use bat (https://github.com/sharkdp/bat) if it's available:
     if ($ansiCompatible -and $(Get-Command bat -ErrorAction Ignore)) {
-        bat "--style=numbers,changes" --color always $path
+        bat --no-config "--style=numbers,changes" --color always $path
     }
     else {
         Get-Content $path
@@ -46,7 +46,7 @@ elseif (($cmdResults = Get-Command $Item -ErrorAction Ignore)) {
     if ($cmdResults) {
         if ($cmdResults.CommandType -ne 'Application') {
             if ($ansiCompatible -and $(Get-Command bat -ErrorAction Ignore)) {
-                Get-Help $Item | bat --language=markdown --color always --style=plain
+                Get-Help $Item | bat --no-config --language=markdown --color always --style=plain
             }
             else {
 
