@@ -46,7 +46,7 @@ elseif (($cmdResults = Get-Command $Item -ErrorAction Ignore)) {
     if ($cmdResults) {
         if ($cmdResults.CommandType -ne 'Application') {
             if ($ansiCompatible -and $(Get-Command bat -ErrorAction Ignore)) {
-                Get-Help $Item | bat --no-config --language=markdown --color always --style=plain
+                Get-Help $Item | bat --no-config --language=man --color always --style=plain
             }
             else {
 
