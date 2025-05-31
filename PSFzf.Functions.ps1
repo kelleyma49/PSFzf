@@ -205,11 +205,18 @@ function GetProcessSelection() {
     $("{0,-8} {1,-8} {2,-8} PROCESS NAME" -f "PM(M)", "CPU", "ID") + "`n" + `
         "{0,-8} {1,-8} {2,-8} {3,-12}" -f "-----", "---", "--", "------------"
 
+    $arguments = @{
+        Bind          = @("ctrl-r:reload($cmd)", "ctrl-a:select-all", "ctrl-d:deselect-all", "ctrl-t:toggle-all")
+        Header        = $header
+        Multi         = $true
+        Preview       = "echo {}"
+        PreviewWindow = """down,3,wrap"""
+        Layout        = 'reverse'
+        Height        = '80%'
+    }
+
     $result = GetProcessesList | `
-        Invoke-Fzf -Multi -Header $header `
-        -Bind "ctrl-r:reload($cmd)", "ctrl-a:select-all", "ctrl-d:deselect-all", "ctrl-t:toggle-all" `
-        -Preview "echo {}" -PreviewWindow """down,3,wrap""" `
-        -Layout reverse -Height 80%
+        Invoke-Fzf @arguments
     $result | ForEach-Object {
         &$ResultAction $_
     }
@@ -342,7 +349,7 @@ function Invoke-PsFzfRipgrep() {
             prompt           = 'ripgrep> '
             delimiter        = ':'
             header           = '? CTRL-R (Ripgrep mode) ? CTRL -F (fzf mode) ?'
-            preview          = 'bat --color=always {1} --highlight-line {2}'
+            preview          = 'bat --no-config --color=always {1} --highlight-line {2}'
             'preview-window' = 'up,60%,border-bottom,+{2}+3/3,~3'
         }
 

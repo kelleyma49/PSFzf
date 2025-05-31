@@ -88,15 +88,46 @@ function SetGitKeyBindings($enable) {
         }
 
         if (Get-Command Set-PSReadLineKeyHandler -ErrorAction Ignore) {
-            @('ctrl+g,ctrl+b', 'Select Git branches via fzf', { Update-CmdLine $(Invoke-PsFzfGitBranches) }), `
-            @('ctrl+g,ctrl+f', 'Select Git files via fzf', { Update-CmdLine $(Invoke-PsFzfGitFiles) }), `
-            @('ctrl+g,ctrl+h', 'Select Git hashes via fzf', { Update-CmdLine $(Invoke-PsFzfGitHashes) }), `
-            @('ctrl+g,ctrl+p', 'Select Git pull requests via fzf', { Update-CmdLine $(Invoke-PsFzfGitPulLRequests) }), `
-            @('ctrl+g,ctrl+s', 'Select Git stashes via fzf', { Update-CmdLine $(Invoke-PsFzfGitStashes) }), `
-            @('ctrl+g,ctrl+t', 'Select Git tags via fzf', { Update-CmdLine $(Invoke-PsFzfGitTags) }) `
-            | ForEach-Object {
-                $script:GitKeyHandlers += $_[0]
-                Set-PSReadLineKeyHandler -Chord $_[0] -Description $_[1] -ScriptBlock $_[2]
+            @(
+                @{
+                    Chord            = 'ctrl+g,ctrl+b'
+                    BriefDescription = 'Fzf Git Branches Select'
+                    Description      = 'Select Git branches via fzf'
+                    ScriptBlock      = { Update-CmdLine $(Invoke-PsFzfGitBranches) }
+                }
+                @{
+                    Chord            = 'ctrl+g,ctrl+f'
+                    BriefDescription = 'Fzf Git Files Select'
+                    Description      = 'Select Git files via fzf'
+                    ScriptBlock      = { Update-CmdLine $(Invoke-PsFzfGitFiles) }
+                }
+                @{
+                    Chord            = 'ctrl+g,ctrl+h'
+                    BriefDescription = 'Fzf Git Hashes Select'
+                    Description      = 'Select Git hashes via fzf'
+                    ScriptBlock      = { Update-CmdLine $(Invoke-PsFzfGitHashes) }
+                }
+                @{
+                    Chord            = 'ctrl+g,ctrl+p'
+                    BriefDescription = 'Fzf Git Pull Requests Select'
+                    Description      = 'Select Git pull requests via fzf'
+                    ScriptBlock      = { Update-CmdLine $(Invoke-PsFzfGitPulLRequests) }
+                }
+                @{
+                    Chord            = 'ctrl+g,ctrl+s'
+                    BriefDescription = 'Fzf Git Stashes Select'
+                    Description      = 'Select Git stashes via fzf'
+                    ScriptBlock      = { Update-CmdLine $(Invoke-PsFzfGitStashes) }
+                }
+                @{
+                    Chord            = 'ctrl+g,ctrl+t'
+                    BriefDescription = 'Fzf Git Tags Select'
+                    Description      = 'Select Git tags via fzf'
+                    ScriptBlock      = { Update-CmdLine $(Invoke-PsFzfGitTags) }
+                }
+            ) | ForEach-Object {
+                $script:GitKeyHandlers += $_.Chord
+                Set-PSReadLineKeyHandler @_
             }
         }
         else {
@@ -192,7 +223,7 @@ function Invoke-PsFzfGitHashes() {
     & git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" $(Get-ColorAlways).Trim() --graph | `
         Invoke-Fzf @fzfArguments -NoSort  `
         -BorderLabel "$script:hashesString" `
-    -Preview "$previewCmd" | ForEach-Object {
+        -Preview "$previewCmd" | ForEach-Object {
         if ($_ -match '\d\d-\d\d-\d\d\s+([a-f0-9]+)\s+') {
             $result += $Matches.1
         }
@@ -224,7 +255,7 @@ function Invoke-PsFzfGitBranches() {
     $branches |
     Invoke-Fzf @fzfArguments -Preview "$previewCmd" -BorderLabel "$script:branchesString" -HeaderLines 2 -Tiebreak begin -ReverseInput | `
         ForEach-Object {
-        $result += $($_.Substring('* '.Length) -split ' ')[0]
+        $result += $($_ -split ' ')[0]
     }
 
     $result

@@ -267,30 +267,44 @@ function script:Invoke-FzfTabCompletionInner() {
         $script:result = @()
         $script:checkCompletion = $true
         $cancelTrigger = 'ESC'
-        $expectTriggers = "${script:TabContinuousTrigger},${cancelTrigger}"
+        $isTabTrigger = $script:TabContinuousTrigger -eq "`t"
+        if ($isTabTrigger) {
+            $expectTriggers = "tab,${cancelTrigger}"
+        }
+        else {
+            $expectTriggers = "${script:TabContinuousTrigger},${cancelTrigger}"
+        }
+
 
         # normalize so path works correctly for Windows:
         $path = $PWD.ProviderPath.Replace('\', '/')
+
+        $arguments = @{
+            Layout        = 'reverse'
+            Expect        = "$expectTriggers"
+            PreviewWindow = 'down:30%'
+        }
+        if ($isTabTrigger) {
+            $arguments["Bind"] = @('ctrl-/:change-preview-window(down,right:50%,border-top|hidden|)')
+        }
+        else {
+            $arguments["Bind"] = @('tab:down', 'btab:up', 'ctrl-/:change-preview-window(down,right:50%,border-top|hidden|)')
+        }
 
         # need to handle parameters differently so PowerShell doesn't parse completion item as a script parameter:
         if ( $completionMatches[0].ResultType -eq 'ParameterName') {
             $Command = $Line.Substring(0, $Line.indexof(' '))
             $previewScript = $(Join-Path $PsScriptRoot 'helpers/PsFzfTabExpansion-Parameter.ps1')
-            $additionalCmd = @{ Preview = $("$PowerShellCMD -NoProfile -NonInteractive -File \""$previewScript\"" $Command {}") }
-
+            $arguments["Preview"] = $("$PowerShellCMD -NoProfile -NonInteractive -File \""$previewScript\"" $Command {}")
         }
         else {
             $previewScript = $(Join-Path $PsScriptRoot 'helpers/PsFzfTabExpansion-Preview.ps1')
-            $additionalCmd = @{ Preview = $($script:PowershellCmd + " -NoProfile -NonInteractive -File \""$previewScript\"" \""" + $path + "\"" {}") }
+            $arguments["Preview"] = $($script:PowershellCmd + " -NoProfile -NonInteractive -File \""$previewScript\"" \""" + $path + "\"" {}")
         }
 
         $script:fzfOutput = @()
-        $completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf `
-            -Layout reverse `
-            -Expect "$expectTriggers" `
-            -PreviewWindow 'down:30%' `
-            -Bind 'tab:down', 'btab:up', 'ctrl-/:change-preview-window(down,right:50%,border-top|hidden|)' `
-            @additionalCmd | ForEach-Object {
+
+        $completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf @arguments | ForEach-Object {
             $script:fzfOutput += $_
         }
 
@@ -303,7 +317,13 @@ function script:Invoke-FzfTabCompletionInner() {
         }
 
         # check if we should continue completion:
-        $script:continueCompletion = $script:fzfOutput[0] -eq $script:TabContinuousTrigger
+        if ($isTabTrigger) {
+            $script:continueCompletion = $script:fzfOutput[0] -eq 'tab'
+        }
+        else {
+            $script:continueCompletion = $script:fzfOutput[0] -eq $script:TabContinuousTrigger
+        }
+
 
         InvokePromptHack
     }
@@ -325,10 +345,10 @@ function script:Invoke-FzfTabCompletionInner() {
         $resultTrimmed = $str.Trim(@('''', '"'))
         if (Test-Path "$resultTrimmed"  -PathType Container) {
             if ($isQuoted) {
-                $str = "'{0}{1}'" -f "$resultTrimmed", $script:TabContinuousTrigger
+                $str = "'{0}{1}'" -f "$resultTrimmed", [IO.Path]::DirectorySeparatorChar.ToString()
             }
             else {
-                $str = "$resultTrimmed" + $script:TabContinuousTrigger
+                $str = "$resultTrimmed" + [IO.Path]::DirectorySeparatorChar.ToString()
             }
         }
         else {

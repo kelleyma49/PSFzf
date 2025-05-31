@@ -18,7 +18,7 @@ if ([System.Management.Automation.Cmdlet]::CommonParameters.Contains($parameter)
 }
 else {
     if ($ansiCompatible -and $(Get-Command bat -ErrorAction Ignore)) {
-        Get-Help -Name $Command -Parameter $parameter | bat --language=man --color always --style=plain
+        Get-Help -Name $Command -Parameter $parameter | bat --no-config --language=man --color always --style=plain
     }
     else {
         Get-Help -Name $Command -Parameter $parameter
