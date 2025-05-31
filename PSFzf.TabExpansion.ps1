@@ -284,23 +284,53 @@ function script:Invoke-FzfTabCompletionInner() {
             Expect        = "$expectTriggers"
             PreviewWindow = 'down:30%'
         }
-        if ($isTabTrigger) {
-            $arguments["Bind"] = @('ctrl-/:change-preview-window(down,right:50%,border-top|hidden|)')
+
+        # Handle Preview override
+        if ((Test-Path variable:script:PsFzfPreviewOverride)) {
+            if ($script:PsFzfPreviewOverride -ne '') {
+                $arguments["Preview"] = $script:PsFzfPreviewOverride
+            }
+            # If PsFzfPreviewOverride is an empty string, don't add Preview to arguments (disables preview)
         }
         else {
-            $arguments["Bind"] = @('tab:down', 'btab:up', 'ctrl-/:change-preview-window(down,right:50%,border-top|hidden|)')
+            # Original logic for Preview
+            if ($completionMatches[0].ResultType -eq 'ParameterName') {
+                $Command = $Line.Substring(0, $Line.indexof(' '))
+                $previewScript = $(Join-Path $PsScriptRoot 'helpers/PsFzfTabExpansion-Parameter.ps1')
+                $arguments["Preview"] = $("$PowerShellCMD -NoProfile -NonInteractive -File \""$previewScript\"" $Command {}")
+            }
+            else {
+                $previewScript = $(Join-Path $PsScriptRoot 'helpers/PsFzfTabExpansion-Preview.ps1')
+                $arguments["Preview"] = $($script:PowershellCmd + " -NoProfile -NonInteractive -File \""$previewScript\"" \""" + $path + "\"" {}")
+            }
         }
 
-        # need to handle parameters differently so PowerShell doesn't parse completion item as a script parameter:
-        if ( $completionMatches[0].ResultType -eq 'ParameterName') {
-            $Command = $Line.Substring(0, $Line.indexof(' '))
-            $previewScript = $(Join-Path $PsScriptRoot 'helpers/PsFzfTabExpansion-Parameter.ps1')
-            $arguments["Preview"] = $("$PowerShellCMD -NoProfile -NonInteractive -File \""$previewScript\"" $Command {}")
+        # Handle ChangePreviewWindow override
+        $defaultChangePreviewWindow = 'ctrl-/:change-preview-window(down,right:50%,border-top|hidden|)'
+        $changePreviewWindowBinding = ''
+
+        if ((Test-Path variable:script:PsFzfChangePreviewWindowOverride)) {
+            if ($script:PsFzfChangePreviewWindowOverride -ne '') {
+                $changePreviewWindowBinding = "ctrl-/:change-preview-window({0})" -f $script:PsFzfChangePreviewWindowOverride
+            }
+            # If PsFzfChangePreviewWindowOverride is an empty string, the binding remains empty, effectively removing it.
         }
         else {
-            $previewScript = $(Join-Path $PsScriptRoot 'helpers/PsFzfTabExpansion-Preview.ps1')
-            $arguments["Preview"] = $($script:PowershellCmd + " -NoProfile -NonInteractive -File \""$previewScript\"" \""" + $path + "\"" {}")
+            $changePreviewWindowBinding = $defaultChangePreviewWindow
         }
+
+        if ($isTabTrigger) {
+            $arguments["Bind"] = @($changePreviewWindowBinding)
+        }
+        else {
+            $arguments["Bind"] = @('tab:down', 'btab:up')
+            if ($changePreviewWindowBinding -ne '') {
+                $arguments["Bind"] += $changePreviewWindowBinding
+            }
+        }
+        # Remove empty strings from Bind array if any
+        $arguments["Bind"] = $arguments["Bind"] | Where-Object { $_ -ne '' }
+
 
         $script:fzfOutput = @()
 

@@ -44,6 +44,40 @@ Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
+
+### -Preview
+Overrides the default preview command used by `Invoke-FzfTabCompletionInner` during tab completion.
+If an empty string (`''`) is provided, the preview functionality will be disabled.
+The value should be a command string that `Invoke-Fzf` can understand for its `--preview` option.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ChangePreviewWindow
+Overrides the default `change-preview-window` binding used by `Invoke-FzfTabCompletionInner` (triggered by `ctrl-/` by default during tab completion).
+If an empty string (`''`) is provided, the `ctrl-/:change-preview-window(...)` binding will be removed.
+The value should be a binding string that `Invoke-Fzf` can understand for the `change-preview-window` action (e.g., `up,60%` or `right:50%,border-top|hidden|`).
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
 ### -PSReadlineChordReverseHistory
 PSReadline keyboard chord shortcut to trigger history selection
 
