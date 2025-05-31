@@ -349,7 +349,7 @@ function Invoke-PsFzfRipgrep() {
             prompt           = 'ripgrep> '
             delimiter        = ':'
             header           = '? CTRL-R (Ripgrep mode) ? CTRL -F (fzf mode) ?'
-            preview          = 'bat --color=always {1} --highlight-line {2}'
+            preview          = 'bat --no-config --color=always {1} --highlight-line {2}'
             'preview-window' = 'up,60%,border-bottom,+{2}+3/3,~3'
         }
 
