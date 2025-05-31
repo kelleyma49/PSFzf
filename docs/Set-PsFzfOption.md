@@ -45,10 +45,10 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -Preview
-Overrides the default preview command used by `Invoke-FzfTabCompletionInner` during tab completion.
-If an empty string (`''`) is provided, the preview functionality will be disabled.
-The value should be a command string that `Invoke-Fzf` can understand for its `--preview` option.
+### -PreviewWindowParam
+Controls the entire string for fzf's `--preview-window` option used during tab completion via `Invoke-FzfTabCompletionInner`.
+This determines the layout and appearance of the preview window (e.g., `down:30%`, `right:50%,border-top`).
+If set to an empty string (`''`), the `--preview-window` option will not be passed to fzf, which typically results in fzf's default preview window behavior or no window if no preview command is active.
 
 ```yaml
 Type: String
@@ -63,9 +63,9 @@ Accept wildcard characters: False
 ```
 
 ### -ChangePreviewWindow
-Overrides the default `change-preview-window` binding used by `Invoke-FzfTabCompletionInner` (triggered by `ctrl-/` by default during tab completion).
-If an empty string (`''`) is provided, the `ctrl-/:change-preview-window(...)` binding will be removed.
-The value should be a binding string that `Invoke-Fzf` can understand for the `change-preview-window` action (e.g., `up,60%` or `right:50%,border-top|hidden|`).
+Controls the parameters for the `ctrl-/:change-preview-window(PARAMS)` binding used during tab completion via `Invoke-FzfTabCompletionInner`.
+For example, providing `left,60%` will result in the binding `ctrl-/:change-preview-window(left,60%)`.
+If set to an empty string (`''`), the entire `ctrl-/:change-preview-window(...)` binding will be removed from the bindings active during tab completion.
 
 ```yaml
 Type: String

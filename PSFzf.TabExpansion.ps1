@@ -282,18 +282,33 @@ function script:Invoke-FzfTabCompletionInner() {
         $arguments = @{
             Layout        = 'reverse'
             Expect        = "$expectTriggers"
-            PreviewWindow = 'down:30%'
+            # Default PreviewWindow will be set below after checking override
         }
 
-        # Handle Preview override
+        # Handle PreviewWindow fzf option (layout of the preview window)
+        if ((Test-Path variable:script:PsFzfPreviewWindowParamOverride)) {
+            if ($script:PsFzfPreviewWindowParamOverride -ne '') {
+                $arguments["PreviewWindow"] = $script:PsFzfPreviewWindowParamOverride
+            }
+            # If PsFzfPreviewWindowParamOverride is an empty string, PreviewWindow key is not added (no --preview-window flag)
+        }
+        else {
+            # Default value if no override is set
+            $arguments["PreviewWindow"] = 'down:30%'
+        }
+
+        # Handle Preview fzf option (the command to generate preview content)
+        # This uses $script:PsFzfPreviewOverride (Note: Set-PsFzfOption -Preview was renamed to -PreviewWindowParam,
+        # so $script:PsFzfPreviewOverride might be orphaned unless another option sets it.
+        # For now, preserving the existing logic that uses it.)
         if ((Test-Path variable:script:PsFzfPreviewOverride)) {
             if ($script:PsFzfPreviewOverride -ne '') {
                 $arguments["Preview"] = $script:PsFzfPreviewOverride
             }
-            # If PsFzfPreviewOverride is an empty string, don't add Preview to arguments (disables preview)
+            # If PsFzfPreviewOverride is an empty string, Preview key is not added (disables preview command)
         }
         else {
-            # Original logic for Preview
+            # Original logic for Preview command
             if ($completionMatches[0].ResultType -eq 'ParameterName') {
                 $Command = $Line.Substring(0, $Line.indexof(' '))
                 $previewScript = $(Join-Path $PsScriptRoot 'helpers/PsFzfTabExpansion-Parameter.ps1')

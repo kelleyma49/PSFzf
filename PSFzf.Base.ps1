@@ -204,11 +204,11 @@ function Set-PsFzfOption {
 		$TabContinuousTrigger,
 		[ScriptBlock]
 		$AltCCommand,
-		[string]$Preview,
+		[string]$PreviewWindowParam,
 		[string]$ChangePreviewWindow
 	)
-	if ($PSBoundParameters.ContainsKey('Preview')) {
-		$script:PsFzfPreviewOverride = $Preview
+	if ($PSBoundParameters.ContainsKey('PreviewWindowParam')) {
+		$script:PsFzfPreviewWindowParamOverride = $PreviewWindowParam
 	}
 	if ($PSBoundParameters.ContainsKey('ChangePreviewWindow')) {
 		$script:PsFzfChangePreviewWindowOverride = $ChangePreviewWindow
