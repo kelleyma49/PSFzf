@@ -280,8 +280,8 @@ function script:Invoke-FzfTabCompletionInner() {
         $path = $PWD.ProviderPath.Replace('\', '/')
 
         $arguments = @{
-            Layout        = 'reverse'
-            Expect        = "$expectTriggers"
+            Layout = 'reverse'
+            Expect = "$expectTriggers"
             # Default PreviewWindow will be set below after checking override
         }
 
@@ -297,18 +297,7 @@ function script:Invoke-FzfTabCompletionInner() {
             $arguments["PreviewWindow"] = 'down:30%'
         }
 
-        # Handle Preview fzf option (the command to generate preview content)
-        # This uses $script:PsFzfPreviewOverride (Note: Set-PsFzfOption -Preview was renamed to -PreviewWindowParam,
-        # so $script:PsFzfPreviewOverride might be orphaned unless another option sets it.
-        # For now, preserving the existing logic that uses it.)
-        if ((Test-Path variable:script:PsFzfPreviewOverride)) {
-            if ($script:PsFzfPreviewOverride -ne '') {
-                $arguments["Preview"] = $script:PsFzfPreviewOverride
-            }
-            # If PsFzfPreviewOverride is an empty string, Preview key is not added (disables preview command)
-        }
-        else {
-            # Original logic for Preview command
+        if ($arguments.ContainsKey("PreviewWindow")) {
             if ($completionMatches[0].ResultType -eq 'ParameterName') {
                 $Command = $Line.Substring(0, $Line.indexof(' '))
                 $previewScript = $(Join-Path $PsScriptRoot 'helpers/PsFzfTabExpansion-Parameter.ps1')
@@ -321,17 +310,18 @@ function script:Invoke-FzfTabCompletionInner() {
         }
 
         # Handle ChangePreviewWindow override
-        $defaultChangePreviewWindow = 'ctrl-/:change-preview-window(down,right:50%,border-top|hidden|)'
+        $defaultChangePreviewCommand = 'ctrl-/:change-preview-window({0})'
+        $defaultChangePreviewCommandSetting = 'down,right:50%,border-top|hidden|'
         $changePreviewWindowBinding = ''
 
         if ((Test-Path variable:script:PsFzfChangePreviewWindowOverride)) {
             if ($script:PsFzfChangePreviewWindowOverride -ne '') {
-                $changePreviewWindowBinding = "ctrl-/:change-preview-window({0})" -f $script:PsFzfChangePreviewWindowOverride
+                $changePreviewWindowBinding = $defaultChangePreviewCommand -f $script:PsFzfChangePreviewWindowOverride
             }
             # If PsFzfChangePreviewWindowOverride is an empty string, the binding remains empty, effectively removing it.
         }
         else {
-            $changePreviewWindowBinding = $defaultChangePreviewWindow
+            $changePreviewWindowBinding = $defaultChangePreviewCommand -f $defaultChangePreviewCommandSetting
         }
 
         if ($isTabTrigger) {
