@@ -220,7 +220,8 @@ function Invoke-PsFzfGitHashes() {
     $result = @()
 
     $fzfArguments = Get-GitFzfArguments
-    & git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" $(Get-ColorAlways).Trim() --graph | `
+   	$gitLogCmd = 'git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" ' + $(Get-ColorAlways).Trim() + " --graph"
+    Invoke-Expression "& $gitLogCmd" | `
         Invoke-Fzf @fzfArguments -NoSort  `
         -BorderLabel "$script:hashesString" `
         -Preview "$previewCmd" | ForEach-Object {
