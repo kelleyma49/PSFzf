@@ -24,8 +24,8 @@ find -L '{0}' -path '*/\.*' -prune -o -type d -print 2> /dev/null
 "@
 }
 
-$script:RunningInWindowsTerminal = [bool]($env:WT_Session) -or [bool]($env:ConEmuANSI)
-if ($script:RunningInWindowsTerminal) {
+$script:AnsiCompatible = [bool]($env:WT_Session) -or [bool]($env:ConEmuANSI) -or [bool]($env:TERM_PROGRAM -eq "WezTerm")
+if ($script:AnsiCompatible) {
 	$script:DefaultFileSystemFdCmd = "fd.exe --color always . --full-path `"{0}`" --fixed-strings"
 }
 else {
@@ -415,7 +415,7 @@ function Invoke-Fzf {
 		if ($Border -eq $true -and -not [string]::IsNullOrWhiteSpace($BorderStyle)) {
 			throw '-Border and -BorderStyle are mutally exclusive'
 		}
-		if ($script:UseFd -and $script:RunningInWindowsTerminal -and -not $arguments.Contains('--ansi')) {
+		if ($script:UseFd -and $script:AnsiCompatible -and -not $arguments.Contains('--ansi')) {
 			$arguments += "--ansi "
 		}
 
@@ -672,7 +672,7 @@ function Invoke-FzfDefaultSystem {
 		$arguments += "--height=40% "
 	}
 
-	if ($script:UseFd -and $script:RunningInWindowsTerminal -and -not $script:OverrideFzfDefaultOpts.Get().Contains('--ansi')) {
+	if ($script:UseFd -and $script:AnsiCompatible -and -not $script:OverrideFzfDefaultOpts.Get().Contains('--ansi')) {
 		$arguments += "--ansi "
 	}
 	if ($script:UseWalker -and -not $script:OverrideFzfDefaultOpts.Get().Contains('--walker')) {
@@ -1093,7 +1093,7 @@ try {
 	$script:UseHeightOption = $fzfVersion.length -ge 2 -and `
 	([int]$fzfVersion[0] -gt 0 -or `
 			[int]$fzfVersion[1] -ge 21) -and `
-		$script:RunningInWindowsTerminal
+		$script:AnsiCompatible
 	$script:UseWalker = $fzfVersion.length -ge 2 -and `
 	([int]$fzfVersion[0] -gt 0 -or `
 			[int]$fzfVersion[1] -ge 48)
