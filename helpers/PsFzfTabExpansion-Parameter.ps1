@@ -3,9 +3,9 @@ $command = $args[0]
 $parameter = $args[1]
 $parameter = $parameter.replace('-', '')
 
-$RunningInWindowsTerminal = [bool]($env:WT_Session)
+$AnsiCompatible = [bool]($env:WT_Session) -or [bool]($env:TERM_PROGRAM -eq "WezTerm")
 $IsWindowsCheck = ($PSVersionTable.PSVersion.Major -le 5) -or $IsWindows
-$ansiCompatible = $script:RunningInWindowsTerminal -or (-not $script:IsWindowsCheck)
+$ansiCompatible = $script:AnsiCompatible -or (-not $script:IsWindowsCheck)
 
 if ([System.Management.Automation.Cmdlet]::CommonParameters.Contains($parameter)) {
     $tempFile = New-TemporaryFile

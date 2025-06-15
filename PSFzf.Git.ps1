@@ -14,7 +14,7 @@ else {
 
 $script:IsWindowsCheck = ($PSVersionTable.PSVersion.Major -le 5) -or $IsWindows
 
-if ($RunningInWindowsTerminal -or -not $script:IsWindowsCheck) {
+if ($AnsiCompatible -or -not $script:IsWindowsCheck) {
     $script:filesString = '📁 Files'
     $script:hashesString = '🍡 Hashes'
     $script:allBranchesString = '🌳 All branches'
@@ -149,7 +149,7 @@ function IsInGitRepo() {
 }
 
 function Get-ColorAlways($setting = ' --color=always') {
-    if ($RunningInWindowsTerminal -or -not $IsWindowsCheck) {
+    if ($AnsiCompatible -or -not $IsWindowsCheck) {
         return $setting
     }
     else {
@@ -220,7 +220,8 @@ function Invoke-PsFzfGitHashes() {
     $result = @()
 
     $fzfArguments = Get-GitFzfArguments
-    & git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" $(Get-ColorAlways).Trim() --graph | `
+   	$gitLogCmd = 'git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" ' + $(Get-ColorAlways).Trim() + " --graph"
+    Invoke-Expression "& $gitLogCmd" | `
         Invoke-Fzf @fzfArguments -NoSort  `
         -BorderLabel "$script:hashesString" `
         -Preview "$previewCmd" | ForEach-Object {
