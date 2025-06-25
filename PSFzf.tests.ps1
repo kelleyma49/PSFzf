@@ -121,6 +121,7 @@ Describe 'Invoke-FuzzySetLocation' {
             # Create a temporary directory for tests that need filesystem interaction
             $ParentPath = if (Test-Path -Path "TestDrive:") { "TestDrive:" } else { $PSScriptRoot }
             $ResolvedTempTestDirectory = Join-Path $ParentPath $TempTestDirectory
+			Write-Warning "CRAP: $ResolvedTempTestDirectory $ParentPath"
             New-Item -ItemType Directory -Path $ResolvedTempTestDirectory -Force | Out-Null
             New-Item -ItemType Directory -Path (Join-Path $ResolvedTempTestDirectory "subdir1") -Force | Out-Null
             New-Item -ItemType Directory -Path (Join-Path $ResolvedTempTestDirectory "subdir2") -Force | Out-Null
