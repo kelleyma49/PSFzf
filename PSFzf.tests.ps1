@@ -5,14 +5,6 @@
 #
 Get-Module PsFzf | Remove-Module
 
-# Ensure fzf binary is findable for module import
-$fzfDir = Join-Path $PSScriptRoot "fzf"
-if (-not (Test-Path (Join-Path $fzfDir "fzf"))) {
-    Write-Warning "fzf executable not found at $fzfDir/fzf. Tests may fail. Ensure Install.ps1 has run."
-}
-$originalPath = $env:PATH
-$env:PATH = $fzfDir + ":" + $env:PATH # Prepend fzf directory to PATH (Linux uses ':')
-
 # set env variable so Import-Module doesn't fail (GOPATH part might be legacy, fzf path is critical)
 if ([string]::IsNullOrEmpty($env:GOPATH)) {
 	$env:GOPATH = "c:\ADirectoryThatShouldNotExist\" # Keeping this in case it's still relevant for other parts
@@ -139,8 +131,8 @@ Describe 'Invoke-FuzzySetLocation' {
             # Restore FZF_ALT_C_COMMAND
             $env:FZF_ALT_C_COMMAND = $Original_FZF_ALT_C_COMMAND
 
-            # Remove temporary directory
-            Remove-Item -Path $ResolvedTempTestDirectory -Recurse -Force -ErrorAction SilentlyContinue
+            # Remove temporary directory - don't remove due to this error: https://github.com/pester/Pester/issues/1070
+            # Remove-Item -Path $ResolvedTempTestDirectory -Recurse -Force -ErrorAction SilentlyContinue
 
             # Clear specific mocks to avoid interference between tests
             # Commenting out Remove-Mock due to persistent CommandNotFoundException in this environment.
