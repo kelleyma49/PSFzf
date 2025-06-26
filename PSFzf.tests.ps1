@@ -5,13 +5,12 @@
 #
 Get-Module PsFzf | Remove-Module
 
-# set env variable so Import-Module doesn't fail:;
+# set env variable so Import-Module doesn't fail:
 if ([string]::IsNullOrEmpty($env:GOPATH)) {
 	$env:GOPATH = "c:\ADirectoryThatShouldNotExist\"
 }
 
 Import-Module $(Join-Path $PSScriptRoot PSFzf.psd1) -ErrorAction Stop
-
 Describe "Find-CurrentPath" {
 	InModuleScope PsFzf {
 		Context "Function Exists" {
