@@ -18,7 +18,7 @@ if ($IsLinux -or $IsMacOS) {
 }
 else {
   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-  Invoke-WebRequest https://github.com/junegunn/fzf/releases/download/v${fzfVersionN}/fzf-${fzfVersion}-windows_amd64.zip -OutFile fzf.zip -Verbose
+  Invoke-WebRequest https://github.com/junegunn/fzf/releases/download/v${fzfVersion}/fzf-${fzfVersion}-windows_amd64.zip -OutFile fzf.zip -Verbose
   Expand-Archive fzf.zip
 }
 
