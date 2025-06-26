@@ -242,7 +242,8 @@ function Invoke-FuzzySetLocation() {
     try {
         $command = if ($env:FZF_ALT_C_COMMAND) {
             $env:FZF_ALT_C_COMMAND
-        } else {
+        }
+        else {
             "Get-ChildItem ""$Directory"" -Recurse -ErrorAction Ignore | Where-Object { `$_.PSIsContainer } | ForEach-Object { `$_.FullName }"
         }
         Invoke-Expression $command | Invoke-Fzf | ForEach-Object { $result = $_ }
@@ -284,12 +285,28 @@ if ((-not $IsLinux) -and (-not $IsMacOS)) {
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyZLocation() {
+    param(
+        [string]$Query = $null
+    )
     $result = $null
     try {
-        (Get-ZLocation).GetEnumerator() | Sort-Object { $_.Value } -Descending | ForEach-Object { $_.Key } | Invoke-Fzf -NoSort | ForEach-Object { $result = $_ }
+        $fzfParameters = @{
+            NoSort = $true
+        }
+        if ($Query) {
+            $fzfParameters.Query = $Query
+        }
+        $zlocationOutput = (Get-ZLocation).GetEnumerator() | Sort-Object { $_.Value } -Descending | ForEach-Object { $_.Key }
+        # Ensure $zlocationOutput is an array for consistent behavior if only one item is returned
+        $zlocationOutputArray = @($zlocationOutput) # This captures the output of ForEach-Object { $_.Key }
+
+        # Explicitly pipe the collected array
+        $fzfResult = $zlocationOutputArray | Invoke-Fzf @fzfParameters
+
+        $fzfResult | ForEach-Object { $result = $_ }
     }
     catch {
-
+        Write-Error "Error in Invoke-FuzzyZLocation: $_"
     }
     if ($null -ne $result) {
         # use cd in case it's aliased to something else:
