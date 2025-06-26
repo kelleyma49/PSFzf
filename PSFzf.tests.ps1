@@ -108,20 +108,22 @@ Describe "Find-CurrentPath" {
 
 Describe 'Invoke-FuzzySetLocation' {
     InModuleScope PsFzf {
-        # Variables for mocks and environment restoration
-        $Original_FZF_ALT_C_COMMAND = $null
-        $TempTestDirectory = "temp_test_dir_ifsl" # IFSL for Invoke-FuzzySetLocation
-        $ResolvedTempTestDirectory = ''
+
+		BeforeAll {
+			# Variables for mocks and environment restoration
+        	$Original_FZF_ALT_C_COMMAND = $null
+        	$TempTestDirectory = "temp_test_dir_ifsl" # IFSL for Invoke-FuzzySetLocation
+        	$ResolvedTempTestDirectory = ''
+		}
 
         BeforeEach {
             # Save and clear FZF_ALT_C_COMMAND
             $Original_FZF_ALT_C_COMMAND = $env:FZF_ALT_C_COMMAND
-            $env:FZF_ALT_C_COMMAND = $null
+	        $env:FZF_ALT_C_COMMAND = $null
 
             # Create a temporary directory for tests that need filesystem interaction
             $ParentPath = if (Test-Path -Path "TestDrive:") { "TestDrive:" } else { $PSScriptRoot }
             $ResolvedTempTestDirectory = Join-Path $ParentPath $TempTestDirectory
-			Write-Warning "CRAP: $ResolvedTempTestDirectory $ParentPath"
             New-Item -ItemType Directory -Path $ResolvedTempTestDirectory -Force | Out-Null
             New-Item -ItemType Directory -Path (Join-Path $ResolvedTempTestDirectory "subdir1") -Force | Out-Null
             New-Item -ItemType Directory -Path (Join-Path $ResolvedTempTestDirectory "subdir2") -Force | Out-Null
@@ -133,7 +135,7 @@ Describe 'Invoke-FuzzySetLocation' {
             $env:FZF_ALT_C_COMMAND = $Original_FZF_ALT_C_COMMAND
 
             # Remove temporary directory - don't remove due to this error: https://github.com/pester/Pester/issues/1070
-            # Remove-Item -Path $ResolvedTempTestDirectory -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path $ResolvedTempTestDirectory -Recurse -Force -ErrorAction SilentlyContinue
 
             # Clear specific mocks to avoid interference between tests
             # Commenting out Remove-Mock due to persistent CommandNotFoundException in this environment.
