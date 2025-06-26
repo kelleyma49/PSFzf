@@ -5,17 +5,13 @@
 #
 Get-Module PsFzf | Remove-Module
 
-# set env variable so Import-Module doesn't fail (GOPATH part might be legacy, fzf path is critical)
+# set env variable so Import-Module doesn't fail
 if ([string]::IsNullOrEmpty($env:GOPATH)) {
 	$env:GOPATH = "c:\ADirectoryThatShouldNotExist\" # Keeping this in case it's still relevant for other parts
 }
 
 # Import the module after PATH modification
 Import-Module $(Join-Path $PSScriptRoot PSFzf.psd1) -ErrorAction Stop
-
-# Restore original PATH after module is imported and its functions are loaded.
-# Functions will use the fzf path captured by the module at import time.
-$env:PATH = $originalPath
 
 Describe "Find-CurrentPath" {
 	InModuleScope PsFzf {
