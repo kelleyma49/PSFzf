@@ -284,12 +284,20 @@ if ((-not $IsLinux) -and (-not $IsMacOS)) {
 
 #.ExternalHelp PSFzf.psm1-help.xml
 function Invoke-FuzzyZLocation() {
+    param(
+        [string]$Query = $null
+    )
     $result = $null
     try {
-        (Get-ZLocation).GetEnumerator() | Sort-Object { $_.Value } -Descending | ForEach-Object { $_.Key } | Invoke-Fzf -NoSort | ForEach-Object { $result = $_ }
+        $fzfParameters = @{
+            NoSort = $true
+        }
+        if ($Query) {
+            $fzfParameters.Query = $Query
+        }
+        (Get-ZLocation).GetEnumerator() | Sort-Object { $_.Value } -Descending | ForEach-Object { $_.Key } | Invoke-Fzf @fzfParameters | ForEach-Object { $result = $_ }
     }
     catch {
-
     }
     if ($null -ne $result) {
         # use cd in case it's aliased to something else:

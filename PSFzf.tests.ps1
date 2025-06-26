@@ -210,6 +210,91 @@ Describe 'Invoke-FuzzySetLocation' {
     }
 }
 
+Describe 'Invoke-FuzzyZLocation' {
+    InModuleScope PsFzf {
+        BeforeEach {
+            # Mock Get-ZLocation, Invoke-Fzf, and Set-Location for isolated testing
+            Mock Get-ZLocation {
+                # Simulate Get-ZLocation output with a hashtable
+                @{
+                    '/path/to/projectA' = 10;
+                    '/path/to/another/projectB' = 5;
+                    '/another/path/to/C' = 15;
+                }
+            } -ModuleName PsFzf
+
+            Mock Invoke-Fzf {
+                param(
+                    [Parameter(ValueFromPipeline = $true)]$InputObject,
+                    [string]$Query = $null,
+                    [switch]$NoSort
+                )
+                # Simulate fzf behavior: if Query is 'projectA', return '/path/to/projectA'
+                # Otherwise, return a generic path or based on InputObject
+                if ($Query -eq 'projectA') {
+                    return '/path/to/projectA_SELECTED'
+                } elseif ($Query -eq 'nonexistent') {
+                    return $null # Simulate no selection
+                }
+                # Simulate a generic selection if no specific query logic matches
+                return '/path/to/another/projectB_SELECTED'
+            } -ModuleName PsFzf
+
+            Mock Set-Location { param($Path) Write-Warning "Set-Location mock called with: $Path" } -ModuleName PsFzf
+        }
+
+        AfterEach {
+            # Clear mocks after each test
+            # Pester\Remove-Mock -CommandName 'Get-ZLocation' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
+            # Pester\Remove-Mock -CommandName 'Invoke-Fzf' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
+            # Pester\Remove-Mock -CommandName 'Set-Location' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
+        }
+
+        Context 'When no query is provided' {
+            It 'Should call Invoke-Fzf without a query and set location to the result' {
+                # Act
+                Invoke-FuzzyZLocation
+
+                # Assert
+                Should -Invoke 'Get-ZLocation' -Times 1 -ModuleName 'PsFzf'
+                Should -Invoke 'Invoke-Fzf' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { -not $Query }
+                Should -Invoke 'Set-Location' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Path -eq '/path/to/another/projectB_SELECTED' }
+            }
+        }
+
+        Context 'When a query is provided' {
+            It 'Should call Invoke-Fzf with the query and set location to the result' {
+                # Arrange
+                $testQuery = 'projectA'
+
+                # Act
+                Invoke-FuzzyZLocation -Query $testQuery
+
+                # Assert
+                Should -Invoke 'Get-ZLocation' -Times 1 -ModuleName 'PsFzf'
+                Should -Invoke 'Invoke-Fzf' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Query -eq $testQuery }
+                Should -Invoke 'Set-Location' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Path -eq '/path/to/projectA_SELECTED' }
+            }
+        }
+
+        Context 'When Invoke-Fzf returns no selection' {
+            It 'Should not call Set-Location' {
+                # Arrange
+                $testQuery = 'nonexistent' # This query will make Invoke-Fzf mock return $null
+
+                # Act
+                Invoke-FuzzyZLocation -Query $testQuery
+
+                # Assert
+                Should -Invoke 'Get-ZLocation' -Times 1 -ModuleName 'PsFzf'
+                Should -Invoke 'Invoke-Fzf' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Query -eq $testQuery }
+                Should -Not -Invoke 'Set-Location' -ModuleName 'PsFzf'
+            }
+        }
+    }
+}
+
+
 Describe "Add-BinaryModuleTypes" {
 	InModuleScope PsFzf {
 		Context "Module Loaded" {
