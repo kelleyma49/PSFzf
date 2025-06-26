@@ -9,8 +9,8 @@ Get-Module PsFzf | Remove-Module
 if ([string]::IsNullOrEmpty($env:GOPATH)) {
 	$env:GOPATH = "c:\ADirectoryThatShouldNotExist\"
 }
-Import-Module $(Join-Path $PSScriptRoot PSFzf.psd1) -ErrorAction Stop
 
+Import-Module $(Join-Path $PSScriptRoot PSFzf.psd1) -ErrorAction Stop
 Describe "Find-CurrentPath" {
 	InModuleScope PsFzf {
 		Context "Function Exists" {
@@ -98,6 +98,116 @@ Describe "Find-CurrentPath" {
 			}
 		}
 	}
+}
+
+Describe 'Invoke-FuzzySetLocation' {
+    InModuleScope PsFzf {
+
+		BeforeAll {
+			# Variables for mocks and environment restoration
+        	$Original_FZF_ALT_C_COMMAND = $null
+        	$TempTestDirectory = "temp_test_dir_ifsl" # IFSL for Invoke-FuzzySetLocation
+        	$ResolvedTempTestDirectory = ''
+		}
+
+        BeforeEach {
+            # Save and clear FZF_ALT_C_COMMAND
+            $Original_FZF_ALT_C_COMMAND = $env:FZF_ALT_C_COMMAND
+	        $env:FZF_ALT_C_COMMAND = $null
+
+            # Create a temporary directory for tests that need filesystem interaction
+            $ParentPath = if (Test-Path -Path "TestDrive:") { "TestDrive:" } else { $PSScriptRoot }
+            $ResolvedTempTestDirectory = Join-Path $ParentPath $TempTestDirectory
+            New-Item -ItemType Directory -Path $ResolvedTempTestDirectory -Force | Out-Null
+            New-Item -ItemType Directory -Path (Join-Path $ResolvedTempTestDirectory "subdir1") -Force | Out-Null
+            New-Item -ItemType Directory -Path (Join-Path $ResolvedTempTestDirectory "subdir2") -Force | Out-Null
+            New-Item -ItemType File -Path (Join-Path $ResolvedTempTestDirectory "somefile.txt") -Force | Out-Null
+        }
+
+        AfterEach {
+            # Restore FZF_ALT_C_COMMAND
+            $env:FZF_ALT_C_COMMAND = $Original_FZF_ALT_C_COMMAND
+
+            # Remove temporary directory - don't remove due to this error: https://github.com/pester/Pester/issues/1070
+            Remove-Item -Path $ResolvedTempTestDirectory -Recurse -Force -ErrorAction SilentlyContinue
+
+            # Clear specific mocks to avoid interference between tests
+            # Commenting out Remove-Mock due to persistent CommandNotFoundException in this environment.
+            # This is a workaround; ideally, Remove-Mock should function correctly.
+            # Pester\Remove-Mock -CommandName 'Invoke-Fzf' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
+            # Pester\Remove-Mock -CommandName 'Set-Location' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
+        }
+
+        Context 'When FZF_ALT_C_COMMAND is set and not empty' {
+            It 'Should use FZF_ALT_C_COMMAND, pass its output to Invoke-Fzf, and set location to Invoke-Fzf result' {
+                # Arrange
+                $env:FZF_ALT_C_COMMAND = 'Write-Output "custom_path_from_alt_c"' # This command's output goes to Invoke-Fzf
+                $script:expectedPathForFzfMock = "custom_path_from_alt_c_SELECTED" # What Invoke-Fzf mock will return
+
+                Mock Invoke-Fzf {
+                    param([Parameter(ValueFromPipeline = $true)]$InputObject) # Match real signature somewhat
+                    Write-Warning "Invoke-Fzf mock called. Input type: $($InputObject.GetType().Name). Input: $InputObject"
+                    return $script:expectedPathForFzfMock
+                } -ModuleName PsFzf
+
+                Mock Set-Location { param($Path) Write-Warning "Set-Location mock called with: $Path" } -ModuleName PsFzf
+
+                # Act
+                $result = Invoke-FuzzySetLocation
+
+                # Assert
+                $result | Should -Be $script:expectedPathForFzfMock
+                Should -Invoke 'Invoke-Fzf' -Times 1 -ModuleName 'PsFzf' # Corrected assertion
+                Should -Invoke 'Set-Location' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Path -eq $script:expectedPathForFzfMock } # Corrected assertion
+            }
+        }
+
+        Context 'When FZF_ALT_C_COMMAND is not set' {
+            It 'Should use default Get-ChildItem command, pass its output to Invoke-Fzf, and set location to Invoke-Fzf result' {
+                # Arrange
+                $env:FZF_ALT_C_COMMAND = $null # Ensure it's null
+                $script:expectedPathForFzfMock = Join-Path $ResolvedTempTestDirectory "subdir1_SELECTED" # Example selection from fzf
+
+                Mock Invoke-Fzf {
+                    param([Parameter(ValueFromPipeline = $true)]$InputObject)
+                    Write-Warning "Invoke-Fzf mock (default case) called. Input type: $($InputObject.GetType().Name). Input count: $(if ($InputObject) {@($InputObject).Count} else {0})"
+                    return $script:expectedPathForFzfMock
+                } -ModuleName PsFzf
+                Mock Set-Location { param($Path) Write-Warning "Set-Location mock (default case) called with: $Path" } -ModuleName PsFzf
+
+                # Act
+                $result = Invoke-FuzzySetLocation -Directory $ResolvedTempTestDirectory
+
+                # Assert
+                $result | Should -Be $script:expectedPathForFzfMock
+                Should -Invoke 'Invoke-Fzf' -Times 1 -ModuleName 'PsFzf' # Corrected assertion
+                Should -Invoke 'Set-Location' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Path -eq $script:expectedPathForFzfMock } # Corrected assertion
+            }
+        }
+
+        Context 'When FZF_ALT_C_COMMAND is set to an empty string' {
+            It 'Should use default Get-ChildItem command (like FZF_ALT_C_COMMAND not set)' {
+                # Arrange
+                $env:FZF_ALT_C_COMMAND = "" # Empty string
+                $script:expectedPathForFzfMock = Join-Path $ResolvedTempTestDirectory "subdir2_SELECTED" # Example selection from fzf
+
+                Mock Invoke-Fzf {
+                    param([Parameter(ValueFromPipeline = $true)]$InputObject)
+                    Write-Warning "Invoke-Fzf mock (empty alt_c) called. Input type: $($InputObject.GetType().Name). Input count: $(if ($InputObject) {@($InputObject).Count} else {0})"
+                    return $script:expectedPathForFzfMock
+                } -ModuleName PsFzf
+                Mock Set-Location { param($Path) Write-Warning "Set-Location mock (empty alt_c) called with: $Path" } -ModuleName PsFzf
+
+                # Act
+                $result = Invoke-FuzzySetLocation -Directory $ResolvedTempTestDirectory
+
+                # Assert
+                $result | Should -Be $script:expectedPathForFzfMock
+                Should -Invoke 'Invoke-Fzf' -Times 1 -ModuleName 'PsFzf' # Corrected assertion
+                Should -Invoke 'Set-Location' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Path -eq $script:expectedPathForFzfMock } # Corrected assertion
+            }
+        }
+    }
 }
 
 Describe "Add-BinaryModuleTypes" {

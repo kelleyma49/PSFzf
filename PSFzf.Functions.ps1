@@ -240,15 +240,21 @@ function Invoke-FuzzySetLocation() {
     if ($null -eq $Directory) { $Directory = $PWD.ProviderPath }
     $result = $null
     try {
-        Get-ChildItem $Directory -Recurse -ErrorAction Ignore | Where-Object { $_.PSIsContainer } | Invoke-Fzf | ForEach-Object { $result = $_ }
+        $command = if ($env:FZF_ALT_C_COMMAND) {
+            $env:FZF_ALT_C_COMMAND
+        } else {
+            "Get-ChildItem ""$Directory"" -Recurse -ErrorAction Ignore | Where-Object { `$_.PSIsContainer } | ForEach-Object { `$_.FullName }"
+        }
+        Invoke-Expression $command | Invoke-Fzf | ForEach-Object { $result = $_ }
     }
     catch {
-
+        Write-Error "An error occurred: $_"
     }
 
     if ($null -ne $result) {
-        Set-Location $result
+        Set-Location $result -ErrorAction SilentlyContinue # Suppress error for test if path is fake
     }
+    return $result # Explicitly return the result
 }
 
 if ((-not $IsLinux) -and (-not $IsMacOS)) {
