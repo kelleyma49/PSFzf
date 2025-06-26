@@ -242,7 +242,8 @@ function Invoke-FuzzySetLocation() {
     try {
         $command = if ($env:FZF_ALT_C_COMMAND) {
             $env:FZF_ALT_C_COMMAND
-        } else {
+        }
+        else {
             "Get-ChildItem ""$Directory"" -Recurse -ErrorAction Ignore | Where-Object { `$_.PSIsContainer } | ForEach-Object { `$_.FullName }"
         }
         Invoke-Expression $command | Invoke-Fzf | ForEach-Object { $result = $_ }
@@ -295,18 +296,14 @@ function Invoke-FuzzyZLocation() {
         if ($Query) {
             $fzfParameters.Query = $Query
         }
-        Write-Warning "Invoke-FuzzyZLocation: About to call Get-ZLocation. Query: '$Query'"
         $zlocationOutput = (Get-ZLocation).GetEnumerator() | Sort-Object { $_.Value } -Descending | ForEach-Object { $_.Key }
-        Write-Warning "Invoke-FuzzyZLocation: Output from Get-ZLocation pipeline before Invoke-Fzf: $($zlocationOutput | Out-String)"
         # Ensure $zlocationOutput is an array for consistent behavior if only one item is returned
         $zlocationOutputArray = @($zlocationOutput) # This captures the output of ForEach-Object { $_.Key }
-        Write-Warning "Invoke-FuzzyZLocation: Count of items collected before piping to Invoke-Fzf: $($zlocationOutputArray.Count)"
 
         # Explicitly pipe the collected array
         $fzfResult = $zlocationOutputArray | Invoke-Fzf @fzfParameters
 
         $fzfResult | ForEach-Object { $result = $_ }
-        Write-Warning "Invoke-FuzzyZLocation: Result from Invoke-Fzf: '$result'"
     }
     catch {
         Write-Error "Error in Invoke-FuzzyZLocation: $_"
