@@ -101,285 +101,295 @@ Describe "Find-CurrentPath" {
 }
 
 Describe 'Invoke-FuzzySetLocation' {
-    InModuleScope PsFzf {
+	InModuleScope PsFzf {
 
 		BeforeAll {
 			# Variables for mocks and environment restoration
-        	$Original_FZF_ALT_C_COMMAND = $null
-        	$TempTestDirectory = "temp_test_dir_ifsl" # IFSL for Invoke-FuzzySetLocation
-        	$ResolvedTempTestDirectory = ''
+			$Original_FZF_ALT_C_COMMAND = $null
+			$TempTestDirectory = "temp_test_dir_ifsl" # IFSL for Invoke-FuzzySetLocation
+			$ResolvedTempTestDirectory = ''
 		}
 
-        BeforeEach {
-            # Save and clear FZF_ALT_C_COMMAND
-            $Original_FZF_ALT_C_COMMAND = $env:FZF_ALT_C_COMMAND
-	        $env:FZF_ALT_C_COMMAND = $null
+		BeforeEach {
+			# Save and clear FZF_ALT_C_COMMAND
+			$Original_FZF_ALT_C_COMMAND = $env:FZF_ALT_C_COMMAND
+			$env:FZF_ALT_C_COMMAND = $null
 
-            # Create a temporary directory for tests that need filesystem interaction
-            $ParentPath = if (Test-Path -Path "TestDrive:") { "TestDrive:" } else { $PSScriptRoot }
-            $ResolvedTempTestDirectory = Join-Path $ParentPath $TempTestDirectory
-            New-Item -ItemType Directory -Path $ResolvedTempTestDirectory -Force | Out-Null
-            New-Item -ItemType Directory -Path (Join-Path $ResolvedTempTestDirectory "subdir1") -Force | Out-Null
-            New-Item -ItemType Directory -Path (Join-Path $ResolvedTempTestDirectory "subdir2") -Force | Out-Null
-            New-Item -ItemType File -Path (Join-Path $ResolvedTempTestDirectory "somefile.txt") -Force | Out-Null
-        }
+			# Create a temporary directory for tests that need filesystem interaction
+			$ParentPath = if (Test-Path -Path "TestDrive:") { "TestDrive:" } else { $PSScriptRoot }
+			$ResolvedTempTestDirectory = Join-Path $ParentPath $TempTestDirectory
+			New-Item -ItemType Directory -Path $ResolvedTempTestDirectory -Force | Out-Null
+			New-Item -ItemType Directory -Path (Join-Path $ResolvedTempTestDirectory "subdir1") -Force | Out-Null
+			New-Item -ItemType Directory -Path (Join-Path $ResolvedTempTestDirectory "subdir2") -Force | Out-Null
+			New-Item -ItemType File -Path (Join-Path $ResolvedTempTestDirectory "somefile.txt") -Force | Out-Null
+		}
 
-        AfterEach {
-            # Restore FZF_ALT_C_COMMAND
-            $env:FZF_ALT_C_COMMAND = $Original_FZF_ALT_C_COMMAND
+		AfterEach {
+			# Restore FZF_ALT_C_COMMAND
+			$env:FZF_ALT_C_COMMAND = $Original_FZF_ALT_C_COMMAND
 
-            # Remove temporary directory - don't remove due to this error: https://github.com/pester/Pester/issues/1070
-            Remove-Item -Path $ResolvedTempTestDirectory -Recurse -Force -ErrorAction SilentlyContinue
+			# Remove temporary directory - don't remove due to this error: https://github.com/pester/Pester/issues/1070
+			Remove-Item -Path $ResolvedTempTestDirectory -Recurse -Force -ErrorAction SilentlyContinue
 
-            # Clear specific mocks to avoid interference between tests
-            # Commenting out Remove-Mock due to persistent CommandNotFoundException in this environment.
-            # This is a workaround; ideally, Remove-Mock should function correctly.
-            # Pester\Remove-Mock -CommandName 'Invoke-Fzf' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
-            # Pester\Remove-Mock -CommandName 'Set-Location' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
-        }
+			# Clear specific mocks to avoid interference between tests
+			# Commenting out Remove-Mock due to persistent CommandNotFoundException in this environment.
+			# This is a workaround; ideally, Remove-Mock should function correctly.
+			# Pester\Remove-Mock -CommandName 'Invoke-Fzf' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
+			# Pester\Remove-Mock -CommandName 'Set-Location' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
+		}
 
-        Context 'When FZF_ALT_C_COMMAND is set and not empty' {
-            It 'Should use FZF_ALT_C_COMMAND, pass its output to Invoke-Fzf, and set location to Invoke-Fzf result' {
-                # Arrange
-                $env:FZF_ALT_C_COMMAND = 'Write-Output "custom_path_from_alt_c"' # This command's output goes to Invoke-Fzf
-                $script:expectedPathForFzfMock = "custom_path_from_alt_c_SELECTED" # What Invoke-Fzf mock will return
+		Context 'When FZF_ALT_C_COMMAND is set and not empty' {
+			It 'Should use FZF_ALT_C_COMMAND, pass its output to Invoke-Fzf, and set location to Invoke-Fzf result' {
+				# Arrange
+				$env:FZF_ALT_C_COMMAND = 'Write-Output "custom_path_from_alt_c"' # This command's output goes to Invoke-Fzf
+				$script:expectedPathForFzfMock = "custom_path_from_alt_c_SELECTED" # What Invoke-Fzf mock will return
 
-                Mock Invoke-Fzf {
-                    param([Parameter(ValueFromPipeline = $true)]$InputObject) # Match real signature somewhat
-                    Write-Warning "Invoke-Fzf mock called. Input type: $($InputObject.GetType().Name). Input: $InputObject"
-                    return $script:expectedPathForFzfMock
-                } -ModuleName PsFzf
+				Mock Invoke-Fzf {
+					param([Parameter(ValueFromPipeline = $true)]$InputObject) # Match real signature somewhat
+					Write-Warning "Invoke-Fzf mock called. Input type: $($InputObject.GetType().Name). Input: $InputObject"
+					return $script:expectedPathForFzfMock
+				} -ModuleName PsFzf
 
-                Mock Set-Location { param($Path) Write-Warning "Set-Location mock called with: $Path" } -ModuleName PsFzf
+				Mock Set-Location { param($Path) Write-Warning "Set-Location mock called with: $Path" } -ModuleName PsFzf
 
-                # Act
-                $result = Invoke-FuzzySetLocation
+				# Act
+				$result = Invoke-FuzzySetLocation
 
-                # Assert
-                $result | Should -Be $script:expectedPathForFzfMock
-                Should -Invoke 'Invoke-Fzf' -Times 1 -ModuleName 'PsFzf' # Corrected assertion
-                Should -Invoke 'Set-Location' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Path -eq $script:expectedPathForFzfMock } # Corrected assertion
-            }
-        }
+				# Assert
+				$result | Should -Be $script:expectedPathForFzfMock
+				Should -Invoke 'Invoke-Fzf' -Times 1 -ModuleName 'PsFzf' # Corrected assertion
+				Should -Invoke 'Set-Location' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Path -eq $script:expectedPathForFzfMock } # Corrected assertion
+			}
+		}
 
-        Context 'When FZF_ALT_C_COMMAND is not set' {
-            It 'Should use default Get-ChildItem command, pass its output to Invoke-Fzf, and set location to Invoke-Fzf result' {
-                # Arrange
-                $env:FZF_ALT_C_COMMAND = $null # Ensure it's null
-                $script:expectedPathForFzfMock = Join-Path $ResolvedTempTestDirectory "subdir1_SELECTED" # Example selection from fzf
+		Context 'When FZF_ALT_C_COMMAND is not set' {
+			It 'Should use default Get-ChildItem command, pass its output to Invoke-Fzf, and set location to Invoke-Fzf result' {
+				# Arrange
+				$env:FZF_ALT_C_COMMAND = $null # Ensure it's null
+				$script:expectedPathForFzfMock = Join-Path $ResolvedTempTestDirectory "subdir1_SELECTED" # Example selection from fzf
 
-                Mock Invoke-Fzf {
-                    param([Parameter(ValueFromPipeline = $true)]$InputObject)
-                    Write-Warning "Invoke-Fzf mock (default case) called. Input type: $($InputObject.GetType().Name). Input count: $(if ($InputObject) {@($InputObject).Count} else {0})"
-                    return $script:expectedPathForFzfMock
-                } -ModuleName PsFzf
-                Mock Set-Location { param($Path) Write-Warning "Set-Location mock (default case) called with: $Path" } -ModuleName PsFzf
+				Mock Invoke-Fzf {
+					param([Parameter(ValueFromPipeline = $true)]$InputObject)
+					Write-Warning "Invoke-Fzf mock (default case) called. Input type: $($InputObject.GetType().Name). Input count: $(if ($InputObject) {@($InputObject).Count} else {0})"
+					return $script:expectedPathForFzfMock
+				} -ModuleName PsFzf
+				Mock Set-Location { param($Path) Write-Warning "Set-Location mock (default case) called with: $Path" } -ModuleName PsFzf
 
-                # Act
-                $result = Invoke-FuzzySetLocation -Directory $ResolvedTempTestDirectory
+				# Act
+				$result = Invoke-FuzzySetLocation -Directory $ResolvedTempTestDirectory
 
-                # Assert
-                $result | Should -Be $script:expectedPathForFzfMock
-                Should -Invoke 'Invoke-Fzf' -Times 1 -ModuleName 'PsFzf' # Corrected assertion
-                Should -Invoke 'Set-Location' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Path -eq $script:expectedPathForFzfMock } # Corrected assertion
-            }
-        }
+				# Assert
+				$result | Should -Be $script:expectedPathForFzfMock
+				Should -Invoke 'Invoke-Fzf' -Times 1 -ModuleName 'PsFzf' # Corrected assertion
+				Should -Invoke 'Set-Location' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Path -eq $script:expectedPathForFzfMock } # Corrected assertion
+			}
+		}
 
-        Context 'When FZF_ALT_C_COMMAND is set to an empty string' {
-            It 'Should use default Get-ChildItem command (like FZF_ALT_C_COMMAND not set)' {
-                # Arrange
-                $env:FZF_ALT_C_COMMAND = "" # Empty string
-                $script:expectedPathForFzfMock = Join-Path $ResolvedTempTestDirectory "subdir2_SELECTED" # Example selection from fzf
+		Context 'When FZF_ALT_C_COMMAND is set to an empty string' {
+			It 'Should use default Get-ChildItem command (like FZF_ALT_C_COMMAND not set)' {
+				# Arrange
+				$env:FZF_ALT_C_COMMAND = "" # Empty string
+				$script:expectedPathForFzfMock = Join-Path $ResolvedTempTestDirectory "subdir2_SELECTED" # Example selection from fzf
 
-                Mock Invoke-Fzf {
-                    param([Parameter(ValueFromPipeline = $true)]$InputObject)
-                    Write-Warning "Invoke-Fzf mock (empty alt_c) called. Input type: $($InputObject.GetType().Name). Input count: $(if ($InputObject) {@($InputObject).Count} else {0})"
-                    return $script:expectedPathForFzfMock
-                } -ModuleName PsFzf
-                Mock Set-Location { param($Path) Write-Warning "Set-Location mock (empty alt_c) called with: $Path" } -ModuleName PsFzf
+				Mock Invoke-Fzf {
+					param([Parameter(ValueFromPipeline = $true)]$InputObject)
+					Write-Warning "Invoke-Fzf mock (empty alt_c) called. Input type: $($InputObject.GetType().Name). Input count: $(if ($InputObject) {@($InputObject).Count} else {0})"
+					return $script:expectedPathForFzfMock
+				} -ModuleName PsFzf
+				Mock Set-Location { param($Path) Write-Warning "Set-Location mock (empty alt_c) called with: $Path" } -ModuleName PsFzf
 
-                # Act
-                $result = Invoke-FuzzySetLocation -Directory $ResolvedTempTestDirectory
+				# Act
+				$result = Invoke-FuzzySetLocation -Directory $ResolvedTempTestDirectory
 
-                # Assert
-                $result | Should -Be $script:expectedPathForFzfMock
-                Should -Invoke 'Invoke-Fzf' -Times 1 -ModuleName 'PsFzf' # Corrected assertion
-                Should -Invoke 'Set-Location' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Path -eq $script:expectedPathForFzfMock } # Corrected assertion
-            }
-        }
-    }
+				# Assert
+				$result | Should -Be $script:expectedPathForFzfMock
+				Should -Invoke 'Invoke-Fzf' -Times 1 -ModuleName 'PsFzf' # Corrected assertion
+				Should -Invoke 'Set-Location' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Path -eq $script:expectedPathForFzfMock } # Corrected assertion
+			}
+		}
+	}
 }
 
 Describe 'Invoke-FuzzyZLocation' {
-    InModuleScope PsFzf {
-        BeforeAll {
-            # For Invoke-FuzzyZLocation tests, always mock Get-ZLocation to return a consistent dataset.
-            # This makes tests independent of the actual ZLocation database state.
-            Mock Get-ZLocation {
-                Write-Warning "Mocked Get-ZLocation (providing consistent test data)"
-                return @{
-                    '/path/to/projectA' = 10;
-                    '/path/to/another/projectB' = 5;
-                    '/another/path/to/C' = 15;
-                }
-            } -ModuleName PsFzf
+	InModuleScope PsFzf {
+		BeforeAll {
+			# simulate functions so we don't have to load module:
+			if ($null -eq ${function:Get-ZLocation}) {
+				${function:Get-ZLocation} = {}
+			}
+			if ($null -eq ${function:Set-ZLocation}) {
+				${function:Set-ZLocation} = {}
+			}
 
-            # Mock Set-ZLocation if it doesn't exist, or use a simple pass-through mock if it does.
-            # This command is not directly asserted in these tests but might be called by other ZLocation logic.
-            if (-not (Get-Command Set-ZLocation -ErrorAction SilentlyContinue)) {
-                Mock Set-ZLocation {
-                    param($Path)
-                    Write-Warning "Mocked Set-ZLocation (original not found) called with: $Path"
-                } -ModuleName PsFzf
-            } else {
-                # If it exists, we can still mock it to prevent actual DB writes if desired,
-                # or let the original run if operations are idempotent and don't affect other tests.
-                # For simplicity, let's just ensure it's available or minimally mocked.
-                 Mock Set-ZLocation {
-                    param($Path)
-                    Write-Warning "Mocked Set-ZLocation (original MAY exist, simple log) called with: $Path"
-                    # Optionally call original: & (Get-Command Set-ZLocation -ErrorAction Stop) @PSBoundParameters
-                } -ModuleName PsFzf
-            }
-        }
+			# For Invoke-FuzzyZLocation tests, always mock Get-ZLocation to return a consistent dataset.
+			# This makes tests independent of the actual ZLocation database state.
+			Mock Get-ZLocation {
+				Write-Warning "Mocked Get-ZLocation (providing consistent test data)"
+				return @{
+					'/path/to/projectA'         = 10;
+					'/path/to/another/projectB' = 5;
+					'/another/path/to/C'        = 15;
+				}
+			} -ModuleName PsFzf
 
-        BeforeEach {
-            # Common mocks for Invoke-FuzzyZLocation tests
-            # These script-scoped variables are reset in AfterEach
-            $script:StaticCollectedInputForAllMockCallsInTest = @()
-            $script:StaticFzfQueryArgValue = $null
-            $script:StaticFzfNoSortArgValue = $null
-            $script:StaticActualInvokeFzfBeginCount = 0
-            $script:StaticActualInvokeFzfProcessCount = 0
-            $script:StaticActualInvokeFzfEndCount = 0
+			# Mock Set-ZLocation if it doesn't exist, or use a simple pass-through mock if it does.
+			# This command is not directly asserted in these tests but might be called by other ZLocation logic.
+			if (-not (Get-Command Set-ZLocation -ErrorAction SilentlyContinue)) {
+				Mock Set-ZLocation {
+					param($Path)
+					Write-Warning "Mocked Set-ZLocation (original not found) called with: $Path"
+				} -ModuleName PsFzf
+			}
+			else {
+				# If it exists, we can still mock it to prevent actual DB writes if desired,
+				# or let the original run if operations are idempotent and don't affect other tests.
+				# For simplicity, let's just ensure it's available or minimally mocked.
+				Mock Set-ZLocation {
+					param($Path)
+					Write-Warning "Mocked Set-ZLocation (original MAY exist, simple log) called with: $Path"
+					# Optionally call original: & (Get-Command Set-ZLocation -ErrorAction Stop) @PSBoundParameters
+				} -ModuleName PsFzf
+			}
+		}
 
-            Mock Invoke-Fzf {
-                [CmdletBinding()]
-                param(
-                    [Parameter(ValueFromPipeline = $true)] $InputObject,
-                    [string]$Query = $null,
-                    [switch]$NoSort
-                )
-                begin {
-                    $script:StaticActualInvokeFzfBeginCount++
-                    # Parameters should be consistent for a single logical pipeline invocation
-                    if ($script:StaticActualInvokeFzfBeginCount -eq 1) {
-                        $script:StaticFzfQueryArgValue = $Query
-                        $script:StaticFzfNoSortArgValue = $NoSort.IsPresent
-                    }
-                    Write-Warning "Invoke-Fzf MOCK ---BEGIN--- CallNo: $($script:StaticActualInvokeFzfBeginCount). Query: '$Query'. NoSort: '$($NoSort.IsPresent)'"
-                }
-                process {
-                    $script:StaticActualInvokeFzfProcessCount++
-                    if ($null -ne $InputObject) {
-                        # Ensure robust array accumulation
-                        $script:StaticCollectedInputForAllMockCallsInTest = @($script:StaticCollectedInputForAllMockCallsInTest) + $InputObject
-                    }
-                    Write-Warning "Invoke-Fzf MOCK ---PROCESS--- ItemNo: $($script:StaticActualInvokeFzfProcessCount). Input: '$InputObject'. Static collected now: $($script:StaticCollectedInputForAllMockCallsInTest.Count)"
-                }
-                end {
-                    $script:StaticActualInvokeFzfEndCount++
-                    Write-Warning "Invoke-Fzf MOCK ---END--- CallNo: $($script:StaticActualInvokeFzfEndCount). Total static collected: $($script:StaticCollectedInputForAllMockCallsInTest.Count). Query was: '$($script:StaticFzfQueryArgValue)'"
+		BeforeEach {
+			# Common mocks for Invoke-FuzzyZLocation tests
+			# These script-scoped variables are reset in AfterEach
+			$script:StaticCollectedInputForAllMockCallsInTest = @()
+			$script:StaticFzfQueryArgValue = $null
+			$script:StaticFzfNoSortArgValue = $null
+			$script:StaticActualInvokeFzfBeginCount = 0
+			$script:StaticActualInvokeFzfProcessCount = 0
+			$script:StaticActualInvokeFzfEndCount = 0
 
-                    # THE RETURN LOGIC NOW ONLY HAPPENS ON THE *LAST* EXPECTED CALL
-                    # AND OPERATES ON THE FULLY ACCUMULATED LIST
-                    # This assumes Get-ZLocation (mocked) provides 3 items.
-                    if ($script:StaticActualInvokeFzfEndCount -eq 3) {
-                        if ($script:StaticFzfQueryArgValue -eq 'projectA') {
-                            return '/path/to/projectA_SELECTED'
-                        } elseif ($script:StaticFzfQueryArgValue -eq 'nonexistent') {
-                            return $null
-                        }
+			Mock Invoke-Fzf {
+				[CmdletBinding()]
+				param(
+					[Parameter(ValueFromPipeline = $true)] $InputObject,
+					[string]$Query = $null,
+					[switch]$NoSort
+				)
+				begin {
+					$script:StaticActualInvokeFzfBeginCount++
+					# Parameters should be consistent for a single logical pipeline invocation
+					if ($script:StaticActualInvokeFzfBeginCount -eq 1) {
+						$script:StaticFzfQueryArgValue = $Query
+						$script:StaticFzfNoSortArgValue = $NoSort.IsPresent
+					}
+					Write-Warning "Invoke-Fzf MOCK ---BEGIN--- CallNo: $($script:StaticActualInvokeFzfBeginCount). Query: '$Query'. NoSort: '$($NoSort.IsPresent)'"
+				}
+				process {
+					$script:StaticActualInvokeFzfProcessCount++
+					if ($null -ne $InputObject) {
+						# Ensure robust array accumulation
+						$script:StaticCollectedInputForAllMockCallsInTest = @($script:StaticCollectedInputForAllMockCallsInTest) + $InputObject
+					}
+					Write-Warning "Invoke-Fzf MOCK ---PROCESS--- ItemNo: $($script:StaticActualInvokeFzfProcessCount). Input: '$InputObject'. Static collected now: $($script:StaticCollectedInputForAllMockCallsInTest.Count)"
+				}
+				end {
+					$script:StaticActualInvokeFzfEndCount++
+					Write-Warning "Invoke-Fzf MOCK ---END--- CallNo: $($script:StaticActualInvokeFzfEndCount). Total static collected: $($script:StaticCollectedInputForAllMockCallsInTest.Count). Query was: '$($script:StaticFzfQueryArgValue)'"
 
-                        if ($script:StaticCollectedInputForAllMockCallsInTest.Count -gt 0 -and (-not $script:StaticFzfQueryArgValue)) {
-                            # First item of the *accumulated and sorted* list
-                            if ($script:StaticCollectedInputForAllMockCallsInTest[0] -eq '/another/path/to/C') {
-                                 return '/another/path/to/C_SELECTED'
-                            }
-                        }
-                        # Fallback based on accumulated data if necessary
-                        if ($script:StaticCollectedInputForAllMockCallsInTest.Count -gt 0) {
-                            return $script:StaticCollectedInputForAllMockCallsInTest[0] + "_fallback_SELECTED"
-                        }
-                        return '/path/to/default/empty_input_SELECTED'
-                    }
-                    return $null # Intermediate "end" calls return nothing, so they don't pollute $result in Invoke-FuzzyZLocation
-                }
-            } -ModuleName PsFzf
+					# THE RETURN LOGIC NOW ONLY HAPPENS ON THE *LAST* EXPECTED CALL
+					# AND OPERATES ON THE FULLY ACCUMULATED LIST
+					# This assumes Get-ZLocation (mocked) provides 3 items.
+					if ($script:StaticActualInvokeFzfEndCount -eq 3) {
+						if ($script:StaticFzfQueryArgValue -eq 'projectA') {
+							return '/path/to/projectA_SELECTED'
+						}
+						elseif ($script:StaticFzfQueryArgValue -eq 'nonexistent') {
+							return $null
+						}
 
-            Mock Set-Location { param($Path) Write-Warning "Set-Location mock (Invoke-FuzzyZLocation specific) called with: $Path" } -ModuleName PsFzf
-        }
+						if ($script:StaticCollectedInputForAllMockCallsInTest.Count -gt 0 -and (-not $script:StaticFzfQueryArgValue)) {
+							# First item of the *accumulated and sorted* list
+							if ($script:StaticCollectedInputForAllMockCallsInTest[0] -eq '/another/path/to/C') {
+								return '/another/path/to/C_SELECTED'
+							}
+						}
+						# Fallback based on accumulated data if necessary
+						if ($script:StaticCollectedInputForAllMockCallsInTest.Count -gt 0) {
+							return $script:StaticCollectedInputForAllMockCallsInTest[0] + "_fallback_SELECTED"
+						}
+						return '/path/to/default/empty_input_SELECTED'
+					}
+					return $null # Intermediate "end" calls return nothing, so they don't pollute $result in Invoke-FuzzyZLocation
+				}
+			} -ModuleName PsFzf
 
-        AfterEach {
-            # Clear mocks after each test
-            # Pester\Remove-Mock -CommandName 'Get-ZLocation' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
-            # Pester\Remove-Mock -CommandName 'Invoke-Fzf' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
-            # Pester\Remove-Mock -CommandName 'Set-Location' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
-            $script:StaticCollectedInputForAllMockCallsInTest = @()
-            $script:StaticFzfQueryArgValue = $null
-            $script:StaticFzfNoSortArgValue = $null
-            $script:StaticActualInvokeFzfBeginCount = 0
-            $script:StaticActualInvokeFzfProcessCount = 0
-            $script:StaticActualInvokeFzfEndCount = 0
-        }
+			Mock Set-Location { param($Path) Write-Warning "Set-Location mock (Invoke-FuzzyZLocation specific) called with: $Path" } -ModuleName PsFzf
+		}
 
-        Context 'When no query is provided' {
-            It 'Should process ZLocation entries, pass them to Invoke-Fzf, and set location to the result' {
-                # Diagnostic: See what Get-ZLocation returns in this context
-                $actualZOutput = Get-ZLocation
-                Write-Warning "Test 'When no query is provided': Get-ZLocation returned: $($actualZOutput | ConvertTo-Json -Depth 3 -Compress)"
+		AfterEach {
+			# Clear mocks after each test
+			# Pester\Remove-Mock -CommandName 'Get-ZLocation' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
+			# Pester\Remove-Mock -CommandName 'Invoke-Fzf' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
+			# Pester\Remove-Mock -CommandName 'Set-Location' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
+			$script:StaticCollectedInputForAllMockCallsInTest = @()
+			$script:StaticFzfQueryArgValue = $null
+			$script:StaticFzfNoSortArgValue = $null
+			$script:StaticActualInvokeFzfBeginCount = 0
+			$script:StaticActualInvokeFzfProcessCount = 0
+			$script:StaticActualInvokeFzfEndCount = 0
+		}
 
-                # Act
-                Invoke-FuzzyZLocation
+		Context 'When no query is provided' {
+			It 'Should process ZLocation entries, pass them to Invoke-Fzf, and set location to the result' {
+				# Diagnostic: See what Get-ZLocation returns in this context
+				$actualZOutput = Get-ZLocation
+				Write-Warning "Test 'When no query is provided': Get-ZLocation returned: $($actualZOutput | ConvertTo-Json -Depth 3 -Compress)"
 
-                # Assert
-                Should -Invoke 'Get-ZLocation' -Times 1 -ModuleName 'PsFzf'
-                # Even if mock is called 3 times, these parameters should be consistent from the first call
-                $script:StaticFzfQueryArgValue | Should -BeNullOrEmpty
-                $script:StaticFzfNoSortArgValue | Should -BeTrue
+				# Act
+				Invoke-FuzzyZLocation
 
-                # Verify the items accumulated by Invoke-Fzf mock are the sorted keys
-                $expectedArray = @('/another/path/to/C', '/path/to/projectA', '/path/to/another/projectB')
-                $script:StaticCollectedInputForAllMockCallsInTest | Should -Be $expectedArray
+				# Assert
+				Should -Invoke 'Get-ZLocation' -Times 1 -ModuleName 'PsFzf'
+				# Even if mock is called 3 times, these parameters should be consistent from the first call
+				$script:StaticFzfQueryArgValue | Should -BeNullOrEmpty
+				$script:StaticFzfNoSortArgValue | Should -BeTrue
 
-                # Check that Set-Location was called with the item fzf mock would return on its final call
-                Should -Invoke 'Set-Location' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Path -eq '/another/path/to/C_SELECTED' }
-            }
-        }
+				# Verify the items accumulated by Invoke-Fzf mock are the sorted keys
+				$expectedArray = @('/another/path/to/C', '/path/to/projectA', '/path/to/another/projectB')
+				$script:StaticCollectedInputForAllMockCallsInTest | Should -Be $expectedArray
 
-        Context 'When a query is provided' {
-            It 'Should pass the query to Invoke-Fzf and set location to the result' {
-                # Arrange
-                $testQuery = 'projectA'
+				# Check that Set-Location was called with the item fzf mock would return on its final call
+				Should -Invoke 'Set-Location' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Path -eq '/another/path/to/C_SELECTED' }
+			}
+		}
 
-                # Act
-                Invoke-FuzzyZLocation -Query $testQuery
+		Context 'When a query is provided' {
+			It 'Should pass the query to Invoke-Fzf and set location to the result' {
+				# Arrange
+				$testQuery = 'projectA'
 
-                # Assert
-                Should -Invoke 'Get-ZLocation' -Times 1 -ModuleName 'PsFzf'
-                $script:StaticFzfQueryArgValue | Should -Be $testQuery
-                $script:StaticFzfNoSortArgValue | Should -BeTrue
-                $script:StaticCollectedInputForAllMockCallsInTest.Count | Should -Be 3 # Still processes all 3 items
-                Should -Invoke 'Set-Location' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Path -eq '/path/to/projectA_SELECTED' }
-            }
-        }
+				# Act
+				Invoke-FuzzyZLocation -Query $testQuery
 
-        Context 'When Invoke-Fzf returns no selection' {
-            It 'Should not call Set-Location' {
-                # Arrange
-                $testQuery = 'nonexistent' # This query will make Invoke-Fzf mock return $null
+				# Assert
+				Should -Invoke 'Get-ZLocation' -Times 1 -ModuleName 'PsFzf'
+				$script:StaticFzfQueryArgValue | Should -Be $testQuery
+				$script:StaticFzfNoSortArgValue | Should -BeTrue
+				$script:StaticCollectedInputForAllMockCallsInTest.Count | Should -Be 3 # Still processes all 3 items
+				Should -Invoke 'Set-Location' -Times 1 -ModuleName 'PsFzf' -ParameterFilter { $Path -eq '/path/to/projectA_SELECTED' }
+			}
+		}
 
-                # Act
-                Invoke-FuzzyZLocation -Query $testQuery
+		Context 'When Invoke-Fzf returns no selection' {
+			It 'Should not call Set-Location' {
+				# Arrange
+				$testQuery = 'nonexistent' # This query will make Invoke-Fzf mock return $null
 
-                # Assert
-                Should -Invoke 'Get-ZLocation' -Times 1 -ModuleName 'PsFzf'
-                $script:StaticFzfQueryArgValue | Should -Be $testQuery
-                $script:StaticCollectedInputForAllMockCallsInTest.Count | Should -Be 3
-                Should -Not -Invoke 'Set-Location' -ModuleName 'PsFzf'
-            }
-        }
-    }
+				# Act
+				Invoke-FuzzyZLocation -Query $testQuery
+
+				# Assert
+				Should -Invoke 'Get-ZLocation' -Times 1 -ModuleName 'PsFzf'
+				$script:StaticFzfQueryArgValue | Should -Be $testQuery
+				$script:StaticCollectedInputForAllMockCallsInTest.Count | Should -Be 3
+				Should -Not -Invoke 'Set-Location' -ModuleName 'PsFzf'
+			}
+		}
+	}
 }
 
 
