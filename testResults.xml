@@ -1,136 +1,136 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="45" errors="0" failures="0" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2025-06-26" time="16:12:48">
-  <environment os-version="6.8.0" user="jules" cwd="/app" nunit-version="2.5.8.0" user-domain="" platform="Linux" clr-version="9.0.4" machine-name="devbox" />
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="45" errors="0" failures="0" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2025-06-26" time="17:31:52">
+  <environment machine-name="devbox" user="jules" platform="Linux" user-domain="" cwd="/app" os-version="6.8.0" nunit-version="2.5.8.0" clr-version="9.0.4" />
   <culture-info current-culture="" current-uiculture="" />
-  <test-suite type="TestFixture" name="Pester" executed="True" result="Success" success="True" time="3.1232" asserts="0" description="Pester">
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Success" success="True" time="3.3291" asserts="0" description="Pester">
     <results>
-      <test-suite type="TestFixture" name="/app/PSFzf.tests.ps1" executed="True" result="Success" success="True" time="3.1232" asserts="0" description="/app/PSFzf.tests.ps1">
+      <test-suite type="TestFixture" name="/app/PSFzf.tests.ps1" executed="True" result="Success" success="True" time="3.3291" asserts="0" description="/app/PSFzf.tests.ps1">
         <results>
-          <test-suite type="TestFixture" name="Find-CurrentPath" executed="True" result="Success" success="True" time="0.4533" asserts="0" description="Find-CurrentPath">
+          <test-suite type="TestFixture" name="Find-CurrentPath" executed="True" result="Success" success="True" time="0.4673" asserts="0" description="Find-CurrentPath">
             <results>
-              <test-suite type="TestFixture" name="Find-CurrentPath.Function Exists" executed="True" result="Success" success="True" time="0.4355" asserts="0" description="Find-CurrentPath.Function Exists">
+              <test-suite type="TestFixture" name="Find-CurrentPath.Function Exists" executed="True" result="Success" success="True" time="0.4487" asserts="0" description="Find-CurrentPath.Function Exists">
                 <results>
-                  <test-case description="Should Return Nothing" name="Find-CurrentPath.Function Exists.Should Return Nothing" time="0.19" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return Nothing with Spaces Cursor at Beginning" name="Find-CurrentPath.Function Exists.Should Return Nothing with Spaces Cursor at Beginning" time="0.0257" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return Nothing with Spaces Cursor at End" name="Find-CurrentPath.Function Exists.Should Return Nothing with Spaces Cursor at End" time="0.0108" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return Path Cursor at Beginning for Single Char" name="Find-CurrentPath.Function Exists.Should Return Path Cursor at Beginning for Single Char" time="0.0124" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return Path Cursor at Beginning" name="Find-CurrentPath.Function Exists.Should Return Path Cursor at Beginning" time="0.0114" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return Nothing" name="Find-CurrentPath.Function Exists.Should Return Nothing" time="0.1975" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return Nothing with Spaces Cursor at Beginning" name="Find-CurrentPath.Function Exists.Should Return Nothing with Spaces Cursor at Beginning" time="0.0268" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return Nothing with Spaces Cursor at End" name="Find-CurrentPath.Function Exists.Should Return Nothing with Spaces Cursor at End" time="0.0114" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return Path Cursor at Beginning for Single Char" name="Find-CurrentPath.Function Exists.Should Return Path Cursor at Beginning for Single Char" time="0.0132" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return Path Cursor at Beginning" name="Find-CurrentPath.Function Exists.Should Return Path Cursor at Beginning" time="0.0117" asserts="0" success="True" result="Success" executed="True" />
                   <test-case description="Should Return Path Cursor at End" name="Find-CurrentPath.Function Exists.Should Return Path Cursor at End" time="0.0112" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return Command and Path Cursor at Beginning" name="Find-CurrentPath.Function Exists.Should Return Command and Path Cursor at Beginning" time="0.0126" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return Command and Path Cursor at End" name="Find-CurrentPath.Function Exists.Should Return Command and Path Cursor at End" time="0.0145" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return Command and Path Cursor at Beginning" name="Find-CurrentPath.Function Exists.Should Return Command and Path Cursor at Beginning" time="0.013" asserts="0" success="True" result="Success" executed="True" />
                   <test-case description="Should Return Command and Path Cursor at End" name="Find-CurrentPath.Function Exists.Should Return Command and Path Cursor at End" time="0.0134" asserts="0" success="True" result="Success" executed="True" />
-                  <test-suite type="ParameterizedTest" name="Find-CurrentPath.Function Exists.Should Return Path With Quotes Cursor at Beginning" executed="True" result="Success" success="True" time="0.0825" asserts="0" description="Should Return Path With Quotes Cursor at Beginning">
+                  <test-case description="Should Return Command and Path Cursor at End" name="Find-CurrentPath.Function Exists.Should Return Command and Path Cursor at End" time="0.0142" asserts="0" success="True" result="Success" executed="True" />
+                  <test-suite type="ParameterizedTest" name="Find-CurrentPath.Function Exists.Should Return Path With Quotes Cursor at Beginning" executed="True" result="Success" success="True" time="0.0778" asserts="0" description="Should Return Path With Quotes Cursor at Beginning">
                     <results>
-                      <test-case description="Should Return Path With Quotes Cursor at Beginning" name="Find-CurrentPath.Function Exists.Should Return Path With Quotes Cursor at Beginning(&quot;&quot;&quot;)" time="0.0207" asserts="0" success="True" result="Success" executed="True" />
-                      <test-case description="Should Return Path With Quotes Cursor at Beginning" name="Find-CurrentPath.Function Exists.Should Return Path With Quotes Cursor at Beginning(&quot;'&quot;)" time="0.0619" asserts="0" success="True" result="Success" executed="True" />
+                      <test-case description="Should Return Path With Quotes Cursor at Beginning" name="Find-CurrentPath.Function Exists.Should Return Path With Quotes Cursor at Beginning(&quot;&quot;&quot;)" time="0.0208" asserts="0" success="True" result="Success" executed="True" />
+                      <test-case description="Should Return Path With Quotes Cursor at Beginning" name="Find-CurrentPath.Function Exists.Should Return Path With Quotes Cursor at Beginning(&quot;'&quot;)" time="0.0569" asserts="0" success="True" result="Success" executed="True" />
                     </results>
                   </test-suite>
                 </results>
               </test-suite>
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Invoke-FuzzySetLocation" executed="True" result="Success" success="True" time="1.1527" asserts="0" description="Invoke-FuzzySetLocation">
+          <test-suite type="TestFixture" name="Invoke-FuzzySetLocation" executed="True" result="Success" success="True" time="1.169" asserts="0" description="Invoke-FuzzySetLocation">
             <results>
-              <test-suite type="TestFixture" name="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is set and not empty" executed="True" result="Success" success="True" time="0.5158" asserts="0" description="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is set and not empty">
+              <test-suite type="TestFixture" name="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is set and not empty" executed="True" result="Success" success="True" time="0.5201" asserts="0" description="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is set and not empty">
                 <results>
-                  <test-case description="Should use FZF_ALT_C_COMMAND, pass its output to Invoke-Fzf, and set location to Invoke-Fzf result" name="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is set and not empty.Should use FZF_ALT_C_COMMAND, pass its output to Invoke-Fzf, and set location to Invoke-Fzf result" time="0.5102" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should use FZF_ALT_C_COMMAND, pass its output to Invoke-Fzf, and set location to Invoke-Fzf result" name="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is set and not empty.Should use FZF_ALT_C_COMMAND, pass its output to Invoke-Fzf, and set location to Invoke-Fzf result" time="0.5148" asserts="0" success="True" result="Success" executed="True" />
                 </results>
               </test-suite>
-              <test-suite type="TestFixture" name="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is not set" executed="True" result="Success" success="True" time="0.584" asserts="0" description="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is not set">
+              <test-suite type="TestFixture" name="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is not set" executed="True" result="Success" success="True" time="0.5903" asserts="0" description="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is not set">
                 <results>
-                  <test-case description="Should use default Get-ChildItem command, pass its output to Invoke-Fzf, and set location to Invoke-Fzf result" name="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is not set.Should use default Get-ChildItem command, pass its output to Invoke-Fzf, and set location to Invoke-Fzf result" time="0.0618" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should use default Get-ChildItem command, pass its output to Invoke-Fzf, and set location to Invoke-Fzf result" name="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is not set.Should use default Get-ChildItem command, pass its output to Invoke-Fzf, and set location to Invoke-Fzf result" time="0.064" asserts="0" success="True" result="Success" executed="True" />
                 </results>
               </test-suite>
-              <test-suite type="TestFixture" name="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is set to an empty string" executed="True" result="Success" success="True" time="0.6938" asserts="0" description="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is set to an empty string">
+              <test-suite type="TestFixture" name="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is set to an empty string" executed="True" result="Success" success="True" time="0.6962" asserts="0" description="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is set to an empty string">
                 <results>
-                  <test-case description="Should use default Get-ChildItem command (like FZF_ALT_C_COMMAND not set)" name="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is set to an empty string.Should use default Get-ChildItem command (like FZF_ALT_C_COMMAND not set)" time="0.1042" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should use default Get-ChildItem command (like FZF_ALT_C_COMMAND not set)" name="Invoke-FuzzySetLocation.When FZF_ALT_C_COMMAND is set to an empty string.Should use default Get-ChildItem command (like FZF_ALT_C_COMMAND not set)" time="0.1004" asserts="0" success="True" result="Success" executed="True" />
                 </results>
               </test-suite>
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Invoke-FuzzyZLocation" executed="True" result="Success" success="True" time="1.6638" asserts="0" description="Invoke-FuzzyZLocation">
+          <test-suite type="TestFixture" name="Invoke-FuzzyZLocation" executed="True" result="Success" success="True" time="1.6001" asserts="0" description="Invoke-FuzzyZLocation">
             <results>
-              <test-suite type="TestFixture" name="Invoke-FuzzyZLocation.When no query is provided" executed="True" result="Success" success="True" time="0.3315" asserts="0" description="Invoke-FuzzyZLocation.When no query is provided">
+              <test-suite type="TestFixture" name="Invoke-FuzzyZLocation.When no query is provided" executed="True" result="Success" success="True" time="0.1642" asserts="0" description="Invoke-FuzzyZLocation.When no query is provided">
                 <results>
-                  <test-case description="Should call Invoke-Fzf without a query and set location to the result" name="Invoke-FuzzyZLocation.When no query is provided.Should call Invoke-Fzf without a query and set location to the result" time="0.3254" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should process ZLocation entries, pass them to Invoke-Fzf, and set location to the result" name="Invoke-FuzzyZLocation.When no query is provided.Should process ZLocation entries, pass them to Invoke-Fzf, and set location to the result" time="0.159" asserts="0" success="True" result="Success" executed="True" />
                 </results>
               </test-suite>
-              <test-suite type="TestFixture" name="Invoke-FuzzyZLocation.When a query is provided" executed="True" result="Success" success="True" time="0.4219" asserts="0" description="Invoke-FuzzyZLocation.When a query is provided">
+              <test-suite type="TestFixture" name="Invoke-FuzzyZLocation.When a query is provided" executed="True" result="Success" success="True" time="0.2241" asserts="0" description="Invoke-FuzzyZLocation.When a query is provided">
                 <results>
-                  <test-case description="Should call Invoke-Fzf with the query and set location to the result" name="Invoke-FuzzyZLocation.When a query is provided.Should call Invoke-Fzf with the query and set location to the result" time="0.0842" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should pass the query to Invoke-Fzf and set location to the result" name="Invoke-FuzzyZLocation.When a query is provided.Should pass the query to Invoke-Fzf and set location to the result" time="0.0546" asserts="0" success="True" result="Success" executed="True" />
                 </results>
               </test-suite>
-              <test-suite type="TestFixture" name="Invoke-FuzzyZLocation.When Invoke-Fzf returns no selection" executed="True" result="Success" success="True" time="0.4988" asserts="0" description="Invoke-FuzzyZLocation.When Invoke-Fzf returns no selection">
+              <test-suite type="TestFixture" name="Invoke-FuzzyZLocation.When Invoke-Fzf returns no selection" executed="True" result="Success" success="True" time="0.2897" asserts="0" description="Invoke-FuzzyZLocation.When Invoke-Fzf returns no selection">
                 <results>
-                  <test-case description="Should not call Set-Location" name="Invoke-FuzzyZLocation.When Invoke-Fzf returns no selection.Should not call Set-Location" time="0.0686" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should not call Set-Location" name="Invoke-FuzzyZLocation.When Invoke-Fzf returns no selection.Should not call Set-Location" time="0.0528" asserts="0" success="True" result="Success" executed="True" />
                 </results>
               </test-suite>
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Add-BinaryModuleTypes" executed="True" result="Success" success="True" time="1.6973" asserts="0" description="Add-BinaryModuleTypes">
+          <test-suite type="TestFixture" name="Add-BinaryModuleTypes" executed="True" result="Success" success="True" time="1.6957" asserts="0" description="Add-BinaryModuleTypes">
             <results>
-              <test-suite type="TestFixture" name="Add-BinaryModuleTypes.Module Loaded" executed="True" result="Success" success="True" time="0.0284" asserts="0" description="Add-BinaryModuleTypes.Module Loaded">
+              <test-suite type="TestFixture" name="Add-BinaryModuleTypes.Module Loaded" executed="True" result="Success" success="True" time="0.0897" asserts="0" description="Add-BinaryModuleTypes.Module Loaded">
                 <results>
-                  <test-case description="Be Able to Create Type" name="Add-BinaryModuleTypes.Module Loaded.Be Able to Create Type" time="0.0229" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Be Able to Create Type" name="Add-BinaryModuleTypes.Module Loaded.Be Able to Create Type" time="0.0835" asserts="0" success="True" result="Success" executed="True" />
                 </results>
               </test-suite>
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Check FixCompletionResult" executed="True" result="Success" success="True" time="1.7732" asserts="0" description="Check FixCompletionResult">
+          <test-suite type="TestFixture" name="Check FixCompletionResult" executed="True" result="Success" success="True" time="1.7874" asserts="0" description="Check FixCompletionResult">
             <results>
-              <test-suite type="TestFixture" name="Check FixCompletionResult.Non-quoted Strings Should Not Change" executed="True" result="Success" success="True" time="0.0251" asserts="0" description="Check FixCompletionResult.Non-quoted Strings Should Not Change">
+              <test-suite type="TestFixture" name="Check FixCompletionResult.Non-quoted Strings Should Not Change" executed="True" result="Success" success="True" time="0.0309" asserts="0" description="Check FixCompletionResult.Non-quoted Strings Should Not Change">
                 <results>
-                  <test-case description="Check Simple String" name="Check FixCompletionResult.Non-quoted Strings Should Not Change.Check Simple String" time="0.0122" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Check Simple String with quote" name="Check FixCompletionResult.Non-quoted Strings Should Not Change.Check Simple String with quote" time="0.0069" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Check Simple String" name="Check FixCompletionResult.Non-quoted Strings Should Not Change.Check Simple String" time="0.0154" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Check Simple String with quote" name="Check FixCompletionResult.Non-quoted Strings Should Not Change.Check Simple String with quote" time="0.0086" asserts="0" success="True" result="Success" executed="True" />
                 </results>
               </test-suite>
-              <test-suite type="TestFixture" name="Check FixCompletionResult.Non-quoted Strings With Spaces Should Change" executed="True" result="Success" success="True" time="0.0501" asserts="0" description="Check FixCompletionResult.Non-quoted Strings With Spaces Should Change">
+              <test-suite type="TestFixture" name="Check FixCompletionResult.Non-quoted Strings With Spaces Should Change" executed="True" result="Success" success="True" time="0.0588" asserts="0" description="Check FixCompletionResult.Non-quoted Strings With Spaces Should Change">
                 <results>
-                  <test-case description="Check Simple String With Space" name="Check FixCompletionResult.Non-quoted Strings With Spaces Should Change.Check Simple String With Space" time="0.0127" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Check Simple String with quote" name="Check FixCompletionResult.Non-quoted Strings With Spaces Should Change.Check Simple String with quote" time="0.0069" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Check Simple String With Space" name="Check FixCompletionResult.Non-quoted Strings With Spaces Should Change.Check Simple String With Space" time="0.0123" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Check Simple String with quote" name="Check FixCompletionResult.Non-quoted Strings With Spaces Should Change.Check Simple String with quote" time="0.0088" asserts="0" success="True" result="Success" executed="True" />
                 </results>
               </test-suite>
-              <test-suite type="TestFixture" name="Check FixCompletionResult.Quoted Strings Should Not Change" executed="True" result="Success" success="True" time="0.0709" asserts="0" description="Check FixCompletionResult.Quoted Strings Should Not Change">
+              <test-suite type="TestFixture" name="Check FixCompletionResult.Quoted Strings Should Not Change" executed="True" result="Success" success="True" time="0.0853" asserts="0" description="Check FixCompletionResult.Quoted Strings Should Not Change">
                 <results>
-                  <test-case description="Check Simple String With Space and Already Double Quoted" name="Check FixCompletionResult.Quoted Strings Should Not Change.Check Simple String With Space and Already Double Quoted" time="0.0078" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Check Simple String With Space and Already Single Quoted" name="Check FixCompletionResult.Quoted Strings Should Not Change.Check Simple String With Space and Already Single Quoted" time="0.0076" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Check Simple String With Space and Already Double Quoted" name="Check FixCompletionResult.Quoted Strings Should Not Change.Check Simple String With Space and Already Double Quoted" time="0.0101" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Check Simple String With Space and Already Single Quoted" name="Check FixCompletionResult.Quoted Strings Should Not Change.Check Simple String With Space and Already Single Quoted" time="0.0097" asserts="0" success="True" result="Success" executed="True" />
                 </results>
               </test-suite>
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Check Parameters" executed="True" result="Success" success="True" time="2.0196" asserts="0" description="Check Parameters">
+          <test-suite type="TestFixture" name="Check Parameters" executed="True" result="Success" success="True" time="2.0822" asserts="0" description="Check Parameters">
             <results>
-              <test-suite type="TestFixture" name="Check Parameters.Parameters Should Fail" executed="True" result="Success" success="True" time="0.2415" asserts="0" description="Check Parameters.Parameters Should Fail">
+              <test-suite type="TestFixture" name="Check Parameters.Parameters Should Fail" executed="True" result="Success" success="True" time="0.2883" asserts="0" description="Check Parameters.Parameters Should Fail">
                 <results>
-                  <test-case description="Borders Should -Be Mutally Exclusive" name="Check Parameters.Parameters Should Fail.Borders Should -Be Mutally Exclusive" time="0.1301" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Validate Tiebreak" name="Check Parameters.Parameters Should Fail.Validate Tiebreak" time="0.0103" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Validate BorderStyle" name="Check Parameters.Parameters Should Fail.Validate BorderStyle" time="0.0079" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Validate Info" name="Check Parameters.Parameters Should Fail.Validate Info" time="0.0087" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Validate Height Pattern Percentage" name="Check Parameters.Parameters Should Fail.Validate Height Pattern Percentage" time="0.0399" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Validate Height Pattern Non-Number" name="Check Parameters.Parameters Should Fail.Validate Height Pattern Non-Number" time="0.0084" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Validate Height Pattern Negative" name="Check Parameters.Parameters Should Fail.Validate Height Pattern Negative" time="0.0081" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Validate MinHeight Pattern Non-Number" name="Check Parameters.Parameters Should Fail.Validate MinHeight Pattern Non-Number" time="0.0124" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Validate MinHeight Pattern Negative" name="Check Parameters.Parameters Should Fail.Validate MinHeight Pattern Negative" time="0.0089" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Borders Should -Be Mutally Exclusive" name="Check Parameters.Parameters Should Fail.Borders Should -Be Mutally Exclusive" time="0.154" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Validate Tiebreak" name="Check Parameters.Parameters Should Fail.Validate Tiebreak" time="0.038" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Validate BorderStyle" name="Check Parameters.Parameters Should Fail.Validate BorderStyle" time="0.0111" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Validate Info" name="Check Parameters.Parameters Should Fail.Validate Info" time="0.0105" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Validate Height Pattern Percentage" name="Check Parameters.Parameters Should Fail.Validate Height Pattern Percentage" time="0.0111" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Validate Height Pattern Non-Number" name="Check Parameters.Parameters Should Fail.Validate Height Pattern Non-Number" time="0.0108" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Validate Height Pattern Negative" name="Check Parameters.Parameters Should Fail.Validate Height Pattern Negative" time="0.0107" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Validate MinHeight Pattern Non-Number" name="Check Parameters.Parameters Should Fail.Validate MinHeight Pattern Non-Number" time="0.016" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Validate MinHeight Pattern Negative" name="Check Parameters.Parameters Should Fail.Validate MinHeight Pattern Negative" time="0.0172" asserts="0" success="True" result="Success" executed="True" />
                 </results>
               </test-suite>
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Get-EditorLaunch" executed="True" result="Success" success="True" time="2.1879" asserts="0" description="Get-EditorLaunch">
+          <test-suite type="TestFixture" name="Get-EditorLaunch" executed="True" result="Success" success="True" time="2.3236" asserts="0" description="Get-EditorLaunch">
             <results>
-              <test-suite type="TestFixture" name="Get-EditorLaunch.Vim" executed="True" result="Success" success="True" time="0.1633" asserts="0" description="Get-EditorLaunch.Vim">
+              <test-suite type="TestFixture" name="Get-EditorLaunch.Vim" executed="True" result="Success" success="True" time="0.2351" asserts="0" description="Get-EditorLaunch.Vim">
                 <results>
-                  <test-case description="Should Return vim Single" name="Get-EditorLaunch.Vim.Should Return vim Single" time="0.0196" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return vim Single With Quotes" name="Get-EditorLaunch.Vim.Should Return vim Single With Quotes" time="0.0114" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return vim Single With Options" name="Get-EditorLaunch.Vim.Should Return vim Single With Options" time="0.0118" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return vim Single with Line Number" name="Get-EditorLaunch.Vim.Should Return vim Single with Line Number" time="0.0098" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return vim Multiple" name="Get-EditorLaunch.Vim.Should Return vim Multiple" time="0.0135" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return vim Multiple With Quotes" name="Get-EditorLaunch.Vim.Should Return vim Multiple With Quotes" time="0.0132" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return code Single" name="Get-EditorLaunch.Vim.Should Return code Single" time="0.0122" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return code Single With Quotes" name="Get-EditorLaunch.Vim.Should Return code Single With Quotes" time="0.021" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return code Single Reuse Window" name="Get-EditorLaunch.Vim.Should Return code Single Reuse Window" time="0.0102" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return code Single with Line Number" name="Get-EditorLaunch.Vim.Should Return code Single with Line Number" time="0.0097" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return code Multiple" name="Get-EditorLaunch.Vim.Should Return code Multiple" time="0.0113" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Should Return code Multiple With Quotes" name="Get-EditorLaunch.Vim.Should Return code Multiple With Quotes" time="0.0111" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return vim Single" name="Get-EditorLaunch.Vim.Should Return vim Single" time="0.0245" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return vim Single With Quotes" name="Get-EditorLaunch.Vim.Should Return vim Single With Quotes" time="0.0154" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return vim Single With Options" name="Get-EditorLaunch.Vim.Should Return vim Single With Options" time="0.0148" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return vim Single with Line Number" name="Get-EditorLaunch.Vim.Should Return vim Single with Line Number" time="0.0126" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return vim Multiple" name="Get-EditorLaunch.Vim.Should Return vim Multiple" time="0.0171" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return vim Multiple With Quotes" name="Get-EditorLaunch.Vim.Should Return vim Multiple With Quotes" time="0.0582" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return code Single" name="Get-EditorLaunch.Vim.Should Return code Single" time="0.0172" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return code Single With Quotes" name="Get-EditorLaunch.Vim.Should Return code Single With Quotes" time="0.0148" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return code Single Reuse Window" name="Get-EditorLaunch.Vim.Should Return code Single Reuse Window" time="0.0113" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return code Single with Line Number" name="Get-EditorLaunch.Vim.Should Return code Single with Line Number" time="0.0115" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return code Multiple" name="Get-EditorLaunch.Vim.Should Return code Multiple" time="0.0134" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should Return code Multiple With Quotes" name="Get-EditorLaunch.Vim.Should Return code Multiple With Quotes" time="0.0138" asserts="0" success="True" result="Success" executed="True" />
                 </results>
               </test-suite>
             </results>
