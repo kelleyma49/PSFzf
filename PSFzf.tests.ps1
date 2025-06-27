@@ -100,6 +100,125 @@ Describe "Find-CurrentPath" {
 	}
 }
 
+Describe 'Invoke-PsFzfRipgrep' {
+    InModuleScope PsFzf {
+        $OriginalPSFZF_RG_PREFIX = $null
+        $script:CapturedCommand = $null
+        $script:MockedFzfDefaultCmd = $null
+
+        BeforeEach {
+            # Store and clear environment variable
+            $OriginalPSFZF_RG_PREFIX = $env:PSFZF_RG_PREFIX
+            $env:PSFZF_RG_PREFIX = $null
+
+            # Reset captured command
+            $script:CapturedCommand = $null
+
+            # Mock Invoke-Expression to capture the command
+            Mock Invoke-Expression {
+                param($Command)
+                $script:CapturedCommand = $Command
+                # Simulate fzf returning no selection to allow the function to complete
+                return $null
+            } -ModuleName PsFzf
+
+            # Mock Get-EditorLaunch to prevent actual editor launch
+            Mock Get-EditorLaunch {
+                param($FileList, $LineNum = 0)
+                # Do nothing, just prevent original function call
+                return "MockedEditorLaunch $FileList $LineNum"
+            } -ModuleName PsFzf
+
+            # Mock Resolve-Path for -NoEditor switch
+            Mock Resolve-Path {
+                param($Path)
+                return "Resolved_$Path" # Simulate path resolution
+            } -ModuleName PsFzf
+
+            # Mock FzfDefaultCmd - new and Restore. # This line is illustrative; the mock below is what's active.
+            # $script:MockedFzfDefaultCmd = @{ Restored = $false } # This variable is no longer used.
+            # The old mock for [FzfDefaultCmd]::new is removed.
+
+            # Mock the Restore method of the FzfDefaultCmd class
+            Mock Restore -CommandName FzfDefaultCmd {
+                # This scriptblock can be empty if we just use Should -Invoke to verify call count
+            } -ModuleName PsFzf -Verifiable
+        }
+
+        AfterEach {
+            # Restore environment variable
+            $env:PSFZF_RG_PREFIX = $OriginalPSFZF_RG_PREFIX
+
+            # Mocks are generally cleaned up by Pester between Describe blocks or by re-mocking.
+            # Pester 5+ typically handles cleanup of -Verifiable mocks automatically.
+            # If explicit removal were needed for FzfDefaultCmd.Restore:
+            # Remove-Mock -CommandName FzfDefaultCmd -MethodName Restore -ModuleName PsFzf -ErrorAction SilentlyContinue
+        }
+
+        Context 'Default rg command' {
+            It 'Should use the default rg prefix when PSFZF_RG_PREFIX is not set' {
+                Invoke-PsFzfRipgrep -SearchString 'testsearch' | Out-Null
+
+                $defaultRgPrefix = "rg --column --line-number --no-heading --color=always --smart-case "
+                # Check that the default rg prefix is part of the command passed to Invoke-Expression (indirectly, via $env:FZF_DEFAULT_COMMAND)
+                # This specifically checks the 'reload' part of the fzf --bind arguments
+                $script:CapturedCommand | Should -Match ([regex]::Escape($defaultRgPrefix))
+                Should -Invoke 'Restore' -CommandName FzfDefaultCmd -Times 1 -ModuleName PsFzf
+            }
+        }
+
+        Context 'Custom rg command via PSFZF_RG_PREFIX' {
+            It 'Should use the custom rg prefix when PSFZF_RG_PREFIX is set' {
+                $customRgPrefix = 'my-custom-rg --awesome '
+                $env:PSFZF_RG_PREFIX = $customRgPrefix
+
+                Invoke-PsFzfRipgrep -SearchString 'testsearch' | Out-Null
+
+                $script:CapturedCommand | Should -Match ([regex]::Escape($customRgPrefix))
+                $script:CapturedCommand | Should -Not -Match ([regex]::Escape("rg --column --line-number"))
+                Should -Invoke 'Restore' -CommandName FzfDefaultCmd -Times 1 -ModuleName PsFzf
+            }
+        }
+
+        Context 'NoEditor switch' {
+            It 'Should call Resolve-Path and not Get-EditorLaunch when -NoEditor is used and fzf returns a value' {
+                # Override Invoke-Expression mock for this specific test to return a value
+                Mock Invoke-Expression {
+                    param($Command)
+                    $script:CapturedCommand = $Command
+                    return "somefile.txt:123:content" # Simulate fzf selection
+                } -ModuleName PsFzf
+
+                $result = Invoke-PsFzfRipgrep -SearchString 'testsearch' -NoEditor
+
+                $result | Should -Be "Resolved_somefile.txt"
+                Should -Invoke 'Resolve-Path' -Times 1 -ModuleName PsFzf -ParameterFilter { $Path -eq 'somefile.txt' }
+                Should -Not -Invoke 'Get-EditorLaunch' -ModuleName PsFzf
+                Should -Invoke 'Restore' -CommandName FzfDefaultCmd -Times 1 -ModuleName PsFzf
+            }
+        }
+
+        Context 'Editor launch' {
+            It 'Should call Get-EditorLaunch when -NoEditor is not used and fzf returns a value' {
+                # Override Invoke-Expression mock for this specific test to return a value
+                Mock Invoke-Expression {
+                    param($Command)
+                    $script:CapturedCommand = $Command
+                    return "anotherfile.txt:45:foobar" # Simulate fzf selection
+                } -ModuleName PsFzf
+
+                Invoke-PsFzfRipgrep -SearchString 'testsearch' | Out-Null
+
+                Should -Invoke 'Get-EditorLaunch' -Times 1 -ModuleName PsFzf -ParameterFilter {
+                    $FileList -eq 'anotherfile.txt' -and $LineNum -eq '45'
+                }
+                Should -Not -Invoke 'Resolve-Path' -ModuleName PsFzf
+                Should -Invoke 'Restore' -CommandName FzfDefaultCmd -Times 1 -ModuleName PsFzf
+            }
+        }
+    }
+}
+
 Describe 'Invoke-FuzzySetLocation' {
 	InModuleScope PsFzf {
 
