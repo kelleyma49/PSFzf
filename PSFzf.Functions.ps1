@@ -351,7 +351,8 @@ function Invoke-PsFzfRipgrep() {
     # this function is adapted from https://github.com/junegunn/fzf/blob/master/ADVANCED.md#switching-between-ripgrep-mode-and-fzf-mode
     param([Parameter(Mandatory)]$SearchString, [switch]$NoEditor)
 
-    $RG_PREFIX = "rg --column --line-number --no-heading --color=always --smart-case "
+    $DEFAULT_RG_PREFIX = "rg --column --line-number --no-heading --color=always --smart-case "
+    $RG_PREFIX = if ($env:PSFZF_RG_PREFIX) { $env:PSFZF_RG_PREFIX } else { $DEFAULT_RG_PREFIX }
     $INITIAL_QUERY = $SearchString
 
     $script:OverrideFzfDefaultCommand = [FzfDefaultCmd]::new('')
