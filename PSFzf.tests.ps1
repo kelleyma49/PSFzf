@@ -244,8 +244,6 @@ Describe 'Invoke-FuzzySetLocation' {
 			# Clear specific mocks to avoid interference between tests
 			# Commenting out Remove-Mock due to persistent CommandNotFoundException in this environment.
 			# This is a workaround; ideally, Remove-Mock should function correctly.
-			# Pester\Remove-Mock -CommandName 'Invoke-Fzf' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
-			# Pester\Remove-Mock -CommandName 'Set-Location' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
 		}
 
 		Context 'When FZF_ALT_C_COMMAND is set and not empty' {
@@ -432,9 +430,6 @@ Describe 'Invoke-FuzzyZLocation' {
 
 		AfterEach {
 			# Clear mocks after each test
-			# Pester\Remove-Mock -CommandName 'Get-ZLocation' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
-			# Pester\Remove-Mock -CommandName 'Invoke-Fzf' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
-			# Pester\Remove-Mock -CommandName 'Set-Location' -ModuleName 'PsFzf' -ErrorAction SilentlyContinue
 			$script:StaticCollectedInputForAllMockCallsInTest = @()
 			$script:StaticFzfQueryArgValue = $null
 			$script:StaticFzfNoSortArgValue = $null
@@ -576,11 +571,6 @@ Describe "Invoke-FzfTabCompletion" {
             # Using Pester's Remove-Mock if available, otherwise clear manually if necessary.
             # Note: Direct type mocking like for PSConsoleReadline might not be removable with Remove-Mock
             # if it's not a standard command. This setup assumes Pester handles it.
-            Remove-Mock -CommandName GetBufferState -ModuleName Microsoft.PowerShell.PSConsoleReadLine -ErrorAction SilentlyContinue
-            Remove-Mock -CommandName Insert -ModuleName Microsoft.PowerShell.PSConsoleReadLine -ErrorAction SilentlyContinue
-            Remove-Mock -CommandName Replace -ModuleName Microsoft.PowerShell.PSConsoleReadLine -ErrorAction SilentlyContinue
-            Remove-Mock -CommandName CompleteInput -ModuleName System.Management.Automation.CommandCompletion -ErrorAction SilentlyContinue
-            Remove-Mock -CommandName Invoke-Fzf -ModuleName PsFzf -ErrorAction SilentlyContinue
 
             # Reset script variables used for mocking
             $script:SimulatedLine = $null
