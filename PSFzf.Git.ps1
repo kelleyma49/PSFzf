@@ -1,3 +1,4 @@
+. "$PSScriptRoot/PSConsoleReadLineWrappers.ps1"
 
 $script:GitKeyHandlers = @()
 
@@ -167,7 +168,7 @@ function Update-CmdLine($result) {
     InvokePromptHack
     if ($result.Length -gt 0) {
         $result = $result -join " "
-        [Microsoft.PowerShell.PSConsoleReadLine]::Insert($result)
+        Insert-PSConsoleReadLineText -TextToInsert $result
     }
 }
 function Invoke-PsFzfGitFiles() {

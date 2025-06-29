@@ -4,6 +4,8 @@ param(
 	[parameter(Position = 2, Mandatory = $false)][string]$PSReadlineChordSetLocation = 'Alt+c',
 	[parameter(Position = 3, Mandatory = $false)][string]$PSReadlineChordReverseHistoryArgs = 'Alt+a')
 
+. "$PSScriptRoot/PSConsoleReadLineWrappers.ps1"
+
 $script:IsWindows = ($PSVersionTable.PSVersion.Major -le 5) -or $IsWindows
 if ($script:IsWindows) {
 	$script:ShellCmd = 'cmd.exe /S /C {0}'
@@ -134,7 +136,7 @@ function InvokePromptHack() {
 	[Console]::OutputEncoding = [Text.Encoding]::UTF8
 
 	try {
-		[Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+		Invoke-PSConsoleReadLinePrompt
 	}
  finally {
 		[Console]::OutputEncoding = $previousOutputEncoding
@@ -734,9 +736,9 @@ function Invoke-FzfDefaultSystem {
 function Invoke-FzfPsReadlineHandlerProvider {
 	$leftCursor = $null
 	$rightCursor = $null
-	$line = $null
-	$cursor = $null
-	[Microsoft.PowerShell.PSConsoleReadline]::GetBufferState([ref]$line, [ref]$cursor)
+	$bufferState = Get-PSConsoleReadLineBufferState
+	$line = $bufferState.Line
+	$cursor = $bufferState.Cursor
 	$currentPath = Find-CurrentPath $line $cursor ([ref]$leftCursor) ([ref]$rightCursor)
 	$addSpace = $null -ne $currentPath -and $currentPath.StartsWith(" ")
 	if ([String]::IsNullOrWhitespace($currentPath) -or !(Test-Path $currentPath)) {
@@ -816,10 +818,10 @@ function Invoke-FzfPsReadlineHandlerProvider {
 		}
 		$replaceLen = $rightCursor - $leftCursor
 		if ($rightCursor -eq 0 -and $leftCursor -eq 0) {
-			[Microsoft.PowerShell.PSConsoleReadLine]::Insert($str)
+			Insert-PSConsoleReadLineText -TextToInsert $str
 		}
 		else {
-			[Microsoft.PowerShell.PSConsoleReadLine]::Replace($leftCursor, $replaceLen + 1, $str)
+			Replace-PSConsoleReadLineText -Start $leftCursor -Length ($replaceLen + 1) -ReplacementText $str
 		}
 	}
 }
@@ -903,25 +905,25 @@ function Get-PickedHistory($Query = '', [switch]$UsePSReadLineHistory) {
 }
 function Invoke-FzfPsReadlineHandlerHistory {
 	$result = $null
-	$line = $null
-	$cursor = $null
-	[Microsoft.PowerShell.PSConsoleReadline]::GetBufferState([ref]$line, [ref]$cursor)
+	$bufferState = Get-PSConsoleReadLineBufferState
+	$line = $bufferState.Line
+	$cursor = $bufferState.Cursor
 
 	$result = Get-PickedHistory -Query $line -UsePSReadLineHistory
 
 	InvokePromptHack
 
 	if (-not [string]::IsNullOrEmpty($result)) {
-		[Microsoft.PowerShell.PSConsoleReadLine]::Replace(0, $line.Length, $result)
+		Replace-PSConsoleReadLineText -Start 0 -Length $line.Length -ReplacementText $result
 	}
 }
 
 function Invoke-FzfPsReadlineHandlerHistoryArgs {
 	$result = @()
 	try {
-		$line = $null
-		$cursor = $null
-		[Microsoft.PowerShell.PSConsoleReadline]::GetBufferState([ref]$line, [ref]$cursor)
+		$bufferState = Get-PSConsoleReadLineBufferState
+		$line = $bufferState.Line
+		$cursor = $bufferState.Cursor
 		$line = $line.Insert($cursor, "{}") # add marker for fzf
 
 		$contentTable = @{}
@@ -957,7 +959,7 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 		}
 	}
 	if ($result.Length -ge 0) {
-		[Microsoft.PowerShell.PSConsoleReadLine]::Replace($cursor, 0, ($result -join ' '))
+		Replace-PSConsoleReadLineText -Start $cursor -Length 0 -ReplacementText ($result -join ' ')
 	}
 }
 
@@ -984,7 +986,7 @@ function Invoke-FzfPsReadlineHandlerSetLocation {
 	}
 	if (-not [string]::IsNullOrEmpty($result)) {
 		& $script:AltCCommand -Location $result
-		[Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+		Invoke-PSConsoleReadLineAcceptLine
 	}
 	else {
 		InvokePromptHack
