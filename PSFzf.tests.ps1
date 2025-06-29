@@ -553,7 +553,7 @@ Describe "Check Parameters" {
 		Context "Parameters Should Fail" {
 			It "Borders Should -Be Mutally Exclusive" {
 				{ $_ = '' | Invoke-Fzf -Border -BorderStyle 'sharp' } |
-				Should -Throw '*are mutally exclusive'
+				Should -Throw '*are mutally exclusive*'
 			}
 
 			It "Validate Tiebreak" {
@@ -680,6 +680,67 @@ Describe "Get-EditorLaunch" {
 			}
 		}
 	}
+}
+
+Describe "PSConsoleReadLineWrappers" {
+    InModuleScope PsFzf {
+        # Mock the static methods of PSConsoleReadLine
+        Mock [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState {
+            param([ref]$line, [ref]$cursor)
+            $line.Value = "mocked line"
+            $cursor.Value = 7
+        } -ModuleName PsFzf
+
+        Mock [Microsoft.PowerShell.PSConsoleReadLine]::Insert {
+            param($TextToInsert)
+            # Store arguments for verification
+            $script:InsertedText = $TextToInsert
+        } -ModuleName PsFzf
+
+        Mock [Microsoft.PowerShell.PSConsoleReadLine]::Replace {
+            param($Start, $Length, $ReplacementText)
+            # Store arguments for verification
+            $script:ReplacedParams = @{ Start = $Start; Length = $Length; Text = $ReplacementText }
+        } -ModuleName PsFzf
+
+        BeforeEach {
+            # Reset any captured values from mocks
+            $script:InsertedText = $null
+            $script:ReplacedParams = $null
+            . "$PSScriptRoot/PSConsoleReadLineWrappers.ps1" # Source the wrappers
+        }
+
+        Context "Get-PSConsoleReadLineBufferState" {
+            It "Should call the original GetBufferState and return its values" {
+                $bufferState = Get-PSConsoleReadLineBufferState
+                $bufferState.Line | Should -Be "mocked line"
+                $bufferState.Cursor | Should -Be 7
+                Should -Invoke "[Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState" -Times 1 -ModuleName PsFzf
+            }
+        }
+
+        Context "Insert-PSConsoleReadLineText" {
+            It "Should call the original Insert with the provided text" {
+                $testText = "some text to insert"
+                Insert-PSConsoleReadLineText -TextToInsert $testText
+                $script:InsertedText | Should -Be $testText
+                Should -Invoke "[Microsoft.PowerShell.PSConsoleReadLine]::Insert" -Times 1 -ModuleName PsFzf
+            }
+        }
+
+        Context "Replace-PSConsoleReadLineText" {
+            It "Should call the original Replace with the provided parameters" {
+                $start = 5
+                $length = 3
+                $replacement = "new"
+                Replace-PSConsoleReadLineText -Start $start -Length $length -ReplacementText $replacement
+                $script:ReplacedParams.Start | Should -Be $start
+                $script:ReplacedParams.Length | Should -Be $length
+                $script:ReplacedParams.Text | Should -Be $replacement
+                Should -Invoke "[Microsoft.PowerShell.PSConsoleReadLine]::Replace" -Times 1 -ModuleName PsFzf
+            }
+        }
+    }
 }
 # CI seems to have problems on GitHub CI - timing issues?
 if ( $false ) {
