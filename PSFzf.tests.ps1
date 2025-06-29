@@ -553,7 +553,7 @@ Describe "Check Parameters" {
 		Context "Parameters Should Fail" {
 			It "Borders Should -Be Mutally Exclusive" {
 				{ $_ = '' | Invoke-Fzf -Border -BorderStyle 'sharp' } |
-				Should -Throw '*are mutally exclusive'
+				Should -Throw '*are mutally exclusive*'
 			}
 
 			It "Validate Tiebreak" {
