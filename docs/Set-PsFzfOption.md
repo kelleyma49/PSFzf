@@ -44,6 +44,40 @@ Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
+
+### -TabExpansionPreviewWindowInitial
+Controls the entire string for fzf's `--preview-window` option used during tab completion via `Invoke-FzfTabCompletionInner`.
+This determines the layout and appearance of the preview window (e.g., `down:30%`, `right:50%,border-top`).
+If set to an empty string (`''`), the `--preview-window` option will not be passed to fzf, which typically results in fzf's default preview window behavior or no window if no preview command is active.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -TabExpansionPreviewWindowAlt
+Controls the parameters for the `ctrl-/:change-preview-window(PARAMS)` binding used during tab completion via `Invoke-FzfTabCompletionInner`.
+For example, providing `left,60%` will result in the binding `ctrl-/:change-preview-window(left,60%)`.
+If set to an empty string (`''`), the entire `ctrl-/:change-preview-window(...)` binding will be removed from the bindings active during tab completion.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
 ### -PSReadlineChordReverseHistory
 PSReadline keyboard chord shortcut to trigger history selection
 
