@@ -45,7 +45,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -PreviewWindowParam
+### -TabExpansionPreviewWindowInitial
 Controls the entire string for fzf's `--preview-window` option used during tab completion via `Invoke-FzfTabCompletionInner`.
 This determines the layout and appearance of the preview window (e.g., `down:30%`, `right:50%,border-top`).
 If set to an empty string (`''`), the `--preview-window` option will not be passed to fzf, which typically results in fzf's default preview window behavior or no window if no preview command is active.
@@ -62,7 +62,7 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -ChangePreviewWindow
+### -TabExpansionPreviewWindowAlt
 Controls the parameters for the `ctrl-/:change-preview-window(PARAMS)` binding used during tab completion via `Invoke-FzfTabCompletionInner`.
 For example, providing `left,60%` will result in the binding `ctrl-/:change-preview-window(left,60%)`.
 If set to an empty string (`''`), the entire `ctrl-/:change-preview-window(...)` binding will be removed from the bindings active during tab completion.

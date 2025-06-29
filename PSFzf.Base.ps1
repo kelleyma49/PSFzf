@@ -204,14 +204,14 @@ function Set-PsFzfOption {
 		$TabContinuousTrigger,
 		[ScriptBlock]
 		$AltCCommand,
-		[string]$PreviewWindowParam,
-		[string]$ChangePreviewWindow
+		[string]$TabExpansionPreviewWindowInitial,
+		[string]$TabExpansionPreviewWindowAlt
 	)
-	if ($PSBoundParameters.ContainsKey('PreviewWindowParam')) {
-		$script:PsFzfPreviewWindowParamOverride = $PreviewWindowParam
+	if ($PSBoundParameters.ContainsKey('TabExpansionPreviewWindowInitial')) {
+		$script:PsFzfTabExpansionPreviewWindowInitialOverride = $TabExpansionPreviewWindowInitial
 	}
-	if ($PSBoundParameters.ContainsKey('ChangePreviewWindow')) {
-		$script:PsFzfChangePreviewWindowOverride = $ChangePreviewWindow
+	if ($PSBoundParameters.ContainsKey('TabExpansionPreviewWindowAlt')) {
+		$script:PsFzfTabExpansionPreviewWindowAltOverride = $TabExpansionPreviewWindowAlt
 	}
 	if ($PSBoundParameters.ContainsKey('TabExpansion')) {
 		SetTabExpansion $TabExpansion
