@@ -502,6 +502,375 @@ Describe 'Invoke-FuzzyZLocation' {
 	}
 }
 
+Describe "Invoke-FzfTabCompletion" {
+    InModuleScope PsFzf {
+
+        BeforeEach {
+            # Mock PSConsoleReadline methods
+            Mock GetBufferState ([ref]$line, [ref]$cursor) {
+                # These will be customized in individual tests
+                $script:SimulatedLine = ''
+                $script:SimulatedCursorPosition = 0
+                $line.Value = $script:SimulatedLine
+                $cursor.Value = $script:SimulatedCursorPosition
+            } -ModuleName Microsoft.PowerShell.PSConsoleReadLine
+
+            $script:Insertions = @()
+            Mock Insert ($text) {
+                $script:Insertions += $text
+            } -ModuleName Microsoft.PowerShell.PSConsoleReadLine
+
+            $script:Replacements = @()
+            Mock Replace ($offset, $length, $text) {
+                $script:Replacements += @{ Offset = $offset; Length = $length; Text = $text }
+            } -ModuleName Microsoft.PowerShell.PSConsoleReadLine
+
+            # Mock CommandCompletion
+            $script:CompletionMatches = @()
+            $script:CompletionReplacementIndex = 0
+            $script:CompletionReplacementLength = 0
+            Mock CompleteInput ($line, $cursor, $options) {
+                return [System.Management.Automation.CommandCompletion]@{
+                    CompletionMatches = $script:CompletionMatches
+                    ReplacementIndex = $script:CompletionReplacementIndex
+                    ReplacementLength = $script:CompletionReplacementLength
+                }
+            } -ModuleName System.Management.Automation.CommandCompletion # This might need adjustment if the type is not directly mockable this way.
+                                                                        # We might need to mock the static method if New-Object is used internally,
+                                                                        # or ensure the type is available.
+                                                                        # For now, let's assume this direct mock attempt.
+
+            # Mock Invoke-Fzf
+            $script:InvokeFzfInput = $null
+            $script:InvokeFzfOutput = @()
+            $script:InvokeFzfArgs = $null
+            Mock Invoke-Fzf {
+                param(
+                    [Parameter(ValueFromPipeline = $true)]$InputObject,
+                    [hashtable]$ArgumentList
+                )
+                process {
+                    # For simplicity in this initial setup, we'll just capture the first input.
+                    # More sophisticated capture might be needed if multiple inputs are pipelined.
+                    if ($null -eq $script:InvokeFzfInput) {
+                        $script:InvokeFzfInput = $InputObject
+                    } elseif ($InputObject) {
+                        # If it's already an array, add to it, otherwise create an array
+                        if ($script:InvokeFzfInput -is [array]) {
+                            $script:InvokeFzfInput += $InputObject
+                        } else {
+                            $script:InvokeFzfInput = @($script:InvokeFzfInput, $InputObject)
+                        }
+                    }
+                }
+                end {
+                    $script:InvokeFzfArgs = $PSBoundParameters # Captures all bound parameters to Invoke-Fzf
+                    # Simulate fzf output, this will be customized per test
+                    return $script:InvokeFzfOutput
+                }
+            } -ModuleName PsFzf
+        }
+
+        AfterEach {
+            # Remove mocks to ensure clean state for subsequent tests
+            # Using Pester's Remove-Mock if available, otherwise clear manually if necessary.
+            # Note: Direct type mocking like for PSConsoleReadline might not be removable with Remove-Mock
+            # if it's not a standard command. This setup assumes Pester handles it.
+            Remove-Mock -CommandName GetBufferState -ModuleName Microsoft.PowerShell.PSConsoleReadLine -ErrorAction SilentlyContinue
+            Remove-Mock -CommandName Insert -ModuleName Microsoft.PowerShell.PSConsoleReadLine -ErrorAction SilentlyContinue
+            Remove-Mock -CommandName Replace -ModuleName Microsoft.PowerShell.PSConsoleReadLine -ErrorAction SilentlyContinue
+            Remove-Mock -CommandName CompleteInput -ModuleName System.Management.Automation.CommandCompletion -ErrorAction SilentlyContinue
+            Remove-Mock -CommandName Invoke-Fzf -ModuleName PsFzf -ErrorAction SilentlyContinue
+
+            # Reset script variables used for mocking
+            $script:SimulatedLine = $null
+            $script:SimulatedCursorPosition = $null
+            $script:Insertions = $null
+            $script:Replacements = $null
+            $script:CompletionMatches = $null
+            $script:CompletionReplacementIndex = $null
+            $script:CompletionReplacementLength = $null
+            $script:InvokeFzfInput = $null
+            $script:InvokeFzfOutput = $null
+            $script:InvokeFzfArgs = $null
+        }
+
+        Context "Single Completion Result" {
+            It "Should insert the completion text" {
+                # Arrange
+                $script:SimulatedLine = "git com"
+                $script:SimulatedCursorPosition = 7
+                $completionText = "commit"
+                $script:CompletionMatches = @(
+                    [System.Management.Automation.CompletionResult]::new($completionText, $completionText, 'ParameterValue', $completionText)
+                )
+                $script:CompletionReplacementIndex = 4 # "git "
+                $script:CompletionReplacementLength = 3 # "com"
+
+                # Act
+                Invoke-FzfTabCompletion
+
+                # Assert
+                $script:Replacements.Count | Should -Be 1
+                $script:Replacements[0].Offset | Should -Be $script:CompletionReplacementIndex
+                $script:Replacements[0].Length | Should -Be $script:CompletionReplacementLength
+                $script:Replacements[0].Text | Should -Be "$completionText " # Note the trailing space
+                $script:Insertions.Count | Should -Be 0
+            }
+
+            It "Should insert the completion text when ReplacementIndex and ReplacementLength are 0" {
+                # Arrange
+                $script:SimulatedLine = "Get-P"
+                $script:SimulatedCursorPosition = 5
+                $completionText = "Get-Process"
+                $script:CompletionMatches = @(
+                    [System.Management.Automation.CompletionResult]::new($completionText, $completionText, 'Command', $completionText)
+                )
+                $script:CompletionReplacementIndex = 0 # Indicates insertion at cursor
+                $script:CompletionReplacementLength = 0 # Indicates insertion, not replacement
+
+                # Act
+                Invoke-FzfTabCompletion
+
+                # Assert
+                $script:Insertions.Count | Should -Be 1
+                $script:Insertions[0] | Should -Be "$completionText " # Note the trailing space
+                $script:Replacements.Count | Should -Be 0
+            }
+        }
+
+        Context "No Completion Results" {
+            It "Should not call Insert or Replace" {
+                # Arrange
+                $script:SimulatedLine = "nonexistent-command "
+                $script:SimulatedCursorPosition = 20
+                $script:CompletionMatches = @() # No matches
+
+                # Act
+                Invoke-FzfTabCompletion
+
+                # Assert
+                $script:Insertions.Count | Should -Be 0
+                $script:Replacements.Count | Should -Be 0
+                Should -Not -Invoke 'Invoke-Fzf' -ModuleName 'PsFzf'
+            }
+        }
+
+        Context "Path Completion" {
+            It "Should append directory separator for directory completion" {
+                # Arrange
+                $script:SimulatedLine = "cd my"
+                $script:SimulatedCursorPosition = 5
+                $completionText = "myDirectory"
+                $fullPath = Join-Path $TestDrive $completionText # Create a dummy directory
+                New-Item -Path $fullPath -ItemType Directory -Force | Out-Null
+
+                $script:CompletionMatches = @(
+                    [System.Management.Automation.CompletionResult]::new($completionText, $completionText, 'ProviderContainer', $completionText)
+                )
+                $script:CompletionReplacementIndex = 3 # "cd "
+                $script:CompletionReplacementLength = 2 # "my"
+                $expectedText = "$completionText{0}" -f [System.IO.Path]::DirectorySeparatorChar
+
+                # Act
+                Invoke-FzfTabCompletion
+
+                # Assert
+                $script:Replacements.Count | Should -Be 1
+                $script:Replacements[0].Text | Should -Be $expectedText
+
+                # Cleanup
+                Remove-Item -Path $fullPath -Force -ErrorAction SilentlyContinue
+            }
+
+            It "Should append space for file completion" {
+                # Arrange
+                $script:SimulatedLine = "cat my"
+                $script:SimulatedCursorPosition = 6
+                $completionText = "myFile.txt"
+                $fullPath = Join-Path $TestDrive $completionText # Create a dummy file
+                Set-Content -Path $fullPath -Value "test" | Out-Null
+
+                $script:CompletionMatches = @(
+                    [System.Management.Automation.CompletionResult]::new($completionText, $completionText, 'ProviderItem', $completionText)
+                )
+                $script:CompletionReplacementIndex = 4 # "cat "
+                $script:CompletionReplacementLength = 2 # "my"
+                $expectedText = "$completionText "
+
+                # Act
+                Invoke-FzfTabCompletion
+
+                # Assert
+                $script:Replacements.Count | Should -Be 1
+                $script:Replacements[0].Text | Should -Be $expectedText
+
+                # Cleanup
+                Remove-Item -Path $fullPath -Force -ErrorAction SilentlyContinue
+            }
+        }
+
+        Context "Multiple Completion Results" {
+            BeforeEach {
+                # Common setup for multiple completion scenarios
+                $script:SimulatedLine = "Get-Command -N"
+                $script:SimulatedCursorPosition = 14
+                $script:CompletionMatches = @(
+                    [System.Management.Automation.CompletionResult]::new("Name", "Name", 'ParameterName', "Name"),
+                    [System.Management.Automation.CompletionResult]::new("Noun", "Noun", 'ParameterName', "Noun"),
+                    [System.Management.Automation.CompletionResult]::new("Native", "Native", 'ParameterName', "Native")
+                )
+                $script:CompletionReplacementIndex = 13 # Get-Command -
+                $script:CompletionReplacementLength = 1  # N
+                $script:TabContinuousTrigger = "`t" # Default value in PSFzf.Base.ps1
+                $script:PowershellCmd = "pwsh" # Default value in PSFzf.Base.ps1
+            }
+
+            It "Should call Invoke-Fzf with completion items and replace with selected item" {
+                # Arrange
+                $selectedItem = "Noun"
+                $script:InvokeFzfOutput = @("tab", $selectedItem) # Simulate fzf output: trigger, selection
+
+                # Act
+                Invoke-FzfTabCompletion
+
+                # Assert
+                Should -Invoke 'Invoke-Fzf' -Times 1 -ModuleName 'PsFzf'
+                $script:InvokeFzfInput | Should -BeOfType ([System.Management.Automation.CompletionResult[]]) # Check it got the array of CompletionResult
+                ($script:InvokeFzfInput | ForEach-Object { $_.CompletionText }) | Should -Be @("Name", "Noun", "Native")
+
+                $script:Replacements.Count | Should -Be 1
+                $script:Replacements[0].Offset | Should -Be $script:CompletionReplacementIndex
+                $script:Replacements[0].Length | Should -Be $script:CompletionReplacementLength
+                $script:Replacements[0].Text | Should -Be "$selectedItem " # Space appended
+            }
+
+            It "Should handle Invoke-Fzf cancellation (ESC)" {
+                # Arrange
+                $script:InvokeFzfOutput = @("ESC") # Simulate fzf output: cancel trigger
+
+                # Act
+                Invoke-FzfTabCompletion
+
+                # Assert
+                Should -Invoke 'Invoke-Fzf' -Times 1 -ModuleName 'PsFzf'
+                $script:Insertions.Count | Should -Be 0
+                $script:Replacements.Count | Should -Be 0
+            }
+
+            It "Should handle continuous completion when fzf returns the TabContinuousTrigger" {
+                # Arrange
+                $firstSelectedItem = "Name"
+                $secondSelectedItem = "Native"
+
+                # Mock GetBufferState to change for the second call
+                $callCount = 0
+                Mock GetBufferState ([ref]$line, [ref]$cursor) {
+                    $callCount++
+                    if ($callCount -eq 1) {
+                        $line.Value = "Get-Command -N"
+                        $cursor.Value = 14
+                    } elseif ($callCount -eq 2) {
+                        # After first completion, line and cursor would have changed
+                        # For simplicity, we'll assume the replacement happened and cursor is at end of "Name "
+                        $line.Value = "Get-Command -Name "
+                        $cursor.Value = ("Get-Command -Name ").Length
+                        # And new completion matches are available (e.g. for a new parameter)
+                        $script:CompletionMatches = @(
+                            [System.Management.Automation.CompletionResult]::new("NewCompletion1", "NewCompletion1", 'ParameterValue', "NewCompletion1"),
+                            [System.Management.Automation.CompletionResult]::new("NewCompletion2", "NewCompletion2", 'ParameterValue', "NewCompletion2")
+                        )
+                        $script:CompletionReplacementIndex = ("Get-Command -Name ").Length # Replacing empty string at cursor
+                        $script:CompletionReplacementLength = 0
+                    }
+                } -ModuleName Microsoft.PowerShell.PSConsoleReadLine
+
+                # Mock Invoke-Fzf to return Tab trigger first, then a different trigger
+                $fzfCallCount = 0
+                Mock Invoke-Fzf {
+                    param(
+                        [Parameter(ValueFromPipeline = $true)]$InputObject,
+                        [hashtable]$ArgumentList
+                    )
+                    process {
+                        # Capture input if needed for assertion
+                    }
+                    end {
+                        $fzfCallCount++
+                        if ($fzfCallCount -eq 1) {
+                            # First call, select "Name", trigger continuous completion
+                            return @("tab", $firstSelectedItem)
+                        } elseif ($fzfCallCount -eq 2) {
+                            # Second call, select "NewCompletion1", stop continuous completion (e.g. by simulating Enter)
+                            return @("enter", "NewCompletion1") # Simulate a non-continuous trigger
+                        }
+                    }
+                } -ModuleName PsFzf
+
+                # Act
+                Invoke-FzfTabCompletion # This will loop due to script:Invoke-FzfTabCompletionInner
+
+                # Assert
+                Should -Invoke 'Invoke-Fzf' -Times 2 -ModuleName 'PsFzf'
+                $script:Replacements.Count | Should -Be 2
+                $script:Replacements[0].Text | Should -Be "$firstSelectedItem "
+                $script:Replacements[1].Text | Should -Be "NewCompletion1 "
+            }
+
+            It "Should correctly pass arguments to Invoke-Fzf for parameter name completion" {
+                # Arrange
+                $script:CompletionMatches = @(
+                    [System.Management.Automation.CompletionResult]::new("-Force", "-Force", 'ParameterName', "-Force"),
+                    [System.Management.Automation.CompletionResult]::new("-Verbose", "-Verbose", 'ParameterName', "-Verbose")
+                )
+                # Simulate line: Get-Something -<TAB>
+                $script:SimulatedLine = "Get-Something -"
+                $script:SimulatedCursorPosition = ("Get-Something -").Length
+                $script:CompletionReplacementIndex = ("Get-Something ").Length
+                $script:CompletionReplacementLength = 1 # The "-"
+
+                $script:InvokeFzfOutput = @("tab", "-Force") # Simulate fzf output
+
+                # Act
+                Invoke-FzfTabCompletion
+
+                # Assert
+                Should -Invoke 'Invoke-Fzf' -Times 1 -ModuleName 'PsFzf'
+                $script:InvokeFzfArgs.Expect | Should -Be "tab,ESC" # Default for tab trigger
+                $script:InvokeFzfArgs.PreviewWindow | Should -Be 'down:30%'
+                $script:InvokeFzfArgs.Preview | Should -Contain "helpers/PsFzfTabExpansion-Parameter.ps1"
+                $script:InvokeFzfArgs.Preview | Should -Contain "Get-Something" # Command name passed to preview
+                $script:InvokeFzfArgs.Bind | Should -Contain 'ctrl-/:change-preview-window(down,right:50%,border-top|hidden|)'
+            }
+
+            It "Should correctly pass arguments to Invoke-Fzf for non-parameter name completion" {
+                # Arrange
+                $script:CompletionMatches = @(
+                    [System.Management.Automation.CompletionResult]::new("File1.txt", "File1.txt", 'ProviderItem', "File1.txt"),
+                    [System.Management.Automation.CompletionResult]::new("FolderA", "FolderA", 'ProviderContainer', "FolderA")
+                )
+                 # Simulate line: Get-ChildItem <TAB>
+                $script:SimulatedLine = "Get-ChildItem "
+                $script:SimulatedCursorPosition = ("Get-ChildItem ").Length
+                $script:CompletionReplacementIndex = ("Get-ChildItem ").Length
+                $script:CompletionReplacementLength = 0
+
+                $script:InvokeFzfOutput = @("tab", "File1.txt") # Simulate fzf output
+
+                # Act
+                Invoke-FzfTabCompletion
+
+                # Assert
+                Should -Invoke 'Invoke-Fzf' -Times 1 -ModuleName 'PsFzf'
+                $script:InvokeFzfArgs.Expect | Should -Be "tab,ESC"
+                $script:InvokeFzfArgs.PreviewWindow | Should -Be 'down:30%'
+                $script:InvokeFzfArgs.Preview | Should -Contain "helpers/PsFzfTabExpansion-Preview.ps1"
+                $script:InvokeFzfArgs.Preview | Should -Contain ($PWD.ProviderPath.Replace('', '/')) # Current path passed to preview
+                $script:InvokeFzfArgs.Bind | Should -Contain 'ctrl-/:change-preview-window(down,right:50%,border-top|hidden|)'
+            }
+        }
+    }
+}
 
 Describe "Add-BinaryModuleTypes" {
 	InModuleScope PsFzf {
