@@ -100,6 +100,283 @@ Describe "Find-CurrentPath" {
 	}
 }
 
+Describe "Invoke-FzfTabCompletion" {
+    InModuleScope PsFzf {
+        # Variables to store original values or mock states
+        $Original_PSConsoleReadLineBufferState = $null
+        $Original_CommandCompletion_CompleteInput = $null
+        $Original_InvokeFzf = $null
+        $Original_InsertPSConsoleReadLineText = $null
+        $Original_ReplacePSConsoleReadLineText = $null
+        $Original_InvokePromptHack = $null
+        $Original_TestPath = $null
+        $Original_JoinPath = $null # Added for Join-Path if it's used by the function for preview scripts
+        $Original_Script_PSScriptRoot = $null
+
+        # Variables for mock control / captured data
+        $Mocked_CompleteInputResult = $null
+        $script:PSScriptRootMock = "mocked/script/root" # Mocked $PsScriptRoot value
+        $script:mockedBufferState = $null # Test sets this: @{ line = '...'; cursor = ... }
+        $script:mockedCompletionResult = $null # Test sets this for [CommandCompletion]::CompleteInput
+        $script:mockedFzfSelection = $null # Test sets this for Invoke-Fzf return
+        $script:capturedInsertText = $null # For Insert-PSConsoleReadLineText
+        $script:capturedReplaceArgs = $null # For Replace-PSConsoleReadLineText @{Start=;Length=;ReplacementText=}
+        $script:mockedTestPathResult = $true # Default for Test-Path mock
+
+        # Original script scope variables that might be modified by the function
+        $Original_Script_TabContinuousTrigger = $null
+        $Original_Script_Result = $null
+        $Original_Script_ContinueCompletion = $null
+        $Original_Script_FzfOutput = $null
+        $Original_Script_CheckCompletion = $null
+        $Original_Script_PowershellCmd = $null
+
+        BeforeEach {
+            # Save original commands and states
+            $Original_PSConsoleReadLineBufferState = Get-Command Get-PSConsoleReadLineBufferState -ErrorAction SilentlyContinue
+            # For static method, Pester 5+ handles this via its own mechanism. We store the mock object itself.
+            # $Original_CommandCompletion_CompleteInput is conceptual; Pester stores/removes the static mock.
+            $Original_InvokeFzf = Get-Command Invoke-Fzf -ErrorAction SilentlyContinue -Module PsFzf
+            $Original_InsertPSConsoleReadLineText = Get-Command Insert-PSConsoleReadLineText -ErrorAction SilentlyContinue
+            $Original_ReplacePSConsoleReadLineText = Get-Command Replace-PSConsoleReadLineText -ErrorAction SilentlyContinue
+            $Original_InvokePromptHack = Get-Command InvokePromptHack -ErrorAction SilentlyContinue -Module PsFzf
+            $Original_TestPath = Get-Command Test-Path -ErrorAction SilentlyContinue
+            $Original_JoinPath = Get-Command Join-Path -ErrorAction SilentlyContinue
+
+            # Save original script variables
+            $Original_Script_TabContinuousTrigger = $script:TabContinuousTrigger
+            $Original_Script_Result = $script:result
+            $Original_Script_ContinueCompletion = $script:continueCompletion
+            $Original_Script_FzfOutput = $script:fzfOutput
+            $Original_Script_CheckCompletion = $script:checkCompletion
+            $Original_Script_PowershellCmd = $script:PowershellCmd
+            $Original_Script_PSScriptRoot = $PSScriptRoot # Save the actual PSScriptRoot if needed, though we usually mock its usage
+
+            # Mock functions
+            Mock Get-PSConsoleReadLineBufferState {
+                return $script:mockedBufferState
+            } -ModuleName PsFzf # Assuming it's part of the module, otherwise remove -ModuleName or use global scope
+
+            # Pester 5+ static method mocking
+            # This mock will be controlled by setting $script:mockedCompletionResult in each test.
+            # $script:mockedCompletionResult should be an instance of [System.Management.Automation.CommandCompletion] or a ScriptBlock
+            if ($Mocked_CompleteInputResult -and $Mocked_CompleteInputResult.IsBound) { Remove-Mock -Mock $Mocked_CompleteInputResult -ErrorAction SilentlyContinue }
+            $Mocked_CompleteInputResult = Mock -StaticNamespace ([System.Management.Automation.CommandCompletion]) -MockWith {
+                param($line, $cursor, $options, $powershell) # Match expected parameters
+                if ($script:mockedCompletionResult -is [scriptblock]) {
+                    # The scriptblock can use $line, $cursor, $options, $powershell if needed
+                    Invoke-Command -ScriptBlock $script:mockedCompletionResult # -ArgumentList $line, $cursor, $options, $powershell (if scriptblock takes args)
+                } else {
+                    $script:mockedCompletionResult
+                }
+            } -Verifiable
+
+            Mock Invoke-Fzf {
+                # Param block should match the actual Invoke-Fzf to avoid errors if called with specific params
+                param(
+                    [Parameter(ValueFromPipeline = $true)]$InputObject,
+                    [string]$Query = $null,
+                    [string]$Prompt = '> ',
+                    [string]$Header = $null,
+                    [string]$Preview = $null,
+                    [string]$PreviewWindow = 'right:50%',
+                    [string]$Delimiter = '\n',
+                    [string]$Key = $null,
+                    [string]$Layout = 'default',
+                    [string]$Cycle = $null,
+                    [string]$Height = $null,
+                    [string]$MinHeight = '10', # Default from function
+                    [string]$Sort = 'score',
+                    [string]$Tiebreak = 'score,index,end,begin', # Default from function
+                    [string]$Expect = $null,
+                    [string]$Theme = $null,
+                    [string]$Color = $null,
+                    [string]$Border = $null,
+                    [string]$BorderStyle = 'round', # Default from function
+                    [string]$Pointer = '> ', # Default from function
+                    [string]$Marker = '> ', # Default from function
+                    [string]$Info = 'default', # Default from function
+                    [string]$History = $null,
+                    [string]$HistorySize = '1000', # Default from function
+                    [string]$FzfExtraArgs = $null,
+                    [switch]$Multi,
+                    [switch]$NoSort,
+                    [switch]$Reverse,
+                    [switch]$Select1,
+                    [switch]$Exit0,
+                    [switch]$Filter,
+                    [switch]$PrintQuery,
+                    [switch]$PreviewScript,
+                    [switch]$CaseInsensitive,
+                    [switch]$CaseSensitive,
+                    [switch]$PathCompletion,
+                    [switch]$Continuous,
+                    [switch]$ShowHelp,
+                    [switch]$NoPreview,
+                    [switch]$NoHeaderLines,
+                    [switch]$NoHeight
+                )
+                Write-Verbose "Invoke-Fzf mock called with InputObject: $($InputObject | Out-String), Query: $Query"
+                return $script:mockedFzfSelection
+            } -ModuleName PsFzf
+
+            Mock Insert-PSConsoleReadLineText {
+                param([string]$TextToInsert)
+                $script:capturedInsertText = $TextToInsert
+                Write-Verbose "Insert-PSConsoleReadLineText mock called with: $TextToInsert"
+            } # Assuming global, adjust if module specific
+
+            Mock Replace-PSConsoleReadLineText {
+                param([int]$Start, [int]$Length, [string]$ReplacementText)
+                $script:capturedReplaceArgs = @{Start = $Start; Length = $Length; ReplacementText = $ReplacementText}
+                Write-Verbose "Replace-PSConsoleReadLineText mock called with: Start=$Start, Length=$Length, ReplacementText='$ReplacementText'"
+            } # Assuming global, adjust if module specific
+
+            Mock InvokePromptHack {
+                Write-Verbose "InvokePromptHack mock called"
+                # Do nothing
+            } -ModuleName PsFzf
+
+            $script:mockedTestPathResults = @{} # For more granular Test-Path control
+            Mock Test-Path {
+                param($PathValue, $PathType = 'Any') # Match common params
+                Write-Verbose "Test-Path mock called with PathValue: $PathValue, PathType: $PathType"
+                if ($script:mockedTestPathResults.ContainsKey($PathValue)) {
+                    return $script:mockedTestPathResults[$PathValue]
+                }
+                return $script:mockedTestPathResult # Default return
+            } -ModuleName PsFzf # Or global if preferred
+
+            # Mock Join-Path to verify calls that might use the mocked PSScriptRoot
+            # This is a simplistic Join-Path mock; real Join-Path is more complex.
+            # Only mock if its behavior related to $PsScriptRoot needs to be controlled/verified.
+            # Otherwise, direct use of Join-Path is fine.
+            # Mock Join-Path {
+            #     param($Path, $ChildPath)
+            #     if ($Path -eq $script:PSScriptRootMock) {
+            #         return "$($script:PSScriptRootMock)\$ChildPath"
+            #     }
+            #     # Fallback to actual Join-Path for other cases if needed, carefully
+            #     return Microsoft.PowerShell.Management\Join-Path -Path $Path -ChildPath $ChildPath
+            # }
+
+            # Reset script scope variables that might be modified by the function or mocks
+            $script:TabContinuousTrigger = "`t"
+            $script:result = $null
+            $script:continueCompletion = $true
+            $script:fzfOutput = $null
+            $script:checkCompletion = $null
+            $script:PowershellCmd = "powershell.exe"
+            # $PSScriptRoot is a readonly variable, its usage is mocked via mocking Join-Path or by
+            # ensuring functions use a script-scoped variable that can be set, e.g. $script:MyModuleRoot = $PSScriptRoot
+            # For this setup, we use $script:PSScriptRootMock and ensure any tested code that needs PSScriptRoot
+            # is either using a mockable helper or we mock the command that uses it (like Join-Path above).
+
+            # Initialize captured data stores
+            $script:capturedInsertText = $null
+            $script:capturedReplaceArgs = $null
+            $script:mockedTestPathResults = @{}
+        }
+
+        AfterEach {
+            # Restore original commands
+            if ($Original_PSConsoleReadLineBufferState) { Remove-Mock -CommandName Get-PSConsoleReadLineBufferState -ModuleName PsFzf -ErrorAction SilentlyContinue }
+            else { Remove-Mock -CommandName Get-PSConsoleReadLineBufferState -ErrorAction SilentlyContinue }
+
+            if ($Mocked_CompleteInputResult) { Remove-Mock -Mock $Mocked_CompleteInputResult -ErrorAction SilentlyContinue }
+
+            if ($Original_InvokeFzf) { Remove-Mock -CommandName Invoke-Fzf -ModuleName PsFzf -ErrorAction SilentlyContinue }
+            if ($Original_InsertPSConsoleReadLineText) { Remove-Mock -CommandName Insert-PSConsoleReadLineText -ErrorAction SilentlyContinue }
+            if ($Original_ReplacePSConsoleReadLineText) { Remove-Mock -CommandName Replace-PSConsoleReadLineText -ErrorAction SilentlyContinue }
+            if ($Original_InvokePromptHack) { Remove-Mock -CommandName InvokePromptHack -ModuleName PsFzf -ErrorAction SilentlyContinue }
+            if ($Original_TestPath) { Remove-Mock -CommandName Test-Path -ModuleName PsFzf -ErrorAction SilentlyContinue }
+            else { Remove-Mock -CommandName Test-Path -ErrorAction SilentlyContinue } # If Test-Path was mocked globally
+            # if ($Original_JoinPath) { Remove-Mock -CommandName Join-Path -ErrorAction SilentlyContinue }
+
+
+            # Restore script scope variables to their original state
+            $script:TabContinuousTrigger = $Original_Script_TabContinuousTrigger
+            $script:result = $Original_Script_Result
+            $script:continueCompletion = $Original_Script_ContinueCompletion
+            $script:fzfOutput = $Original_Script_FzfOutput
+            $script:checkCompletion = $Original_Script_CheckCompletion
+            $script:PowershellCmd = $Original_Script_PowershellCmd
+            # $PSScriptRoot = $Original_Script_PSScriptRoot # $PSScriptRoot is readonly, cannot be restored directly.
+                                                            # Ensure tests clean up if they modified related script variables.
+
+            # Clear mock control variables
+            $script:mockedBufferState = $null
+            $script:mockedCompletionResult = $null
+            $script:mockedFzfSelection = $null
+            $script:capturedInsertText = $null
+            $script:capturedReplaceArgs = $null
+            $script:mockedTestPathResult = $true
+            $script:mockedTestPathResults = @{}
+            $Mocked_CompleteInputResult = $null # Clear the stored mock object
+        }
+
+        Context "Basic Scenarios" {
+            It "Should exist as a function" {
+                Get-Command Invoke-FzfTabCompletion | Should -Not -Be $null
+            }
+
+            It "Inner function script:Invoke-FzfTabCompletionInner should exist" {
+                Get-Command script:Invoke-FzfTabCompletionInner | Should -Not -Be $null
+            }
+
+            # More tests will be added here in subsequent steps
+        }
+
+        Context "Single Completion Scenarios" {
+            It "Should return false and not call CompleteInput or Fzf if line is empty" {
+                $script:mockedBufferState = @{ Line = ''; Cursor = 0 }
+                $script:mockedCompletionResult = $null # Ensure no leftover mock data
+
+                $result = script:Invoke-FzfTabCompletionInner
+                $result | Should -BeFalse
+
+                Should -Not -Invoke '[System.Management.Automation.CommandCompletion]::CompleteInput'
+                Should -Not -Invoke 'Invoke-Fzf' -ModuleName 'PsFzf'
+                Should -Not -Invoke 'Insert-PSConsoleReadLineText'
+                Should -Not -Invoke 'Replace-PSConsoleReadLineText'
+            }
+
+            It "Should return false and not call CompleteInput if cursor is invalid" {
+                $script:mockedBufferState = @{ Line = 'some text'; Cursor = -1 }
+                $script:mockedCompletionResult = $null
+
+                $result = script:Invoke-FzfTabCompletionInner
+                $result | Should -BeFalse
+
+                Should -Not -Invoke '[System.Management.Automation.CommandCompletion]::CompleteInput'
+            }
+
+            It "Should return false gracefully if CompleteInput throws an exception" {
+                $script:mockedBufferState = @{ Line = 'git c'; Cursor = 5 }
+                $script:mockedCompletionResult = { throw "Test Exception from CompleteInput" }
+
+                $result = script:Invoke-FzfTabCompletionInner
+                $result | Should -BeFalse
+
+                Should -Invoke '[System.Management.Automation.CommandCompletion]::CompleteInput' -Times 1
+                Should -Not -Invoke 'Invoke-Fzf' -ModuleName 'PsFzf'
+            }
+
+            It "Should return false and not call Fzf if CompleteInput returns no matches" {
+                $script:mockedBufferState = @{ Line = 'git unknown'; Cursor = 11 }
+                $emptyCompletionMatches = @()
+                $script:mockedCompletionResult = [System.Management.Automation.CommandCompletion]::new($emptyCompletionMatches, 0, 0)
+
+                $result = script:Invoke-FzfTabCompletionInner
+                $result | Should -BeFalse
+
+                Should -Invoke '[System.Management.Automation.CommandCompletion]::CompleteInput' -Times 1
+                Should -Not -Invoke 'Invoke-Fzf' -ModuleName 'PsFzf'
+            }
+        }
+    }
+}
+
 Describe 'Invoke-PsFzfRipgrep' {
     InModuleScope PsFzf {
         $OriginalPSFZF_RG_PREFIX = $null
