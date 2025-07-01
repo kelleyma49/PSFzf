@@ -47,5 +47,3 @@ function Invoke-PSConsoleReadLineAcceptLine {
 
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
-
-Export-ModuleMember -Function Get-PSConsoleReadLineBufferState, Insert-PSConsoleReadLineText, Replace-PSConsoleReadLineText, Invoke-PSConsoleReadLinePrompt, Invoke-PSConsoleReadLineAcceptLine
