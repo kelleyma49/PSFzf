@@ -236,9 +236,9 @@ function script:Invoke-FzfTabCompletionInner() {
     $script:result = @()
 
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Management.Automation")
-    $line = $null
-    $cursor = $null
-    [Microsoft.PowerShell.PSConsoleReadline]::GetBufferState([ref]$line, [ref]$cursor)
+    $bufferState = Get-PSConsoleReadLineBufferState
+    $line = $bufferState.Line
+    $cursor = $bufferState.Cursor
 
     if ($cursor -lt 0 -or [string]::IsNullOrWhiteSpace($line)) {
         return $false
@@ -360,10 +360,10 @@ function script:Invoke-FzfTabCompletionInner() {
         $leftCursor = $completions.ReplacementIndex
         $replacementLength = $completions.ReplacementLength
         if ($leftCursor -le 0 -and $replacementLength -le 0) {
-            [Microsoft.PowerShell.PSConsoleReadLine]::Insert($str)
+            Insert-PSConsoleReadLineText -TextToInsert $str
         }
         else {
-            [Microsoft.PowerShell.PSConsoleReadLine]::Replace($leftCursor, $replacementLength, $str)
+            Replace-PSConsoleReadLineText -Start $leftCursor -Length $replacementLength -ReplacementText $str
         }
 
     }
