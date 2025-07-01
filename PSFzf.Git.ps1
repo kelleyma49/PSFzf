@@ -1,5 +1,3 @@
-. "$PSScriptRoot/PSFzf.PSConsoleReadLineWrappers.ps1"
-
 $script:GitKeyHandlers = @()
 
 $script:foundGit = $false
