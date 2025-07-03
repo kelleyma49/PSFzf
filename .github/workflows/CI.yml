@@ -12,6 +12,9 @@ jobs:
     - name: Install needed software
       run: ./.github/scripts/Install.ps1
       shell: pwsh
+    - name: Run PlatyPS on docs
+      run: ./.github/scripts/Run-PlatyPS.ps1
+      shell: pwsh
     - name: Build PSFzf-Binary
       run: ./.github/scripts/Build.ps1
       shell: pwsh
@@ -29,6 +32,9 @@ jobs:
     - name: Install needed software
       run: ./.github/scripts/Install.ps1
       shell: pwsh
+    - name: Run PlatyPS on docs
+      run: ./.github/scripts/Run-PlatyPS.ps1
+      shell: pwsh
     - name: Build PSFzf-Binary
       run: ./.github/scripts/Build.ps1
       shell: pwsh
@@ -44,6 +50,9 @@ jobs:
     - uses: actions/checkout@v1
     - name: Install needed software
       run: ./.github/scripts/Install.ps1
+      shell: powershell
+    - name: Run PlatyPS on docs
+      run: ./.github/scripts/Run-PlatyPS.ps1
       shell: powershell
     - name: Build PSFzf-Binary
       run: |
