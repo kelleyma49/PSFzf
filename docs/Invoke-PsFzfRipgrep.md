@@ -66,8 +66,6 @@ This cmdlet does not generate any output.
 This function is adapted from [Fzf's advanced document](https://github.com/junegunn/fzf/blob/master/ADVANCED.md#switching-between-ripgrep-mode-and-fzf-mode).
 This function requires the installation of [ripgrep](https://github.com/BurntSushi/ripgrep) and [bat](https://github.com/sharkdp/bat).
 
-### CUSTOMIZATION
-#### `PSFZF_RG_PREFIX`
 You can customize the `rg` command used by `Invoke-PsFzfRipgrep` by setting the `PSFZF_RG_PREFIX` environment variable. This allows you to add default arguments to `rg`, such as enabling hidden file search or excluding specific directories.
 
 For example, to make `rg` search hidden files and exclude the `node_modules` directory, you can set the environment variable as follows:
