@@ -18,7 +18,7 @@ try {
     # and that the module manifest is discoverable by PlatyPS or not strictly needed for validation intent.
     # For robust validation, one might need to specify the module manifest path if docs are tied to a specific module.
     # However, the goal here is to "see if platyps can generate the documentation", implying a test of the markdown files themselves.
-    Get-ChildItem -Path $markdownPath -Filter *.md | New-ExternalHelp -OutputPath $tempOutputPath -Force -Verbose
+    New-ExternalHelp -Path $markdownPath -OutputPath $tempOutputPath -Force -Verbose
 
     # Check if the command was successful.
     # New-ExternalHelp might not set $? to $false on logical errors if it completes the cmdlet execution.
