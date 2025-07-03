@@ -5,9 +5,8 @@ param ($DirName, $Item)
 $DirName = $DirName.Trim("'").Trim('"')
 $Item = $Item.Trim("'").Trim('"')
 
-$RunningInWindowsTerminal = [bool]($env:WT_Session)
 $IsWindowsCheck = ($PSVersionTable.PSVersion.Major -le 5) -or $IsWindows
-$ansiCompatible = $script:RunningInWindowsTerminal -or (-not $script:IsWindowsCheck)
+$ansiCompatible = [bool]($env:WT_Session) -or [bool]($env:TERM_PROGRAM -eq "WezTerm") -or (-not $script:IsWindowsCheck)
 
 if ([System.IO.Path]::IsPathRooted($Item)) {
     $path = $Item
