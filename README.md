@@ -45,6 +45,8 @@ PSFzf does not override <kbd>Ctrl+r</kbd> by default.  To confirm that you want 
 Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
 ```
 
+**Recommendation:** It is recommended to use `Set-PsFzfOption -PSReadlineChordReverseHistory` to enable PSFzf's reverse history search functionality for the best user experience.
+
 ### Set-Location Based on Selected Directory (default chord: <kbd>Alt+c</kbd>)
 
 Press <kbd>Alt+c</kbd> to start PSFzf to select a directory.  By default, `Set-Location` will be called with the selected directory. You can override the default command with the following code in our `$PROFILE`:

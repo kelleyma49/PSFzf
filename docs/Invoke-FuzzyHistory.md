@@ -38,5 +38,7 @@ This cmdlet does not accept any input.
 This cmdlet does not generate any output.
 ## NOTES
 
+For an enhanced history search experience, it is recommended to use `Set-PsFzfOption -PSReadlineChordReverseHistory` to enable PSFzf's PSReadline integration. This allows you to use keyboard shortcuts (like Ctrl+r) to launch the fuzzy history search directly from the command line.
+
 ## RELATED LINKS
 
