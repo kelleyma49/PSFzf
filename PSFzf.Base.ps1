@@ -815,11 +815,13 @@ function Invoke-FzfPsReadlineHandlerProvider {
 			$str = ' ' + $str
 		}
 		$replaceLen = $rightCursor - $leftCursor
-		if ($rightCursor -eq 0 -and $leftCursor -eq 0) {
-			Insert-PSConsoleReadLineText -TextToInsert $str
-		}
-		else {
-			Replace-PSConsoleReadLineText -Start $leftCursor -Length ($replaceLen + 1) -ReplacementText $str
+		if (-not [string]::IsNullOrWhiteSpace($str)) {
+			if ($rightCursor -eq 0 -and $leftCursor -eq 0) {
+				Insert-PSConsoleReadLineText -TextToInsert $str
+			}
+			else {
+				Replace-PSConsoleReadLineText -Start $leftCursor -Length ($replaceLen + 1) -ReplacementText $str
+			}
 		}
 	}
 }
