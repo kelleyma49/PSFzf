@@ -118,7 +118,7 @@ In addition to its core function [Invoke-Fzf](docs/Invoke-Fzf.md), PSFzf include
 | [`Invoke-FuzzyFasd`](docs/Invoke-FuzzyFasd.md)                       | `ff`       | Starts fzf with input from the files saved in [fasd](https://github.com/clvv/fasd)(non-Windows) or [fasdr](https://github.com/kelleyma49/fasdr) (Windows) and sets the current location.
 | [`Invoke-FuzzyZLocation`](docs/Invoke-FuzzyZLocation.md)             | `fz`       | Starts fzf with input from the history of [ZLocation](https://github.com/vors/ZLocation) and sets the current location.
 | [`Invoke-FuzzyGitStatus`](docs/Invoke-FuzzyGitStatus.md)             | `fgs`      | Starts fzf with input from output of the `git status` function.
-| [`Invoke-FuzzyHistory`](docs/Invoke-FuzzyHistory.md)                 | `fh`       | Rerun a previous command from history based on the user's selection in fzf.
+| [`Invoke-FuzzyHistory`](docs/Invoke-FuzzyHistory.md)                 | `fh`       | Rerun a previous command from history based on the user's selection in fzf. **Recommendation:** Use `Set-PsFzfOption -PSReadlineChordReverseHistory` for the best user experience.
 | [`Invoke-FuzzyKillProcess`](docs/Invoke-FuzzyKillProcess.md)         | `fkill`    | Runs `Stop-Process` on processes selected by the user in fzf.
 | [`Invoke-FuzzySetLocation`](docs/Invoke-FuzzySetLocation.md)         | `fd`       | Sets the current location from the user's selection in fzf.
 | [`Invoke-FuzzyScoop`](docs/Invoke-FuzzyScoop.md)                     | `fs`       | Starts fzf on [Scoop](https://scoop.sh) applications list.
