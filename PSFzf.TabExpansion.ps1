@@ -282,13 +282,13 @@ function script:Invoke-FzfTabCompletionInner() {
         $arguments = @{
             Layout        = 'reverse'
             Expect        = "$expectTriggers"
-            PreviewWindow = 'down:30%'
+            PreviewWindow = 'hidden'
         }
         if ($isTabTrigger) {
-            $arguments["Bind"] = @('ctrl-/:change-preview-window(down,right:50%,border-top|hidden|)')
+            $arguments["Bind"] = @('ctrl-/:change-preview-window:down|right|right:hidden')
         }
         else {
-            $arguments["Bind"] = @('tab:down', 'btab:up', 'ctrl-/:change-preview-window(down,right:50%,border-top|hidden|)')
+            $arguments["Bind"] = @('tab:down', 'btab:up', 'ctrl-/:change-preview-window:down|right|right:hidden')
         }
 
         # need to handle parameters differently so PowerShell doesn't parse completion item as a script parameter:
