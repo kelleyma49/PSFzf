@@ -103,24 +103,27 @@ class FzfDefaultCmd {
 	}
 }
 
-function FixCompletionResult($str) {
+function FixCompletionResult($str, [switch]$AlwaysQuote) {
 	if ([string]::IsNullOrEmpty($str)) {
 		return ""
 	}
-	elseif ($str.Contains(" ") -or $str.Contains("`t")) {
-		$str = $str.Replace("`r`n", "")
-		# check if already quoted
-		if (($str.StartsWith("'") -and $str.EndsWith("'")) -or `
-			($str.StartsWith("""") -and $str.EndsWith(""""))) {
-			return $str
-		}
-		else {
-			return """{0}""" -f $str
-		}
-
+	
+	$str = $str.Replace("`r`n", "")
+	
+	# check if already quoted
+	$isAlreadyQuoted = ($str.StartsWith("'") -and $str.EndsWith("'")) -or `
+		($str.StartsWith("""") -and $str.EndsWith(""""))
+	
+	if ($isAlreadyQuoted) {
+		return $str
 	}
- else {
-		return $str.Replace("`r`n", "")
+	
+	# Quote if it contains spaces/tabs, or if AlwaysQuote is specified
+	if ($AlwaysQuote -or $str.Contains(" ") -or $str.Contains("`t")) {
+		return """{0}""" -f $str
+	}
+	else {
+		return $str
 	}
 }
 
@@ -807,7 +810,7 @@ function Invoke-FzfPsReadlineHandlerProvider {
 				else {
 					$resultFull = $result[$i]
 				}
-				$result[$i] = FixCompletionResult $resultFull
+				$result[$i] = FixCompletionResult $resultFull -AlwaysQuote
 			}
 		}
 		else {

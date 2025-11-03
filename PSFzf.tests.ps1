@@ -545,6 +545,28 @@ Describe "Check FixCompletionResult" {
 				FixCompletionResult("'with space and already quoted'") | Should -Be "'with space and already quoted'"
 			}
 		}
+
+		Context "AlwaysQuote Parameter Tests" {
+			It "Should quote simple string when AlwaysQuote is used" {
+				FixCompletionResult -str "file.txt" -AlwaysQuote | Should -Be """file.txt"""
+			}
+
+			It "Should not double-quote already double-quoted string with AlwaysQuote" {
+				FixCompletionResult -str """already_quoted.txt""" -AlwaysQuote | Should -Be """already_quoted.txt"""
+			}
+
+			It "Should not double-quote already single-quoted string with AlwaysQuote" {
+				FixCompletionResult -str "'already_quoted.txt'" -AlwaysQuote | Should -Be "'already_quoted.txt'"
+			}
+
+			It "Should quote string with spaces when AlwaysQuote is used" {
+				FixCompletionResult -str "file with spaces.txt" -AlwaysQuote | Should -Be """file with spaces.txt"""
+			}
+
+			It "Should not double-quote already quoted string with spaces when AlwaysQuote is used" {
+				FixCompletionResult -str """file with spaces.txt""" -AlwaysQuote | Should -Be """file with spaces.txt"""
+			}
+		}
 	}
 }
 
