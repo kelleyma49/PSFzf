@@ -145,7 +145,7 @@ $script:FzfLocation = $null
 $script:OverrideFzfDefaults = $null
 $script:PSReadlineHandlerChords = @()
 $script:TabContinuousTrigger = [IO.Path]::DirectorySeparatorChar.ToString()
-$script:PSReadlineChordProviderDelimiter = ','
+$script:PsReadlineHandlerProviderDelimiter = ','
 
 $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
 {
@@ -206,7 +206,7 @@ function Set-PsFzfOption {
 		[ScriptBlock]
 		$AltCCommand,
 		[string]
-		$PSReadlineChordProviderDelimiter
+		$PsReadlineHandlerProviderDelimiter
 	)
 	if ($PSBoundParameters.ContainsKey('TabExpansion')) {
 		SetTabExpansion $TabExpansion
@@ -254,8 +254,8 @@ function Set-PsFzfOption {
 		$script:AltCCommand = $AltCCommand
 	}
 
-	if ($PSBoundParameters.ContainsKey('PSReadlineChordProviderDelimiter')) {
-		$script:PSReadlineChordProviderDelimiter = $PSReadlineChordProviderDelimiter
+	if ($PSBoundParameters.ContainsKey('PsReadlineHandlerProviderDelimiter')) {
+		$script:PsReadlineHandlerProviderDelimiter = $PsReadlineHandlerProviderDelimiter
 	}
 }
 
@@ -817,7 +817,7 @@ function Invoke-FzfPsReadlineHandlerProvider {
 			$result = FixCompletionResult $result
 		}
 
-		$str = $result -join $script:PSReadlineChordProviderDelimiter
+		$str = $result -join $script:PsReadlineHandlerProviderDelimiter
 		if ($addSpace) {
 			$str = ' ' + $str
 		}

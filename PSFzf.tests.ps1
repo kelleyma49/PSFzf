@@ -600,29 +600,29 @@ Describe "Check Parameters" {
 	}
 }
 
-Describe "Set-PsFzfOption PSReadlineChordProviderDelimiter" {
+Describe "Set-PsFzfOption PsReadlineHandlerProviderDelimiter" {
 	InModuleScope PsFzf {
 		Context "Default delimiter is comma" {
 			It "Should default to comma" {
 				# The default delimiter should be ','
-				$script:PSReadlineChordProviderDelimiter | Should -Be ','
+				$script:PsReadlineHandlerProviderDelimiter | Should -Be ','
 			}
 		}
 
 		Context "Can override delimiter" {
 			It "Should allow setting custom delimiter" {
-				Set-PsFzfOption -PSReadlineChordProviderDelimiter ' '
-				$script:PSReadlineChordProviderDelimiter | Should -Be ' '
+				Set-PsFzfOption -PsReadlineHandlerProviderDelimiter ' '
+				$script:PsReadlineHandlerProviderDelimiter | Should -Be ' '
 			}
 
 			It "Should allow setting to semicolon" {
-				Set-PsFzfOption -PSReadlineChordProviderDelimiter ';'
-				$script:PSReadlineChordProviderDelimiter | Should -Be ';'
+				Set-PsFzfOption -PsReadlineHandlerProviderDelimiter ';'
+				$script:PsReadlineHandlerProviderDelimiter | Should -Be ';'
 			}
 
 			It "Should allow setting back to comma" {
-				Set-PsFzfOption -PSReadlineChordProviderDelimiter ','
-				$script:PSReadlineChordProviderDelimiter | Should -Be ','
+				Set-PsFzfOption -PsReadlineHandlerProviderDelimiter ','
+				$script:PsReadlineHandlerProviderDelimiter | Should -Be ','
 			}
 		}
 	}

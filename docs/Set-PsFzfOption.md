@@ -250,15 +250,15 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -PSReadlineChordProviderDelimiter
+### -PsReadlineHandlerProviderDelimiter
 Specifies the delimiter character used to join multiple selected files when using the PSReadlineChordProvider (Ctrl+t by default). 
 
 ```powershell
 # example - use space as delimiter instead of comma:
-Set-PsFzfOption -PSReadlineChordProviderDelimiter ' '
+Set-PsFzfOption -PsReadlineHandlerProviderDelimiter ' '
 
 # example - use semicolon as delimiter:
-Set-PsFzfOption -PSReadlineChordProviderDelimiter ';'
+Set-PsFzfOption -PsReadlineHandlerProviderDelimiter ';'
 ```
 ```yaml
 Type: String
