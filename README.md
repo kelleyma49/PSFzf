@@ -131,7 +131,7 @@ Follow the [installation instructions for fzf](https://github.com/junegunn/fzf#i
 
 ### Windows
 
-The latest version of `fzf` is available via [Chocolatey](https://chocolatey.org/packages/fzf), or you can download the `fzf` binary and place it in your path.  Run `Get-Command fzf*.exe` to verify that PowerShell can find the executable.
+The latest version of `fzf` is available via [winget](https://winstall.app/apps/junegunn.fzf), or you can download the `fzf` binary and place it in your path.  Run `Get-Command fzf*.exe` to verify that PowerShell can find the executable.
 
 PSFzf has been tested under PowerShell 5.0, 6.0, and 7.0.
 
