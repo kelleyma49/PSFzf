@@ -244,8 +244,18 @@ function script:Invoke-FzfTabCompletionInner() {
         return $false
     }
 
+    $runspace = Get-Runspace
+    $runspaceIsRemote = $null -ne $runspace -and $null -ne $runspace.ConnectionInfo
+    if (-not $runspaceIsRemote) {
+        $ps = [System.Management.Automation.PowerShell]::Create('CurrentRunspace')
+    }
+    else {
+        $ps = [System.Management.Automation.PowerShell]::Create()
+        $ps.Runspace = $runspace
+    }
+
     try {
-        $completions = [System.Management.Automation.CommandCompletion]::CompleteInput($line, $cursor, @{})
+        $completions = [System.Management.Automation.CommandCompletion]::CompleteInput($line, $cursor, @{}, $ps)
     }
     catch {
         # some custom tab completions will cause CompleteInput() to throw, so we gracefully handle those cases.
