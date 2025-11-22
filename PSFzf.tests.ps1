@@ -650,6 +650,34 @@ Describe "Set-PsFzfOption PsReadlineHandlerProviderDelimiter" {
 	}
 }
 
+Describe "Set-PsFzfOption TabCompletionPreviewWindow" {
+	InModuleScope PsFzf {
+		Context "Default preview window configuration" {
+			It "Should default to 'hidden|down|right|right:hidden'" {
+				# The default preview window configuration should be 'hidden|down|right|right:hidden'
+				$script:TabCompletionPreviewWindow | Should -Be 'hidden|down|right|right:hidden'
+			}
+		}
+
+		Context "Can override preview window configuration" {
+			It "Should allow setting custom preview window configuration" {
+				Set-PsFzfOption -TabCompletionPreviewWindow 'visible|up|left'
+				$script:TabCompletionPreviewWindow | Should -Be 'visible|up|left'
+			}
+
+			It "Should allow setting to hidden with different change options" {
+				Set-PsFzfOption -TabCompletionPreviewWindow 'hidden|up|down|left:hidden'
+				$script:TabCompletionPreviewWindow | Should -Be 'hidden|up|down|left:hidden'
+			}
+
+			It "Should allow setting back to default" {
+				Set-PsFzfOption -TabCompletionPreviewWindow 'hidden|down|right|right:hidden'
+				$script:TabCompletionPreviewWindow | Should -Be 'hidden|down|right|right:hidden'
+			}
+		}
+	}
+}
+
 Describe "Get-EditorLaunch" {
 
 

@@ -289,16 +289,21 @@ function script:Invoke-FzfTabCompletionInner() {
         # normalize so path works correctly for Windows:
         $path = $PWD.ProviderPath.Replace('\', '/')
 
+        # Parse the TabCompletionPreviewWindow option to extract initial state and change-preview-window options
+        $previewParts = $script:TabCompletionPreviewWindow -split '\|', 2
+        $initialPreviewState = $previewParts[0]
+        $changePreviewWindowOptions = if ($previewParts.Length -gt 1) { $previewParts[1] } else { 'down|right|right:hidden' }
+
         $arguments = @{
             Layout        = 'reverse'
             Expect        = "$expectTriggers"
-            PreviewWindow = 'hidden'
+            PreviewWindow = $initialPreviewState
         }
         if ($isTabTrigger) {
-            $arguments["Bind"] = @('ctrl-/:change-preview-window:down|right|right:hidden')
+            $arguments["Bind"] = @("ctrl-/:change-preview-window:$changePreviewWindowOptions")
         }
         else {
-            $arguments["Bind"] = @('tab:down', 'btab:up', 'ctrl-/:change-preview-window:down|right|right:hidden')
+            $arguments["Bind"] = @('tab:down', 'btab:up', "ctrl-/:change-preview-window:$changePreviewWindowOptions")
         }
 
         # need to handle parameters differently so PowerShell doesn't parse completion item as a script parameter:
