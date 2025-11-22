@@ -149,6 +149,7 @@ $script:OverrideFzfDefaults = $null
 $script:PSReadlineHandlerChords = @()
 $script:TabContinuousTrigger = [IO.Path]::DirectorySeparatorChar.ToString()
 $script:PsReadlineHandlerProviderDelimiter = ','
+$script:TabCompletionPreviewWindow = 'hidden|down|right|right:hidden'
 
 $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove =
 {
@@ -209,7 +210,9 @@ function Set-PsFzfOption {
 		[ScriptBlock]
 		$AltCCommand,
 		[string]
-		$PsReadlineHandlerProviderDelimiter
+		$PsReadlineHandlerProviderDelimiter,
+		[string]
+		$TabCompletionPreviewWindow
 	)
 	if ($PSBoundParameters.ContainsKey('TabExpansion')) {
 		SetTabExpansion $TabExpansion
@@ -259,6 +262,10 @@ function Set-PsFzfOption {
 
 	if ($PSBoundParameters.ContainsKey('PsReadlineHandlerProviderDelimiter')) {
 		$script:PsReadlineHandlerProviderDelimiter = $PsReadlineHandlerProviderDelimiter
+	}
+
+	if ($PSBoundParameters.ContainsKey('TabCompletionPreviewWindow')) {
+		$script:TabCompletionPreviewWindow = $TabCompletionPreviewWindow
 	}
 }
 

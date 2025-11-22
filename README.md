@@ -88,6 +88,20 @@ Use the following command to enable tab expansion:
 Set-PsFzfOption -TabExpansion
 ```
 
+### Tab Completion Preview Window
+
+By default, the tab completion preview window starts hidden and can be toggled with <kbd>Ctrl+/</kbd> to cycle through different positions (down, right, or hidden). You can customize this behavior:
+
+```powershell
+# Start with visible preview on the right
+Set-PsFzfOption -TabCompletionPreviewWindow 'right|down|hidden'
+
+# Start hidden and toggle between up, left, and hidden
+Set-PsFzfOption -TabCompletionPreviewWindow 'hidden|up|left|hidden'
+```
+
+The format is `initial_state|change_preview_window_options` where the first part sets whether the preview window is initially visible or hidden, and the rest defines the states to cycle through when pressing <kbd>Ctrl+/</kbd>.
+
 ## Using within a Pipeline
 
 `Invoke-Fzf` works with input from a pipeline. You can use it in the middle of a pipeline, or as part of an expression.
