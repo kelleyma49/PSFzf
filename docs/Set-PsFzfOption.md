@@ -271,6 +271,31 @@ Default value: ','
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
+
+### -TabCompletionPreviewWindow
+Specifies the preview window behavior for tab completion. The format is 'initial_state|change_preview_window_options' where the first part sets the initial state of the preview window (e.g., 'hidden' or 'visible'), and the rest is passed to the change-preview-window command (typically bound to Ctrl+/).
+
+```powershell
+# example - start with hidden preview, toggle between up, left, and hidden:
+Set-PsFzfOption -TabCompletionPreviewWindow 'hidden|up|left|hidden'
+
+# example - start with visible preview on the right:
+Set-PsFzfOption -TabCompletionPreviewWindow 'right|up|down|hidden'
+
+# default - start hidden, toggle between down, right, and right:hidden:
+Set-PsFzfOption -TabCompletionPreviewWindow 'hidden|down|right|right:hidden'
+```
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases: 
+
+Required: False
+Position: Named
+Default value: 'hidden|down|right|right:hidden'
+Accept pipeline input: False
+Accept wildcard characters: False
+```
 ## INPUTS
 ### None
 
