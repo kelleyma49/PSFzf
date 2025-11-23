@@ -107,17 +107,17 @@ function FixCompletionResult($str, [switch]$AlwaysQuote) {
 	if ([string]::IsNullOrEmpty($str)) {
 		return ""
 	}
-	
+
 	$str = $str.Replace("`r`n", "")
-	
+
 	# check if already quoted
 	$isAlreadyQuoted = ($str.StartsWith("'") -and $str.EndsWith("'")) -or `
-		($str.StartsWith("""") -and $str.EndsWith(""""))
-	
+	($str.StartsWith("""") -and $str.EndsWith(""""))
+
 	if ($isAlreadyQuoted) {
 		return $str
 	}
-	
+
 	# Quote if it contains spaces/tabs, or if AlwaysQuote is specified
 	if ($AlwaysQuote -or $str.Contains(" ") -or $str.Contains("`t")) {
 		return """{0}""" -f $str
@@ -283,6 +283,7 @@ function Stop-Pipeline {
 }
 
 function Invoke-Fzf {
+	[CmdletBinding()]
 	param(
 		# Search
 		[Alias("x")]
@@ -367,57 +368,147 @@ function Invoke-Fzf {
 		[object[]]$Input
 	)
 
-	Begin {
+	begin {
+		#region ConvertTo-FzfOption
+		function ConvertTo-FzfOption {
+			[CmdletBinding()]
+			[OutputType([string])]
+			param(
+				[Parameter(Mandatory, Position = 0, ValueFromPipeline)]
+				[string]$Param
+			)
+			process {
+				Write-Verbose "ConvertTo-FzfOption: Input-> $Param"
+
+				# Insert dash before uppercase letters, convert to lowercase
+				$result = $Param -creplace '([A-Z])', '-$1' -replace '^-', '' |
+				ForEach-Object { $_.ToLower() }
+
+				# Add leading dashes
+				$result = "--$result"
+
+				Write-Verbose "ConvertTo-FzfOption: Result-> $result"
+				return $result
+			}
+		}
+
+		#endregion
+		#region Add-FzfArgument
+		function Add-FzfArgument {
+			[CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'NameOnly')]
+			[OutputType([string])]
+			param(
+				[Parameter(
+					Mandatory = $true,
+					Position = 0,
+					ParameterSetName = 'NameOnly'
+				)]
+				[Parameter(
+					Mandatory = $true,
+					Position = 0,
+					ParameterSetName = 'NameAndValue'
+				)]
+				[ValidateNotNullOrEmpty()]
+				[string]
+				$FzfOption,
+
+				[Parameter(
+					Mandatory = $true,
+					Position = 1,
+					ParameterSetName = 'NameAndValue'
+				)]
+				[object]
+				$Value
+			)
+
+			process {
+				# Resolve the final value based on the parameter set
+				$ResolvedValue = if ($PSCmdlet.ParameterSetName -eq 'NameOnly') {
+					$true
+				}
+				else {
+					$Value
+				}
+
+				Write-Verbose "Add-FzfArgument: ParameterSetName-> $($PSCmdlet.ParameterSetName)"
+				Write-Verbose "Add-FzfArgument: FzfOption [Raw]-> $FzfOption"
+				Write-Verbose "Add-FzfArgument: ResolvedValue [Raw]-> $ResolvedValue"
+
+				if ($PSCmdlet.ShouldProcess(
+						"Add-FzfArgument: fzf option '$FzfOption' with value '$ResolvedValue'",
+						'Add-FzfArgument: Add fzf argument'
+					)) {
+
+					if (($ResolvedValue -is [bool]) -or $ResolvedValue -is [switch] -and $ResolvedValue) {
+						# Switch/flag case: just the option, lowercased, avoid the powershell '1' eq $true
+						$result = '{0} ' -f (ConvertTo-FzfOption $FzfOption -Verbose:$VerbosePreference)
+						Write-Verbose "Add-FzfArgument: Output [switch]-> $result"
+						return $result
+					}
+
+					else {
+						# Option + value: option=value, both lowercased
+						$needsQuotes = $ResolvedValue.ToString() -match '[\s"]'
+						$value = if ($needsQuotes) { '"{0}"' -f $ResolvedValue } else { $ResolvedValue.ToString().ToLowerInvariant() }
+						$result = '{0}={1} ' -f (ConvertTo-FzfOption $FzfOption -Verbose:$VerbosePreference), $value
+						Write-Verbose "Add-FzfArgument: Output [name+value]-> $result"
+						return $result
+					}
+				}
+			}
+		}
+		#endregion Add-FzfArgument
+
+		# First, let's normalize parameter pairs where a switch and a validated string serve the same purpose.
+		# PowerShell doesn't allow a single parameter to be both a [switch] (for default behavior)
+		# and a [string] with [ValidateSet] (for explicit choices). This part works around that
+		# limitation by accepting pairs like:
+		#   - Border (switch with implicit default) + BorderStyle (string with ValidateSet)
+		#   - HeaderLinesBorder (switch) + HeaderLinesBorderStyle (string with ValidateSet)
+		#
+		# At runtime, any *Style parameter is automatically renamed to its base name (Border,
+		# HeaderLinesBorder, etc.) so downstream code only sees the normalized parameter and simplifies what's next!
+		Write-Verbose "Original parameters: $($PSBoundParameters.Keys -join ', ')"
+
+		# PSBoundParameters does not contain a method named 'Clone', let's make one!
+		$params = @{} + $PSBoundParameters
+
+		# Remove common parameters added by CmdletBinding
+		$params.Remove('Verbose') | Out-Null
+
+		# Find all *Style parameters and normalize them
+		$cleanedParams = $params.Keys | Where-Object { $_ -like '*Style' }
+
+		foreach ($cleanedParam in $cleanedParams) {
+			$baseParam = $cleanedParam -replace 'Style$', ''
+			Write-Verbose "Normalizing: $cleanedParam -> $baseParam (Value: $($params[$cleanedParam]))"
+			$params[$baseParam] = $params[$cleanedParam]
+			$params.Remove($cleanedParam)
+		}
+		Write-Verbose "Normalized parameters: $($params.Keys -join ', ')"
+
 		# process parameters:
-		$arguments = ''
+		$arguments = @()
 		$WriteLine = $true
-		if ($PSBoundParameters.ContainsKey('Extended') -and $Extended) { $arguments += '--extended ' }
-		if ($PSBoundParameters.ContainsKey('Exact') -and $Exact) { $arguments += '--exact ' }
-		if ($PSBoundParameters.ContainsKey('CaseInsensitive') -and $CaseInsensitive) { $arguments += '-i ' }
-		if ($PSBoundParameters.ContainsKey('CaseSensitive') -and $CaseSensitive) { $arguments += '+i ' }
-		if ($PSBoundParameters.ContainsKey('Scheme') -and ![string]::IsNullOrWhiteSpace($Scheme)) { $arguments += "--scheme=$Scheme " }
-		if ($PSBoundParameters.ContainsKey('Delimiter') -and ![string]::IsNullOrWhiteSpace($Delimiter)) { $arguments += "--delimiter=$Delimiter " }
-		if ($PSBoundParameters.ContainsKey('NoSort') -and $NoSort) { $arguments += '--no-sort ' }
-		if ($PSBoundParameters.ContainsKey('ReverseInput') -and $ReverseInput) { $arguments += '--tac ' }
-		if ($PSBoundParameters.ContainsKey('Phony') -and $Phony) { $arguments += '--phony ' }
-		if ($PSBoundParameters.ContainsKey('Tiebreak') -and ![string]::IsNullOrWhiteSpace($Tiebreak)) { $arguments += "--tiebreak=$Tiebreak " }
-		if ($PSBoundParameters.ContainsKey('Disabled') -and $Disabled) { $arguments += '--disabled ' }
-		if ($PSBoundParameters.ContainsKey('Multi') -and $Multi) { $arguments += '--multi ' }
-		if ($PSBoundParameters.ContainsKey('Highlightline') -and $Highlightline) { $arguments += '--highlight-line ' }
-		if ($PSBoundParameters.ContainsKey('NoMouse') -and $NoMouse) { $arguments += '--no-mouse ' }
-		if ($PSBoundParameters.ContainsKey('Bind') -and $Bind.Length -ge 1) { $Bind | ForEach-Object { $arguments += "--bind=""$_"" " } }
-		if ($PSBoundParameters.ContainsKey('Reverse') -and $Reverse) { $arguments += '--reverse ' }
-		if ($PSBoundParameters.ContainsKey('Cycle') -and $Cycle) { $arguments += '--cycle ' }
-		if ($PSBoundParameters.ContainsKey('KeepRight') -and $KeepRight) { $arguments += '--keep-right ' }
-		if ($PSBoundParameters.ContainsKey('NoHScroll') -and $NoHScroll) { $arguments += '--no-hscroll ' }
-		if ($PSBoundParameters.ContainsKey('FilepathWord') -and $FilepathWord) { $arguments += '--filepath-word ' }
-		if ($PSBoundParameters.ContainsKey('Height') -and ![string]::IsNullOrWhiteSpace($Height)) { $arguments += "--height=$height " }
-		if ($PSBoundParameters.ContainsKey('MinHeight') -and $MinHeight -ge 0) { $arguments += "--min-height=$MinHeight " }
-		if ($PSBoundParameters.ContainsKey('Layout') -and ![string]::IsNullOrWhiteSpace($Layout)) { $arguments += "--layout=$Layout " }
-		if ($PSBoundParameters.ContainsKey('Border') -and $Border) { $arguments += '--border ' }
-		if ($PSBoundParameters.ContainsKey('BorderLabel') -and ![string]::IsNullOrWhiteSpace($BorderLabel)) { $arguments += "--border-label=""$BorderLabel"" " }
-		if ($PSBoundParameters.ContainsKey('BorderStyle') -and ![string]::IsNullOrWhiteSpace($BorderStyle)) { $arguments += "--border=$BorderStyle " }
-		if ($PSBoundParameters.ContainsKey('Info') -and ![string]::IsNullOrWhiteSpace($Info)) { $arguments += "--info=$Info " }
-		if ($PSBoundParameters.ContainsKey('Prompt') -and ![string]::IsNullOrWhiteSpace($Prompt)) { $arguments += "--prompt=""$Prompt"" " }
-		if ($PSBoundParameters.ContainsKey('Pointer') -and ![string]::IsNullOrWhiteSpace($Pointer)) { $arguments += "--pointer=""$Pointer"" " }
-		if ($PSBoundParameters.ContainsKey('Marker') -and ![string]::IsNullOrWhiteSpace($Marker)) { $arguments += "--marker=""$Marker"" " }
-		if ($PSBoundParameters.ContainsKey('Header') -and ![string]::IsNullOrWhiteSpace($Header)) { $arguments += "--header=""$Header"" " }
-		if ($PSBoundParameters.ContainsKey('HeaderLines') -and $HeaderLines -ge 0) { $arguments += "--header-lines=$HeaderLines " }
-		if ($PSBoundParameters.ContainsKey('Read0') -and $Read0) { $arguments += '--read0 ' ; $WriteLine = $false }
-		if ($PSBoundParameters.ContainsKey('Ansi') -and $Ansi) { $arguments += '--ansi ' }
-		if ($PSBoundParameters.ContainsKey('Tabstop') -and $Tabstop -ge 0) { $arguments += "--tabstop=$Tabstop " }
-		if ($PSBoundParameters.ContainsKey('Color') -and ![string]::IsNullOrWhiteSpace($Color)) { $arguments += "--color=""$Color"" " }
-		if ($PSBoundParameters.ContainsKey('NoBold') -and $NoBold) { $arguments += '--no-bold ' }
-		if ($PSBoundParameters.ContainsKey('History') -and $History) { $arguments += "--history=""$History"" " }
-		if ($PSBoundParameters.ContainsKey('HistorySize') -and $HistorySize -ge 1) { $arguments += "--history-size=$HistorySize " }
-		if ($PSBoundParameters.ContainsKey('Preview') -and ![string]::IsNullOrWhiteSpace($Preview)) { $arguments += "--preview=""$Preview"" " }
-		if ($PSBoundParameters.ContainsKey('PreviewWindow') -and ![string]::IsNullOrWhiteSpace($PreviewWindow)) { $arguments += "--preview-window=""$PreviewWindow"" " }
-		if ($PSBoundParameters.ContainsKey('Query') -and ![string]::IsNullOrWhiteSpace($Query)) { $arguments += "--query=""{0}"" " -f $(PrepareArg $Query) }
-		if ($PSBoundParameters.ContainsKey('Select1') -and $Select1) { $arguments += '--select-1 ' }
-		if ($PSBoundParameters.ContainsKey('Exit0') -and $Exit0) { $arguments += '--exit-0 ' }
-		if ($PSBoundParameters.ContainsKey('Filter') -and ![string]::IsNullOrEmpty($Filter)) { $arguments += "--filter=$Filter " }
-		if ($PSBoundParameters.ContainsKey('PrintQuery') -and $PrintQuery) { $arguments += '--print-query ' }
-		if ($PSBoundParameters.ContainsKey('Expect') -and ![string]::IsNullOrWhiteSpace($Expect)) { $arguments += "--expect=""$Expect"" " }
+
+		# To add new fzf options: Add the parameter to Invoke-Fzf's param() block
+		# and let Add-FzfArgument work its magic in the Begin block.
+		# Note: For fzf options like --border[=STYLE], use both parameters:
+		#   [switch]$Border
+		#   [ValidateSet('rounded', 'sharp', ...)]
+		#   [string]$BorderStyle
+		# The normalization logic will handle merging them automatically.
+
+		$params.GetEnumerator() | ForEach-Object {
+			if ($_.Value -is [bool] -and $_.Value) {
+				$arguments += Add-FzfArgument $_.Key -Verbose:$VerbosePreference
+			}
+			else {
+				$arguments += Add-FzfArgument $_.Key $_.Value -Verbose:$VerbosePreference
+			}
+		}
+
+		Write-Verbose "Final arguments passed to fzf: $($arguments -join '')"
 
 		if (!$script:OverrideFzfDefaults) {
 			$script:OverrideFzfDefaults = [FzfDefaultOpts]::new("")
@@ -429,9 +520,6 @@ function Invoke-Fzf {
 			$arguments += "--height=40% "
 		}
 
-		if ($Border -eq $true -and -not [string]::IsNullOrWhiteSpace($BorderStyle)) {
-			throw '-Border and -BorderStyle are mutally exclusive'
-		}
 		if ($script:UseFd -and $script:AnsiCompatible -and -not $arguments.Contains('--ansi')) {
 			$arguments += "--ansi "
 		}
