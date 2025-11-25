@@ -1029,14 +1029,14 @@ function SetPsReadlineShortcut($Chord, [switch]$Override, $BriefDesc, $Desc, [sc
 
 function FindFzf() {
 	if ($script:IsWindows) {
-		$AppNames = @('fzf-*-windows_*.exe', 'fzf.exe')
+		$AppNames = @('fzf.exe', 'fzf-*-windows_*.exe')
 	}
 	else {
 		if ($IsMacOS) {
-			$AppNames = @('fzf-*-darwin_*', 'fzf')
+			$AppNames = @('fzf', 'fzf-*-darwin_*')
 		}
 		elseif ($IsLinux) {
-			$AppNames = @('fzf-*-linux_*', 'fzf')
+			$AppNames = @('fzf', 'fzf-*-linux_*')
 		}
 		else {
 			throw 'Unknown OS'
