@@ -1033,10 +1033,10 @@ function FindFzf() {
 	}
 	else {
 		if ($IsMacOS) {
-			$AppNames = @('fzf-*-darwin_*', 'fzf')
+			$AppNames = @('fzf', 'fzf-*-darwin_*')
 		}
 		elseif ($IsLinux) {
-			$AppNames = @('fzf-*-linux_*', 'fzf')
+			$AppNames = @('fzf', 'fzf-*-linux_*')
 		}
 		else {
 			throw 'Unknown OS'
