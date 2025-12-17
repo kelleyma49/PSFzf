@@ -244,7 +244,7 @@ function script:Invoke-FzfTabCompletionInner() {
         return $false
     }
 
-    $runspace = Get-Runspace
+    $runspace = $host.Runspace
     $runspaceIsRemote = $null -ne $runspace -and $null -ne $runspace.ConnectionInfo
     if (-not $runspaceIsRemote) {
         $ps = [System.Management.Automation.PowerShell]::Create('CurrentRunspace')
