@@ -299,6 +299,7 @@ function Invoke-Fzf {
 		[string]$Delimiter,
 		[Alias('n')]
 		[string]$WithNth,
+		[string]$Nth,
 		[switch]$NoSort,
 		[Alias('tac')]
 		[switch]$ReverseInput,
@@ -380,6 +381,7 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('Scheme') -and ![string]::IsNullOrWhiteSpace($Scheme)) { $arguments += "--scheme=$Scheme " }
 		if ($PSBoundParameters.ContainsKey('Delimiter') -and ![string]::IsNullOrWhiteSpace($Delimiter)) { $arguments += "--delimiter=$Delimiter " }
 		if ($PSBoundParameters.ContainsKey('WithNth') -and ![string]::IsNullOrWhiteSpace($WithNth)) { $arguments += "--with-nth=$WithNth " }
+		if ($PSBoundParameters.ContainsKey('Nth') -and ![string]::IsNullOrWhiteSpace($Nth)) { $arguments += "--nth=$Nth " }
 		if ($PSBoundParameters.ContainsKey('NoSort') -and $NoSort) { $arguments += '--no-sort ' }
 		if ($PSBoundParameters.ContainsKey('ReverseInput') -and $ReverseInput) { $arguments += '--tac ' }
 		if ($PSBoundParameters.ContainsKey('Phony') -and $Phony) { $arguments += '--phony ' }

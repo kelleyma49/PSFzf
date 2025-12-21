@@ -300,6 +300,7 @@ function script:Invoke-FzfTabCompletionInner() {
             PreviewWindow = $initialPreviewState
             Delimiter     = '\0'
             WithNth       = '2'
+            Nth           = '1..'
         }
         if ($isTabTrigger) {
             $arguments["Bind"] = @("ctrl-/:change-preview-window:$changePreviewWindowOptions")
@@ -321,7 +322,7 @@ function script:Invoke-FzfTabCompletionInner() {
 
         $script:fzfOutput = @()
 
-        $completionMatches | ForEach-Object { "$($_.CompletionText)`0$($_.ListItemText)" } | Invoke-Fzf @arguments | ForEach-Object {
+        $completionMatches | ForEach-Object { "$($_.CompletionText)`0$($_.ListItemText)`0$($_.ToolTip)" } | Invoke-Fzf @arguments | ForEach-Object {
             $script:fzfOutput += $_
         }
 
