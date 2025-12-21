@@ -298,7 +298,7 @@ function script:Invoke-FzfTabCompletionInner() {
             Layout        = 'reverse'
             Expect        = "$expectTriggers"
             PreviewWindow = $initialPreviewState
-            Delimiter     = "`0"
+            Delimiter     = '\0'
             WithNth       = '2'
         }
         if ($isTabTrigger) {
