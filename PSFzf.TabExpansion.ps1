@@ -298,6 +298,8 @@ function script:Invoke-FzfTabCompletionInner() {
             Layout        = 'reverse'
             Expect        = "$expectTriggers"
             PreviewWindow = $initialPreviewState
+            Delimiter     = "`0"
+            WithNth       = '2'
         }
         if ($isTabTrigger) {
             $arguments["Bind"] = @("ctrl-/:change-preview-window:$changePreviewWindowOptions")
@@ -319,7 +321,7 @@ function script:Invoke-FzfTabCompletionInner() {
 
         $script:fzfOutput = @()
 
-        $completionMatches | ForEach-Object { $_.CompletionText } | Invoke-Fzf @arguments | ForEach-Object {
+        $completionMatches | ForEach-Object { "$($_.CompletionText)`0$($_.ListItemText)" } | Invoke-Fzf @arguments | ForEach-Object {
             $script:fzfOutput += $_
         }
 
@@ -328,7 +330,15 @@ function script:Invoke-FzfTabCompletionInner() {
             return $false
         }
         elseif ($script:fzfOutput.Length -gt 1) {
-            $script:result = $script:fzfOutput[1]
+            # Extract CompletionText (first field before NUL character)
+            $selectedLine = $script:fzfOutput[1]
+            $nullIndex = $selectedLine.IndexOf("`0")
+            if ($nullIndex -ge 0) {
+                $script:result = $selectedLine.Substring(0, $nullIndex)
+            }
+            else {
+                $script:result = $selectedLine
+            }
         }
 
         # check if we should continue completion:
