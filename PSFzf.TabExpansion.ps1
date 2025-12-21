@@ -332,7 +332,7 @@ function script:Invoke-FzfTabCompletionInner() {
         elseif ($script:fzfOutput.Length -gt 1) {
             # Extract CompletionText (first field before NUL character)
             $selectedLine = $script:fzfOutput[1]
-            $nullIndex = $selectedLine.IndexOf("`0")
+            $nullIndex = $selectedLine.IndexOf([char]0)
             if ($nullIndex -ge 0) {
                 $script:result = $selectedLine.Substring(0, $nullIndex)
             }
