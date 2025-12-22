@@ -747,6 +747,11 @@ function Invoke-FzfDefaultSystem {
 			$script:OverrideFzfDefaultOpts = $null
 		}
 	}
+	if ((Join-Path $PWD '') -ne (Join-Path $ProviderPath '')) {
+		for ($i = 0;$i -lt $result.Length;$i++) {
+			$result[$i] = Join-Path $ProviderPath $result[$i]
+		}
+	}
 
 	return $result
 }
