@@ -983,6 +983,47 @@ function Invoke-FzfPsReadlineHandlerHistoryArgs {
 	}
 }
 
+function Invoke-FzfHandlerHistoryHost {
+	$Cmdlets = @('Invoke-Command','Enter-PSSession')
+	$Alias = (get-alias |? { $Cmdlets -contains $_.ResolvedCommand }).Name
+	$Commands = $Cmdlets + $Alias
+	$result = @()
+	try
+	{
+		$line = $null
+		$cursor = $null
+		[Microsoft.PowerShell.PSConsoleReadline]::GetBufferState([ref]$line, [ref]$cursor)
+		$line = $line.Insert($cursor,"{}") # add marker for fzf
+		
+		$contentTable = @{}
+		$reader = New-Object PSFzf.IO.ReverseLineReader -ArgumentList $((Get-PSReadlineOption).HistorySavePath)
+		
+		$reader.GetEnumerator() | Where-Object { $_ -ilike '*-ComputerName*' -or  $_ -imatch $($Commands -join '|')  } | ForEach-Object {
+			$tokens =  ([System.Management.Automation.PsParser]::Tokenize($_, [ref] $null))
+			$TokenComputerParameter = $tokens |? { $_.Content -eq '-ComputerName' -and $_.Type -eq 'CommandParameter' }
+			if($TokenComputerParameter){
+				$tokens[1+ $tokens.IndexOf($TokenComputerParameter)].Content
+			}elseif($tokens |? {$_.Type -eq 'Command' -and $_.Content -match $($Commands -join '|')}){
+				$SelectedToken = $tokens |? {$_.Type -eq 'CommandArgument'}
+				if($SelectedToken.Count -gt 0){
+					$SelectedToken[0].Content
+				}
+			} 
+		} | Select-Object -Unique  | Invoke-Fzf -NoSort -Bind ctrl-r:toggle-sort | ForEach-Object { $result = $_ }
+
+	}catch{
+
+	}finally{
+		$reader.Dispose()
+	}
+
+	InvokePromptHack
+
+	if (-not [string]::IsNullOrEmpty($result)) {
+		[Microsoft.PowerShell.PSConsoleReadLine]::Replace($cursor,0, ' ' + $result)
+	}
+}
+
 function Invoke-FzfPsReadlineHandlerSetLocation {
 	$result = $null
 	try {
