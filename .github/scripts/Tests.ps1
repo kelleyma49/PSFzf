@@ -12,13 +12,7 @@ $config.TestResult.Enabled = $true
 $config.TestResult.OutputFormat = 'NUnitXml'
 $config.TestResult.OutputPath = $testResultsFile
 $config.CodeCoverage.Enabled = $true
-$config.CodeCoverage.Path = @(
-    './PSFzf.Base.ps1',
-    './PSFzf.Functions.ps1',
-    './PSFzf.Git.ps1',
-    './PSFzf.PSConsoleReadLineWrappers.ps1',
-    './PSFzf.TabExpansion.ps1'
-)
+$config.CodeCoverage.Path = './PSFzf.psm1'
 $config.CodeCoverage.OutputFormat = 'JaCoCo'
 $config.CodeCoverage.OutputPath = $coverageFile
 $res = Invoke-Pester -Configuration $config
