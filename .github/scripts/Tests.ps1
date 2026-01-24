@@ -27,9 +27,9 @@ $res = Invoke-Pester -Configuration $config
 Write-Host ""
 Write-Host "Code Coverage Summary:" -ForegroundColor Cyan
 Write-Host "  Covered Lines: $($res.CodeCoverage.CoveragePercent)%" -ForegroundColor Green
-Write-Host "  Commands Analyzed: $($res.CodeCoverage.NumberOfCommandsAnalyzed)"
-Write-Host "  Commands Executed: $($res.CodeCoverage.NumberOfCommandsExecuted)"
-Write-Host "  Commands Missed: $($res.CodeCoverage.NumberOfCommandsMissed)"
+Write-Host "  Commands Analyzed: $($res.CodeCoverage.CommandsAnalyzedCount)"
+Write-Host "  Commands Executed: $($res.CodeCoverage.CommandsExecutedCount)"
+Write-Host "  Commands Missed: $($res.CodeCoverage.CommandsMissedCount)"
 Write-Host "  Coverage Report: $coverageFile"
 Write-Host ""
 
