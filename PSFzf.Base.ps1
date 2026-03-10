@@ -930,6 +930,9 @@ function Invoke-FzfPsReadlineHandlerHistory {
 	$cursor = $bufferState.Cursor
 
 	$result = Get-PickedHistory -Query $line -UsePSReadLineHistory
+	if ($result -is [system.array]) {
+		$result = $result -join "```n"
+	}
 
 	InvokePromptHack
 
