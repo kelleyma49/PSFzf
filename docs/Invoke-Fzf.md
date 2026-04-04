@@ -15,7 +15,7 @@ Invoke-Fzf [-Extended] [-ExtendedExact] [-CaseInsensitive] [-CaseSensitive] [[-D
  [-ReverseInput] [[-Tiebreak] <String>] [-Multi] [-NoMouse] [-Cycle] [-NoHScroll] [-Reverse] [-InlineInfo]
  [[-Prompt] <String>] [[-Header] <String>] [[-HeaderLines] <Int32>] [[-History] <String>]
  [[-HistorySize] <Int32>] [[-Preview] <String>] [[-PreviewWindow] <String>] [[-Query] <String>] [-Select1]
- [-Exit0] [[-Filter] <String>] [[-Input] <Object[]>]
+ [-Exit0] [[-Filter] <String>] [-Popup] [[-Input] <Object[]>]
 ```
 
 ## DESCRIPTION
@@ -327,6 +327,21 @@ Aliases:
 
 Required: False
 Position: 8
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Popup
+Display fzf as a popup window (requires fzf 0.71.0 or later)
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: 
+
+Required: False
+Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False

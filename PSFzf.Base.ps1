@@ -107,17 +107,17 @@ function FixCompletionResult($str, [switch]$AlwaysQuote) {
 	if ([string]::IsNullOrEmpty($str)) {
 		return ""
 	}
-	
+
 	$str = $str.Replace("`r`n", "")
-	
+
 	# check if already quoted
 	$isAlreadyQuoted = ($str.StartsWith("'") -and $str.EndsWith("'")) -or `
-		($str.StartsWith("""") -and $str.EndsWith(""""))
-	
+	($str.StartsWith("""") -and $str.EndsWith(""""))
+
 	if ($isAlreadyQuoted) {
 		return $str
 	}
-	
+
 	# Quote if it contains spaces/tabs, or if AlwaysQuote is specified
 	if ($AlwaysQuote -or $str.Contains(" ") -or $str.Contains("`t")) {
 		return """{0}""" -f $str
@@ -326,6 +326,7 @@ function Invoke-Fzf {
 		[int]$MinHeight,
 		[ValidateSet('default', 'reverse', 'reverse-list')]
 		[string]$Layout = $null,
+		[switch]$Popup,
 		[switch]$Border,
 		[ValidateSet('rounded', 'sharp', 'bold', 'block', 'double', 'horizontal', 'vertical', 'top', 'bottom', 'left', 'right', 'none')]
 		[string]$BorderStyle,
@@ -397,6 +398,14 @@ function Invoke-Fzf {
 		if ($PSBoundParameters.ContainsKey('Height') -and ![string]::IsNullOrWhiteSpace($Height)) { $arguments += "--height=$height " }
 		if ($PSBoundParameters.ContainsKey('MinHeight') -and $MinHeight -ge 0) { $arguments += "--min-height=$MinHeight " }
 		if ($PSBoundParameters.ContainsKey('Layout') -and ![string]::IsNullOrWhiteSpace($Layout)) { $arguments += "--layout=$Layout " }
+		if ($PSBoundParameters.ContainsKey('Popup') -and $Popup) {
+			if ($script:UsePopup) {
+				$arguments += '--popup '
+			}
+			else {
+				Write-Warning "--popup requires fzf version 0.71 or later. Current version does not support this feature."
+			}
+		}
 		if ($PSBoundParameters.ContainsKey('Border') -and $Border) { $arguments += '--border ' }
 		if ($PSBoundParameters.ContainsKey('BorderLabel') -and ![string]::IsNullOrWhiteSpace($BorderLabel)) { $arguments += "--border-label=""$BorderLabel"" " }
 		if ($PSBoundParameters.ContainsKey('BorderStyle') -and ![string]::IsNullOrWhiteSpace($BorderStyle)) { $arguments += "--border=$BorderStyle " }
@@ -1114,7 +1123,7 @@ else {
 FindFzf
 
 try {
-	$fzfVersion = $(& $script:FzfLocation --version).Replace(' (devel)', '').Split('.')
+	$fzfVersion = $(& $script:FzfLocation --version).Replace(' (devel)', '').Replace(' (Homebrew)', '').Split('.')
 	$script:UseHeightOption = $fzfVersion.length -ge 2 -and `
 	([int]$fzfVersion[0] -gt 0 -or `
 			[int]$fzfVersion[1] -ge 21) -and `
@@ -1122,6 +1131,9 @@ try {
 	$script:UseWalker = $fzfVersion.length -ge 2 -and `
 	([int]$fzfVersion[0] -gt 0 -or `
 			[int]$fzfVersion[1] -ge 48)
+	$script:UsePopup = $fzfVersion.length -ge 2 -and `
+	([int]$fzfVersion[0] -gt 0 -or `
+			[int]$fzfVersion[1] -ge 71)
 }
 catch {
 	# continue
@@ -1130,7 +1142,4 @@ catch {
 # check if we're running on Windows PowerShell. This method is faster than Get-Command:
 if ($(get-host).Version.Major -le 5) {
 	$script:PowershellCmd = 'powershell'
-}
-else {
-	$script:PowershellCmd = 'pwsh'
 }
