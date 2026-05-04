@@ -735,20 +735,22 @@ function Invoke-FzfDefaultSystem {
 		$process.BeginOutputReadLine() | Out-Null
 		$process.WaitForExit()
 
-		Get-Event -SourceIdentifier $stdOutEventId | `
-			Sort-Object -Property TimeGenerated | `
-			Where-Object { $null -ne $_.SourceEventArgs.Data } | ForEach-Object {
-			$result += $_.SourceEventArgs.Data
-			Remove-Event -EventIdentifier $_.EventIdentifier
-		}
-		Remove-Event -SourceIdentifier $stdOutEventId
+		Get-Event -SourceIdentifier $stdOutEventId |
+			Where-Object { $null -ne $_.SourceEventArgs.Data } |
+			Sort-Object -Property TimeGenerated |
+			ForEach-Object { $result += $_.SourceEventArgs.Data }
 	}
- catch {
-		# ignore errors
-	}
- finally {
+	finally {
 		try {
+			Get-Event -SourceIdentifier $stdOutEventId -ErrorAction SilentlyContinue | ForEach-Object {
+				Remove-Event -EventIdentifier $_.EventIdentifier -ErrorAction SilentlyContinue
+			}
 			Unregister-Event -SourceIdentifier $stdOutEventId -ErrorAction SilentlyContinue
+
+			if ($null -ne $stdOutEvent) {
+				Stop-Job -Job $stdOutEvent -ErrorAction SilentlyContinue
+				Remove-Job -Job $stdOutEvent -Force -ErrorAction SilentlyContinue
+			}
 		}
 		finally {} # ignore errors
 
