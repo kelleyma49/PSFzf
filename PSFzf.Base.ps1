@@ -497,20 +497,6 @@ function Invoke-Fzf {
 				# do nothing
 			}
 
-			try {
-				#$stdOutEventId,$exitedEventId | ForEach-Object {
-				#	Unregister-Event $_ -ErrorAction SilentlyContinue
-				#}
-
-				$stdOutEvent, $exitedEvent | ForEach-Object {
-					Stop-Job $_  -ErrorAction SilentlyContinue
-					Remove-Job $_ -Force  -ErrorAction SilentlyContinue
-				}
-			}
-			catch {
-
-			}
-
 			# events seem to be generated out of order - therefore, we need sort by time created. For example,
 			# -print-query and -expect and will be outputted first if specified on the command line.
 			Get-Event -SourceIdentifier $stdOutEventId | `
@@ -519,6 +505,20 @@ function Invoke-Fzf {
 				Write-Output $_.SourceEventArgs.Data
 				Remove-Event -EventIdentifier $_.EventIdentifier
 			}
+
+			try {
+				$stdOutEventId, $exitedEventId | ForEach-Object {
+					Unregister-Event -SourceIdentifier $_ -ErrorAction SilentlyContinue
+				}
+
+				$stdOutEvent, $exitedEvent |
+					Where-Object { $null -ne $_ } |
+					ForEach-Object {
+						Stop-Job -Job $_ -ErrorAction SilentlyContinue
+						Remove-Job -Job $_ -Force -ErrorAction SilentlyContinue
+					}
+			}
+			finally {}
 		}
 		$checkProcessStatus = [scriptblock] {
 			if ($processHasExited.flag -or $process.HasExited) {
@@ -747,6 +747,11 @@ function Invoke-FzfDefaultSystem {
 		# ignore errors
 	}
  finally {
+		try {
+			Unregister-Event -SourceIdentifier $stdOutEventId -ErrorAction SilentlyContinue
+		}
+		finally {} # ignore errors
+
 		if ($script:OverrideFzfDefaultCommand) {
 			$script:OverrideFzfDefaultCommand.Restore()
 			$script:OverrideFzfDefaultCommand = $null
