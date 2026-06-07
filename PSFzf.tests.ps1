@@ -210,6 +210,50 @@ Describe 'Invoke-PsFzfRipgrep' {
     }
 }
 
+Describe 'Invoke-Fzf event cleanup' {
+	InModuleScope PsFzf {
+		AfterEach {
+			Get-EventSubscriber | Where-Object {
+				$_.SourceIdentifier -like 'PsFzf*Eh-*' -or
+				$_.SourceIdentifier -like 'Invoke-FzfDefaultSystem-PsFzfStdOutEh-*'
+			} | ForEach-Object {
+				Unregister-Event -SourceIdentifier $_.SourceIdentifier -ErrorAction SilentlyContinue
+			}
+		}
+
+		It 'Should not leave event subscribers after Invoke-Fzf completes' {
+			$before = @(Get-EventSubscriber | Where-Object {
+					$_.SourceIdentifier -like 'PsFzf*Eh-*'
+				} | Select-Object -ExpandProperty SourceIdentifier | Sort-Object)
+
+			'file1.txt' | Invoke-Fzf -Select1 -Exit0 -Filter 'file1.txt' | Out-Null
+
+			$after = @(Get-EventSubscriber | Where-Object {
+					$_.SourceIdentifier -like 'PsFzf*Eh-*'
+				} | Select-Object -ExpandProperty SourceIdentifier | Sort-Object)
+
+			Compare-Object -ReferenceObject $before -DifferenceObject $after |
+				Should -BeNullOrEmpty
+		}
+
+		It 'Should not leave event subscribers after Invoke-FzfDefaultSystem completes' {
+			$providerPath = (Resolve-Path $TestDrive).Path
+			$before = @(Get-EventSubscriber | Where-Object {
+					$_.SourceIdentifier -like 'Invoke-FzfDefaultSystem-PsFzfStdOutEh-*'
+				} | Select-Object -ExpandProperty SourceIdentifier | Sort-Object)
+
+			Invoke-FzfDefaultSystem -ProviderPath $providerPath -DefaultOpts '--filter=file1.txt' | Out-Null
+
+			$after = @(Get-EventSubscriber | Where-Object {
+					$_.SourceIdentifier -like 'Invoke-FzfDefaultSystem-PsFzfStdOutEh-*'
+				} | Select-Object -ExpandProperty SourceIdentifier | Sort-Object)
+
+			Compare-Object -ReferenceObject $before -DifferenceObject $after |
+				Should -BeNullOrEmpty
+		}
+	}
+}
+
 Describe 'Invoke-FuzzySetLocation' {
 	InModuleScope PsFzf {
 

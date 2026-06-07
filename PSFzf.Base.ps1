@@ -497,20 +497,6 @@ function Invoke-Fzf {
 				# do nothing
 			}
 
-			try {
-				#$stdOutEventId,$exitedEventId | ForEach-Object {
-				#	Unregister-Event $_ -ErrorAction SilentlyContinue
-				#}
-
-				$stdOutEvent, $exitedEvent | ForEach-Object {
-					Stop-Job $_  -ErrorAction SilentlyContinue
-					Remove-Job $_ -Force  -ErrorAction SilentlyContinue
-				}
-			}
-			catch {
-
-			}
-
 			# events seem to be generated out of order - therefore, we need sort by time created. For example,
 			# -print-query and -expect and will be outputted first if specified on the command line.
 			Get-Event -SourceIdentifier $stdOutEventId | `
@@ -519,6 +505,20 @@ function Invoke-Fzf {
 				Write-Output $_.SourceEventArgs.Data
 				Remove-Event -EventIdentifier $_.EventIdentifier
 			}
+
+			try {
+				$stdOutEventId, $exitedEventId | ForEach-Object {
+					Unregister-Event -SourceIdentifier $_ -ErrorAction SilentlyContinue
+				}
+
+				$stdOutEvent, $exitedEvent |
+					Where-Object { $null -ne $_ } |
+					ForEach-Object {
+						Stop-Job -Job $_ -ErrorAction SilentlyContinue
+						Remove-Job -Job $_ -Force -ErrorAction SilentlyContinue
+					}
+			}
+			finally {}
 		}
 		$checkProcessStatus = [scriptblock] {
 			if ($processHasExited.flag -or $process.HasExited) {
@@ -735,18 +735,25 @@ function Invoke-FzfDefaultSystem {
 		$process.BeginOutputReadLine() | Out-Null
 		$process.WaitForExit()
 
-		Get-Event -SourceIdentifier $stdOutEventId | `
-			Sort-Object -Property TimeGenerated | `
-			Where-Object { $null -ne $_.SourceEventArgs.Data } | ForEach-Object {
-			$result += $_.SourceEventArgs.Data
-			Remove-Event -EventIdentifier $_.EventIdentifier
+		Get-Event -SourceIdentifier $stdOutEventId |
+			Where-Object { $null -ne $_.SourceEventArgs.Data } |
+			Sort-Object -Property TimeGenerated |
+			ForEach-Object { $result += $_.SourceEventArgs.Data }
+	}
+	finally {
+		try {
+			Get-Event -SourceIdentifier $stdOutEventId -ErrorAction SilentlyContinue | ForEach-Object {
+				Remove-Event -EventIdentifier $_.EventIdentifier -ErrorAction SilentlyContinue
+			}
+			Unregister-Event -SourceIdentifier $stdOutEventId -ErrorAction SilentlyContinue
+
+			if ($null -ne $stdOutEvent) {
+				Stop-Job -Job $stdOutEvent -ErrorAction SilentlyContinue
+				Remove-Job -Job $stdOutEvent -Force -ErrorAction SilentlyContinue
+			}
 		}
-		Remove-Event -SourceIdentifier $stdOutEventId
-	}
- catch {
-		# ignore errors
-	}
- finally {
+		finally {} # ignore errors
+
 		if ($script:OverrideFzfDefaultCommand) {
 			$script:OverrideFzfDefaultCommand.Restore()
 			$script:OverrideFzfDefaultCommand = $null
