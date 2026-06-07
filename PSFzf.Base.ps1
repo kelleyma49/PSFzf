@@ -498,9 +498,9 @@ function Invoke-Fzf {
 			}
 
 			try {
-				#$stdOutEventId,$exitedEventId | ForEach-Object {
-				#	Unregister-Event $_ -ErrorAction SilentlyContinue
-				#}
+				$stdOutEventId, $exitedEventId | ForEach-Object {
+					Unregister-Event -SourceIdentifier $_ -ErrorAction SilentlyContinue
+				}
 
 				$stdOutEvent, $exitedEvent | ForEach-Object {
 					Stop-Job $_  -ErrorAction SilentlyContinue
@@ -741,6 +741,7 @@ function Invoke-FzfDefaultSystem {
 			$result += $_.SourceEventArgs.Data
 			Remove-Event -EventIdentifier $_.EventIdentifier
 		}
+		Unregister-Event -SourceIdentifier $stdOutEventId -ErrorAction SilentlyContinue
 		Remove-Event -SourceIdentifier $stdOutEventId
 	}
  catch {
