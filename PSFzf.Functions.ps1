@@ -328,8 +328,8 @@ function Invoke-FuzzyScoop() {
         $apps = New-Object System.Collections.ArrayList
         Get-ChildItem "$(Split-Path $scoopexists.Path)\..\buckets" | ForEach-Object {
             $bucket = $_.Name
-            Get-ChildItem "$($_.FullName)\bucket" | ForEach-Object {
-                $apps.Add($bucket + '/' + ($_.Name -replace '.json', '')) > $null
+            Get-ChildItem "$($_.FullName)\bucket" -Recurse -File -Filter "*.json" | ForEach-Object {
+                $apps.Add($bucket + '/' + $_.BaseName) > $null
             }
         }
 
