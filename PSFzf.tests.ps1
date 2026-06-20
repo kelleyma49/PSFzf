@@ -842,5 +842,56 @@ if ( $false ) {
 				}
 			}
 		}
+
+	}
+}
+
+Describe "Invoke-FzfPsReadlineHandlerHistory multiline insertion" {
+	InModuleScope PsFzf {
+		BeforeEach {
+			Mock Get-PSConsoleReadLineBufferState {
+				[pscustomobject]@{
+					Line   = ''
+					Cursor = 0
+				}
+			} -ModuleName PsFzf
+
+			Mock InvokePromptHack {} -ModuleName PsFzf
+			Mock Replace-PSConsoleReadLineText {} -ModuleName PsFzf
+		}
+
+		It "Should join multiline history selections with newlines only" {
+			$historySelection = @(
+				'$a = 1'
+				'$b = 2'
+				'$c = 3'
+			)
+			$expected = $historySelection -join "`n"
+
+			Mock Get-PickedHistory { $historySelection } -ModuleName PsFzf
+
+			Invoke-FzfPsReadlineHandlerHistory
+
+			Should -Invoke 'Replace-PSConsoleReadLineText' -Times 1 -ModuleName PsFzf -ParameterFilter {
+				$Start -eq 0 -and $Length -eq 0 -and $ReplacementText -eq $expected
+			}
+		}
+
+		It "Should preserve explicit backticks from history entries" {
+			$historySelection = @(
+				'$a = 1 `'
+				'  + 2 `'
+				'  + 3'
+			)
+			$expected = $historySelection -join "`n"
+
+			Mock Get-PickedHistory { $historySelection } -ModuleName PsFzf
+
+			Invoke-FzfPsReadlineHandlerHistory
+
+			Should -Invoke 'Replace-PSConsoleReadLineText' -Times 1 -ModuleName PsFzf -ParameterFilter {
+				$Start -eq 0 -and $Length -eq 0 -and $ReplacementText -eq $expected
+			}
+		}
 	}
 }
