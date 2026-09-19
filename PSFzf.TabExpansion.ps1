@@ -355,15 +355,16 @@ function script:Invoke-FzfTabCompletionInner() {
 
     $result = $script:result
     if ($null -ne $result) {
-        # quote strings if we need to:
+        # Some completers include a trailing separator in CompletionText.
+        # PSFzf appends its own separator below, so remove one before quoting.
         if ($result -is [system.array]) {
             for ($i = 0; $i -lt $result.Length; $i++) {
-                $result[$i] = FixCompletionResult $result[$i]
+                $result[$i] = FixCompletionResult ($result[$i] -replace '[ \t]$', '')
             }
             $str = $result -join ','
         }
         else {
-            $str = FixCompletionResult $result
+            $str = FixCompletionResult ($result -replace '[ \t]$', '')
         }
 
         $isQuoted = $str.EndsWith("'")
