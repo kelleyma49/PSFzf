@@ -22,7 +22,7 @@ else {
   Expand-Archive fzf.zip
 }
 
-$modules = @('Pester', $null), @('platyPS', $null), @('PSScriptAnalyzer', $null)
+$modules = @('Pester', '6.2.0'), @('platyPS', $null), @('PSScriptAnalyzer', $null)
 $modules | ForEach-Object {
   $module = $_[0]
   $version = $_[1]
