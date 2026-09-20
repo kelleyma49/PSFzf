@@ -316,17 +316,18 @@ function Invoke-FuzzyZLocation() {
 
 
 #.ExternalHelp PSFzf.psm1-help.xml
-function Invoke-FuzzyScoop() {
+Function Invoke-FuzzyScoop {
     param(
         [string]$subcommand = "install",
         [string]$subcommandflags = ""
     )
 
     $result = $null
-    $scoopexists = Get-Command scoop -ErrorAction Ignore
+    $scoopexists = Get-Command scoop.ps1 -ErrorAction Ignore
     if ($scoopexists) {
+        $scoopDir = Split-Path (Split-Path $scoopexists.Source -Parent) -Parent
         $apps = New-Object System.Collections.ArrayList
-        Get-ChildItem "$(Split-Path $scoopexists.Path)\..\buckets" | ForEach-Object {
+        Get-ChildItem "$(Join-Path $scoopDir buckets)" | ForEach-Object {
             $bucket = $_.Name
             Get-ChildItem "$($_.FullName)\bucket" -Recurse -File -Filter "*.json" | ForEach-Object {
                 $apps.Add($bucket + '/' + $_.BaseName) > $null
