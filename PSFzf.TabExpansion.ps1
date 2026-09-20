@@ -359,12 +359,12 @@ function script:Invoke-FzfTabCompletionInner() {
         # PSFzf appends its own separator below, so remove one before quoting.
         if ($result -is [system.array]) {
             for ($i = 0; $i -lt $result.Length; $i++) {
-                $result[$i] = FixCompletionResult ($result[$i] -replace '[ \t]$', '')
+                $result[$i] = FixCompletionResult -str $result[$i] -RemoveTrailingSpace
             }
             $str = $result -join ','
         }
         else {
-            $str = FixCompletionResult ($result -replace '[ \t]$', '')
+            $str = FixCompletionResult -str $result -RemoveTrailingSpace
         }
 
         $isQuoted = $str.EndsWith("'")
@@ -373,7 +373,7 @@ function script:Invoke-FzfTabCompletionInner() {
             $directorySeparator = [IO.Path]::DirectorySeparatorChar.ToString()
             $altDirectorySeparator = [IO.Path]::AltDirectorySeparatorChar.ToString()
             $hasTrailingSeparator = $resultTrimmed.EndsWith($directorySeparator) -or
-                $resultTrimmed.EndsWith($altDirectorySeparator)
+            $resultTrimmed.EndsWith($altDirectorySeparator)
 
             if (-not $hasTrailingSeparator) {
                 if ($isQuoted) {
