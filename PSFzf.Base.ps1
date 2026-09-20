@@ -103,9 +103,13 @@ class FzfDefaultCmd {
 	}
 }
 
-function FixCompletionResult($str, [switch]$AlwaysQuote) {
+function FixCompletionResult($str, [switch]$AlwaysQuote, [switch]$RemoveTrailingSpace) {
 	if ([string]::IsNullOrEmpty($str)) {
 		return ""
+	}
+
+	if ($RemoveTrailingSpace) {
+		$str = $str -replace '[ \t]$', ''
 	}
 
 	$str = $str.Replace("`r`n", "")
@@ -512,11 +516,11 @@ function Invoke-Fzf {
 				}
 
 				$stdOutEvent, $exitedEvent |
-					Where-Object { $null -ne $_ } |
-					ForEach-Object {
-						Stop-Job -Job $_ -ErrorAction SilentlyContinue
-						Remove-Job -Job $_ -Force -ErrorAction SilentlyContinue
-					}
+				Where-Object { $null -ne $_ } |
+				ForEach-Object {
+					Stop-Job -Job $_ -ErrorAction SilentlyContinue
+					Remove-Job -Job $_ -Force -ErrorAction SilentlyContinue
+				}
 			}
 			finally {}
 		}
@@ -736,9 +740,9 @@ function Invoke-FzfDefaultSystem {
 		$process.WaitForExit()
 
 		Get-Event -SourceIdentifier $stdOutEventId |
-			Where-Object { $null -ne $_.SourceEventArgs.Data } |
-			Sort-Object -Property TimeGenerated |
-			ForEach-Object { $result += $_.SourceEventArgs.Data }
+		Where-Object { $null -ne $_.SourceEventArgs.Data } |
+		Sort-Object -Property TimeGenerated |
+		ForEach-Object { $result += $_.SourceEventArgs.Data }
 	}
 	finally {
 		try {

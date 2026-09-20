@@ -355,25 +355,33 @@ function script:Invoke-FzfTabCompletionInner() {
 
     $result = $script:result
     if ($null -ne $result) {
-        # quote strings if we need to:
+        # Some completers include a trailing separator in CompletionText.
+        # PSFzf appends its own separator below, so remove one before quoting.
         if ($result -is [system.array]) {
             for ($i = 0; $i -lt $result.Length; $i++) {
-                $result[$i] = FixCompletionResult $result[$i]
+                $result[$i] = FixCompletionResult -str $result[$i] -RemoveTrailingSpace
             }
             $str = $result -join ','
         }
         else {
-            $str = FixCompletionResult $result
+            $str = FixCompletionResult -str $result -RemoveTrailingSpace
         }
 
         $isQuoted = $str.EndsWith("'")
         $resultTrimmed = $str.Trim(@('''', '"'))
         if (Test-Path "$resultTrimmed"  -PathType Container) {
-            if ($isQuoted) {
-                $str = "'{0}{1}'" -f "$resultTrimmed", [IO.Path]::DirectorySeparatorChar.ToString()
-            }
-            else {
-                $str = "$resultTrimmed" + [IO.Path]::DirectorySeparatorChar.ToString()
+            $directorySeparator = [IO.Path]::DirectorySeparatorChar.ToString()
+            $altDirectorySeparator = [IO.Path]::AltDirectorySeparatorChar.ToString()
+            $hasTrailingSeparator = $resultTrimmed.EndsWith($directorySeparator) -or
+            $resultTrimmed.EndsWith($altDirectorySeparator)
+
+            if (-not $hasTrailingSeparator) {
+                if ($isQuoted) {
+                    $str = "'{0}{1}'" -f "$resultTrimmed", $directorySeparator
+                }
+                else {
+                    $str = "$resultTrimmed" + $directorySeparator
+                }
             }
         }
         else {

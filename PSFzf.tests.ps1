@@ -101,113 +101,113 @@ Describe "Find-CurrentPath" {
 }
 
 Describe 'Invoke-PsFzfRipgrep' {
-    InModuleScope PsFzf {
-        $OriginalPSFZF_RG_PREFIX = $null
-        $script:CapturedCommand = $null
-        # $script:MockedFzfDefaultCmd = $null # No longer needed
-        $script:SystemOriginalFzfDefaultCommand = $null
+	InModuleScope PsFzf {
+		$OriginalPSFZF_RG_PREFIX = $null
+		$script:CapturedCommand = $null
+		# $script:MockedFzfDefaultCmd = $null # No longer needed
+		$script:SystemOriginalFzfDefaultCommand = $null
 
-        BeforeEach {
-            # Store and clear environment variables
-            $OriginalPSFZF_RG_PREFIX = $env:PSFZF_RG_PREFIX
-            $env:PSFZF_RG_PREFIX = $null
+		BeforeEach {
+			# Store and clear environment variables
+			$OriginalPSFZF_RG_PREFIX = $env:PSFZF_RG_PREFIX
+			$env:PSFZF_RG_PREFIX = $null
 
-            $script:SystemOriginalFzfDefaultCommand = $env:FZF_DEFAULT_COMMAND
-            $env:FZF_DEFAULT_COMMAND = "SENTINEL_FZF_COMMAND_FOR_RESTORE_TEST"
+			$script:SystemOriginalFzfDefaultCommand = $env:FZF_DEFAULT_COMMAND
+			$env:FZF_DEFAULT_COMMAND = "SENTINEL_FZF_COMMAND_FOR_RESTORE_TEST"
 
-            # Reset captured command
-            $script:CapturedCommand = $null
+			# Reset captured command
+			$script:CapturedCommand = $null
 
-            # Mock Invoke-Expression to capture the command
-            Mock Invoke-Expression {
-                param($Command)
-                $script:CapturedCommand = $Command
-                # Simulate fzf returning no selection to allow the function to complete
-                return $null
-            } -ModuleName PsFzf
+			# Mock Invoke-Expression to capture the command
+			Mock Invoke-Expression {
+				param($Command)
+				$script:CapturedCommand = $Command
+				# Simulate fzf returning no selection to allow the function to complete
+				return $null
+			} -ModuleName PsFzf
 
-            # Mock Get-EditorLaunch to prevent actual editor launch
-            Mock Get-EditorLaunch {
-                param($FileList, $LineNum = 0)
-                # Do nothing, just prevent original function call
-                return "MockedEditorLaunch $FileList $LineNum"
-            } -ModuleName PsFzf
+			# Mock Get-EditorLaunch to prevent actual editor launch
+			Mock Get-EditorLaunch {
+				param($FileList, $LineNum = 0)
+				# Do nothing, just prevent original function call
+				return "MockedEditorLaunch $FileList $LineNum"
+			} -ModuleName PsFzf
 
-            # Mock Resolve-Path for -NoEditor switch
-            Mock Resolve-Path {
-                param($Path)
-                return "Resolved_$Path" # Simulate path resolution
-            } -ModuleName PsFzf
+			# Mock Resolve-Path for -NoEditor switch
+			Mock Resolve-Path {
+				param($Path)
+				return "Resolved_$Path" # Simulate path resolution
+			} -ModuleName PsFzf
 
-            # No more mocking of FzfDefaultCmd constructor or Restore method
-        }
+			# No more mocking of FzfDefaultCmd constructor or Restore method
+		}
 
-        AfterEach {
-            # Restore environment variables
-            $env:PSFZF_RG_PREFIX = $OriginalPSFZF_RG_PREFIX
-            $env:FZF_DEFAULT_COMMAND = $script:SystemOriginalFzfDefaultCommand
-        }
+		AfterEach {
+			# Restore environment variables
+			$env:PSFZF_RG_PREFIX = $OriginalPSFZF_RG_PREFIX
+			$env:FZF_DEFAULT_COMMAND = $script:SystemOriginalFzfDefaultCommand
+		}
 
-        Context 'Default rg command' {
-            It 'Should use the default rg prefix and restore FZF_DEFAULT_COMMAND' {
-                Invoke-PsFzfRipgrep -SearchString 'testsearch' | Out-Null
+		Context 'Default rg command' {
+			It 'Should use the default rg prefix and restore FZF_DEFAULT_COMMAND' {
+				Invoke-PsFzfRipgrep -SearchString 'testsearch' | Out-Null
 
-                $defaultRgPrefix = "rg --column --line-number --no-heading --color=always --smart-case "
-                $script:CapturedCommand | Should -Match ([regex]::Escape($defaultRgPrefix))
-                $env:FZF_DEFAULT_COMMAND | Should -Be "SENTINEL_FZF_COMMAND_FOR_RESTORE_TEST"
-            }
-        }
+				$defaultRgPrefix = "rg --column --line-number --no-heading --color=always --smart-case "
+				$script:CapturedCommand | Should -Match ([regex]::Escape($defaultRgPrefix))
+				$env:FZF_DEFAULT_COMMAND | Should -Be "SENTINEL_FZF_COMMAND_FOR_RESTORE_TEST"
+			}
+		}
 
-        Context 'Custom rg command via PSFZF_RG_PREFIX' {
-            It 'Should use the custom rg prefix and restore FZF_DEFAULT_COMMAND' {
-                $customRgPrefix = 'my-custom-rg --awesome '
-                $env:PSFZF_RG_PREFIX = $customRgPrefix
+		Context 'Custom rg command via PSFZF_RG_PREFIX' {
+			It 'Should use the custom rg prefix and restore FZF_DEFAULT_COMMAND' {
+				$customRgPrefix = 'my-custom-rg --awesome '
+				$env:PSFZF_RG_PREFIX = $customRgPrefix
 
-                Invoke-PsFzfRipgrep -SearchString 'testsearch' | Out-Null
+				Invoke-PsFzfRipgrep -SearchString 'testsearch' | Out-Null
 
-                $script:CapturedCommand | Should -Match ([regex]::Escape($customRgPrefix))
-                $script:CapturedCommand | Should -Not -Match ([regex]::Escape("rg --column --line-number"))
-                $env:FZF_DEFAULT_COMMAND | Should -Be "SENTINEL_FZF_COMMAND_FOR_RESTORE_TEST"
-            }
-        }
+				$script:CapturedCommand | Should -Match ([regex]::Escape($customRgPrefix))
+				$script:CapturedCommand | Should -Not -Match ([regex]::Escape("rg --column --line-number"))
+				$env:FZF_DEFAULT_COMMAND | Should -Be "SENTINEL_FZF_COMMAND_FOR_RESTORE_TEST"
+			}
+		}
 
-        Context 'NoEditor switch' {
-            It 'Should call Resolve-Path, not Get-EditorLaunch, and restore FZF_DEFAULT_COMMAND' {
-                # Override Invoke-Expression mock for this specific test to return a value
-                Mock Invoke-Expression {
-                    param($Command)
-                    $script:CapturedCommand = $Command
-                    return "somefile.txt:123:content" # Simulate fzf selection
-                } -ModuleName PsFzf
+		Context 'NoEditor switch' {
+			It 'Should call Resolve-Path, not Get-EditorLaunch, and restore FZF_DEFAULT_COMMAND' {
+				# Override Invoke-Expression mock for this specific test to return a value
+				Mock Invoke-Expression {
+					param($Command)
+					$script:CapturedCommand = $Command
+					return "somefile.txt:123:content" # Simulate fzf selection
+				} -ModuleName PsFzf
 
-                $result = Invoke-PsFzfRipgrep -SearchString 'testsearch' -NoEditor
+				$result = Invoke-PsFzfRipgrep -SearchString 'testsearch' -NoEditor
 
-                $result | Should -Be "Resolved_somefile.txt"
-                Should -Invoke 'Resolve-Path' -Times 1 -ModuleName PsFzf -ParameterFilter { $Path -eq 'somefile.txt' }
-                Should -Not -Invoke 'Get-EditorLaunch' -ModuleName PsFzf
-                $env:FZF_DEFAULT_COMMAND | Should -Be "SENTINEL_FZF_COMMAND_FOR_RESTORE_TEST"
-            }
-        }
+				$result | Should -Be "Resolved_somefile.txt"
+				Should -Invoke 'Resolve-Path' -Times 1 -ModuleName PsFzf -ParameterFilter { $Path -eq 'somefile.txt' }
+				Should -Not -Invoke 'Get-EditorLaunch' -ModuleName PsFzf
+				$env:FZF_DEFAULT_COMMAND | Should -Be "SENTINEL_FZF_COMMAND_FOR_RESTORE_TEST"
+			}
+		}
 
-        Context 'Editor launch' {
-            It 'Should call Get-EditorLaunch, not Resolve-Path, and restore FZF_DEFAULT_COMMAND' {
-                # Override Invoke-Expression mock for this specific test to return a value
-                Mock Invoke-Expression {
-                    param($Command)
-                    $script:CapturedCommand = $Command
-                    return "anotherfile.txt:45:foobar" # Simulate fzf selection
-                } -ModuleName PsFzf
+		Context 'Editor launch' {
+			It 'Should call Get-EditorLaunch, not Resolve-Path, and restore FZF_DEFAULT_COMMAND' {
+				# Override Invoke-Expression mock for this specific test to return a value
+				Mock Invoke-Expression {
+					param($Command)
+					$script:CapturedCommand = $Command
+					return "anotherfile.txt:45:foobar" # Simulate fzf selection
+				} -ModuleName PsFzf
 
-                Invoke-PsFzfRipgrep -SearchString 'testsearch' | Out-Null
+				Invoke-PsFzfRipgrep -SearchString 'testsearch' | Out-Null
 
-                Should -Invoke 'Get-EditorLaunch' -Times 1 -ModuleName PsFzf -ParameterFilter {
-                    $FileList -eq 'anotherfile.txt' -and $LineNum -eq '45'
-                }
-                Should -Not -Invoke 'Resolve-Path' -ModuleName PsFzf
-                $env:FZF_DEFAULT_COMMAND | Should -Be "SENTINEL_FZF_COMMAND_FOR_RESTORE_TEST"
-            }
-        }
-    }
+				Should -Invoke 'Get-EditorLaunch' -Times 1 -ModuleName PsFzf -ParameterFilter {
+					$FileList -eq 'anotherfile.txt' -and $LineNum -eq '45'
+				}
+				Should -Not -Invoke 'Resolve-Path' -ModuleName PsFzf
+				$env:FZF_DEFAULT_COMMAND | Should -Be "SENTINEL_FZF_COMMAND_FOR_RESTORE_TEST"
+			}
+		}
+	}
 }
 
 Describe 'Invoke-Fzf event cleanup' {
@@ -233,7 +233,7 @@ Describe 'Invoke-Fzf event cleanup' {
 				} | Select-Object -ExpandProperty SourceIdentifier | Sort-Object)
 
 			Compare-Object -ReferenceObject $before -DifferenceObject $after |
-				Should -BeNullOrEmpty
+			Should -BeNullOrEmpty
 		}
 
 		It 'Should not leave event subscribers after Invoke-FzfDefaultSystem completes' {
@@ -249,7 +249,7 @@ Describe 'Invoke-Fzf event cleanup' {
 				} | Select-Object -ExpandProperty SourceIdentifier | Sort-Object)
 
 			Compare-Object -ReferenceObject $before -DifferenceObject $after |
-				Should -BeNullOrEmpty
+			Should -BeNullOrEmpty
 		}
 	}
 }
@@ -609,6 +609,20 @@ Describe "Check FixCompletionResult" {
 
 			It "Should not double-quote already quoted string with spaces when AlwaysQuote is used" {
 				FixCompletionResult -str """file with spaces.txt""" -AlwaysQuote | Should -Be """file with spaces.txt"""
+			}
+		}
+
+		Context "RemoveTrailingSpace Parameter Tests" {
+			It "Should trim a trailing space from an unquoted string" {
+				FixCompletionResult -str "file.txt " -RemoveTrailingSpace | Should -Be "file.txt"
+			}
+
+			It "Should trim a trailing tab from an unquoted string" {
+				FixCompletionResult -str "file.txt`t" -RemoveTrailingSpace | Should -Be "file.txt"
+			}
+
+			It "Should trim trailing space before quoting a string with spaces" {
+				FixCompletionResult -str "file with spaces.txt " -RemoveTrailingSpace | Should -Be """file with spaces.txt"""
 			}
 		}
 	}
